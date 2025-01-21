@@ -1,11 +1,7 @@
 {
   "clients": [
     {
-      "path": "%%STUBCLIENTSDIR%%/dashboard"
-    },
-    {
-      "exclude_from_menu": true,
-      "path": "%%STUBCLIENTSDIR%%/settings"
+      "path": "%%STUBCLIENTSDIR%%"
     }
   ]
 }

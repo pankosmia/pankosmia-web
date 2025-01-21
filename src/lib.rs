@@ -1497,7 +1497,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         let app_setup_template_path = relative!("./templates/app_setup.json");
         let app_setup_json_string = match fs::read_to_string(app_setup_template_path) {
             Ok(s) => maybe_os_quoted_path_str(
-                s.replace("%%STUBCLIENTSDIR%%", relative!("./default_clients"))
+                s.replace("%%STUBCLIENTSDIR%%", relative!("./stub_client"))
             ),
             Err(e) => {
                 println!("Could not read app_setup file '{}': {}", app_setup_template_path, e);
@@ -1639,7 +1639,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             Ok(_) => {}
             Err(e) => {
                 println!(
-                    "Could not copy web fonts to working directory: {}",
+                    "Could not copy web fonts to working directory from {}: {}",
+                    template_webfonts_dir_path,
                     e
                 );
                 exit(1);

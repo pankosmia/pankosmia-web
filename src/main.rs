@@ -1,7 +1,22 @@
 use std::env;
 use serde_json::json;
+use serde_json::Value;
 use rocket::fs::relative;
+use tokio::runtime::Runtime;
+
 mod lib;
+
+
+fn do_rocket(conf: Value) {
+    let rt = Runtime::new().unwrap();
+    let builder = lib::rocket(conf);
+    rt.block_on(
+        async move {
+            let _ = builder.launch().await;
+        }
+    );
+}
+
 pub fn main() -> () {
     let args: Vec<String> = env::args().collect();
     let mut working_dir = "".to_string();
@@ -13,5 +28,5 @@ pub fn main() -> () {
         "working_dir": working_dir,
         "webfont_path": webfont_path
     });
-    lib::rocket(conf).launch();
+    let _ = do_rocket(conf);
 }
