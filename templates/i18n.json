@@ -1,0 +1,101 @@
+{
+  "server": {
+    "settings": {},
+    "net": {},
+    "git": {},
+    "burrito": {},
+    "i18n": {}
+  },
+  "components": {
+    "framework": {
+      "no_entry_if_offline": {
+        "en": "You need to be online to view this page.",
+        "fr": "Vous devez vous connecter à l'Internet pour accéder à cette page."
+      }
+    },
+    "header": {
+      "new_reference": {
+        "en": "New Reference",
+        "fr": "Nouvelle référence"
+      },
+      "goto_local_projects_menu_item": {
+        "en": "Projects on this machine",
+        "fr": "Projets sur cette machine"
+      }
+    }
+  },
+  "munchers": {
+    "bcv_notes_viewer": {
+      "title": {
+        "en": "Notes by Verse",
+        "fr": "Notes par verset"
+      }
+    },
+    "tasteless": {
+      "title": {
+        "en": "Default Viewer",
+        "fr": "Vue par défaut"
+      },
+      "show_metadata": {
+        "en": "Show Metadata",
+        "fr": "Afficher les metadonnées"
+      }
+    },
+    "text_translation_viewer": {
+      "title": {
+        "en": "Scripture (Text) Viewer",
+        "fr": "Ecriture (texte), lecture seulement"
+      }
+    },
+    "text_translation_editor": {
+      "title": {
+        "en": "Scripture (Text) Editor",
+        "fr": "Editeur d'Ecriture (texte)"
+      }
+    },
+    "video_links_viewer": {
+      "title": {
+        "en": "Video Links",
+        "fr": "Liens vidéo"
+      },
+      "no_content": {
+        "en": "No Content for this Verse",
+        "fr": "Aucun contenu pour ce verset"
+      },
+      "no_video_support": {
+        "en": "No Video Support in this Browser",
+        "fr": "Ce navigateur ne permet pas de regarder des vidéos"
+      },
+      "offline_mode": {
+        "en": "Video links cannot be displayed in offline. Enable Internet access if it is safe to do so.",
+        "fr": "Impossible de suivre des liens vidéo on mode hors ligne. Activez la connection Internet si ça ne vous met pas en danger."
+      }
+    }
+  },
+  "flavors": {
+    "names": {
+      "parascriptural/x-videolinks": {
+        "en": "Video Links",
+        "fr": "Liens vidéo"
+      },
+      "parascriptural/x-bcvArticles": {
+        "en": "Articles by Verse",
+        "fr": "Articles par verset"
+      },
+      "parascriptural/x-bcvNotes": {
+        "en": "Notes by Verse",
+        "fr": "Notes par verset"
+      },
+      "scripture/textTranslation": {
+        "en": "Scripture (Text)",
+        "fr": "Ecriture (texte)"
+      },
+      "parascriptural/x-bcvImages": {
+        "en": "Images by Verse",
+        "fr": "Images par verset"
+      }
+    }
+  },
+  "fonts": {},
+  "branding": {}
+}
