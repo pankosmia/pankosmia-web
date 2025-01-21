@@ -8,17 +8,17 @@ homepage = "https://xenizo.fr"
 repository = "https://github.com/pankosmia/pankosmia-server"
 readme = "README.md"
 
+exclude = [
+    "default_clients/*",
+    "webfonts/*"
+]
+
 [lib]
 name = "pankosmia_web"
 crate-type = [
     "lib"
 ]
 path = "src/main.rs"
-
-exclude = [
-    "default_clients/*",
-    "webfonts/*"
-]
 
 [dependencies]
 fs = "0.0.5"
