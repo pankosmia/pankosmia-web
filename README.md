@@ -1,4 +1,4 @@
-# pankosmia-server
+# pankosmia_web
 A web server for pankosmia desktop applications
 
 ## Installation
