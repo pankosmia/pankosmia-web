@@ -1,8 +1,16 @@
 [package]
 name = "production"
+description = "A web server for pankosmia desktop applications"
 version = "0.1.0"
 edition = "2021"
-publish = false
+license = "MIT"
+homepage = "https://xenizo.fr"
+repository = "https://github.com/pankosmia/pankosmia-server"
+readme = "README.md"
+
+exclude = [
+    "default_clients/*"
+]
 
 [dependencies]
 fs = "0.0.5"

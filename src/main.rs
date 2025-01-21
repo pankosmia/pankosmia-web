@@ -1471,7 +1471,7 @@ fn public_serialize_clients(cv: Vec<Client>) -> Vec<PublicClient> {
 type Clients = Mutex<Vec<Client>>;
 
 #[rocket::launch]
-fn rocket() -> Rocket<Build> {
+pub fn rocket() -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
     // Set up managed state;
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
