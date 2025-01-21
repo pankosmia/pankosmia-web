@@ -1,12 +1,19 @@
 [package]
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"
 repository = "https://github.com/pankosmia/pankosmia-server"
 readme = "README.md"
+
+[lib]
+name = "pankosmia_web"
+crate-type = [
+    "lib"
+]
+path = "src/main.rs"
 
 exclude = [
     "default_clients/*",
