@@ -1632,7 +1632,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         };
     }
     // Copy web fonts from cli path
-    let template_webfonts_dir_path = relative!("./webfonts").to_string();
+    let template_webfonts_dir_path = launch_config["webfont_path"].as_str().unwrap();
     let webfonts_dir_path = working_dir_path.clone() + os_slash_str() + "webfonts";
     if !Path::new(&webfonts_dir_path).is_dir() {
         match copy_dir(template_webfonts_dir_path.clone(), webfonts_dir_path.clone()) {
