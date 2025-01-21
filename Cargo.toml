@@ -1,5 +1,5 @@
 [package]
-name = "pankosmia-server"
+name = "pankosmia_server"
 description = "A web server for pankosmia desktop applications"
 version = "0.1.0"
 edition = "2021"
