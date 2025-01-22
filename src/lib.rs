@@ -1481,7 +1481,6 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         working_dir_path = launch_config["working_dir"].as_str().unwrap().to_string();
     };
     let user_settings_path = format!("{}/user_settings.json", working_dir_path);
-    let app_setup_path = format!("{}/app_setup.json", working_dir_path);
     let app_state_path = format!("{}/app_state.json", working_dir_path);
     let workspace_dir_exists = Path::new(&working_dir_path).is_dir();
     if !workspace_dir_exists {
@@ -1493,31 +1492,6 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 exit(1);
             }
         };
-        // Copy app_setup file to working dir
-        let app_setup_template_path = relative!("./templates/app_setup.json");
-        let app_setup_json_string = match fs::read_to_string(app_setup_template_path) {
-            Ok(s) => maybe_os_quoted_path_str(
-                s.replace("%%STUBCLIENTSDIR%%", relative!("./stub_client"))
-            ),
-            Err(e) => {
-                println!("Could not read app_setup file '{}': {}", app_setup_template_path, e);
-                exit(1);
-            }
-        };
-        let mut file_handle = match fs::File::create(&app_setup_path) {
-            Ok(h) => h,
-            Err(e) => {
-                println!("Could not open app_setup file '{}' to write default: {}", app_setup_path, e);
-                exit(1);
-            }
-        };
-        match file_handle.write_all(&app_setup_json_string.as_bytes()) {
-            Ok(_) => {}
-            Err(e) => {
-                println!("Could not write app_setup file to '{}: {}'", app_setup_path, e);
-                exit(1);
-            }
-        }
         // Copy user_settings file to working dir
         let user_settings_template_path = relative!("./templates/user_settings.json");
         let user_settings_json_string = match fs::read_to_string(&user_settings_template_path) {
@@ -1569,6 +1543,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         }
     }
     // Try to load app_setup JSON
+    let app_setup_path = launch_config["app_setup_path"].as_str().unwrap();
     let app_setup_json_string = match fs::read_to_string(&app_setup_path) {
         Ok(s) => s,
         Err(e) => {
@@ -1635,7 +1610,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     let template_webfonts_dir_path = launch_config["webfont_path"].as_str().unwrap();
     let webfonts_dir_path = working_dir_path.clone() + os_slash_str() + "webfonts";
     if !Path::new(&webfonts_dir_path).is_dir() {
-        match copy_dir(template_webfonts_dir_path.clone(), webfonts_dir_path.clone()) {
+        match copy_dir(template_webfonts_dir_path, webfonts_dir_path.clone()) {
             Ok(_) => {}
             Err(e) => {
                 println!(
