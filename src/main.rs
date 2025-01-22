@@ -32,7 +32,7 @@ pub fn main() {
         "working_dir": working_dir,
         "webfont_path": webfont_path,
         "app_setup_path": app_setup_path,
-        "local_pankosmia_path": local_setup_path
+        "local_setup_path": local_setup_path
     });
     let _ = do_rocket(conf);
 }

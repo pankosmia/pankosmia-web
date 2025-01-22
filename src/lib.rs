@@ -1543,7 +1543,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         }
     }
     // Try to load local setup JSON
-    let local_setup_path = relative!("./setup/local_setup.json");
+    let local_setup_path = launch_config["local_setup_path"].as_str().unwrap();
     let local_setup_json_string = match fs::read_to_string(&local_setup_path) {
         Ok(s) => s,
         Err(e) => {
