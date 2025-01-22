@@ -1542,15 +1542,38 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             }
         }
     }
-    // Try to load app_setup JSON
+    // Try to load local setup JSON
+    let local_setup_path = relative!("./setup/local_setup.json");
+    let local_setup_json_string = match fs::read_to_string(&local_setup_path) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("Could not read local setup file '{}': {}", local_setup_path, e);
+            exit(1);
+        }
+    };
+    let local_setup_json: Value = match serde_json::from_str(local_setup_json_string.as_str()) {
+        Ok(j) => j,
+        Err(e) => {
+            println!("Could not parse local setup file '{}': {}", local_setup_path, e);
+            exit(1);
+        }
+    };
+    let local_pankosmia_path = local_setup_json["local_pankosmia_path"].as_str().unwrap();
+    // Try to load app_setup JSON, substituting pankosmia path
     let app_setup_path = launch_config["app_setup_path"].as_str().unwrap();
-    let app_setup_json_string = match fs::read_to_string(&app_setup_path) {
+    let mut app_setup_json_string = match fs::read_to_string(&app_setup_path) {
         Ok(s) => s,
         Err(e) => {
             println!("Could not read app_setup file '{}': {}", app_setup_path, e);
             exit(1);
         }
     };
+    app_setup_json_string = app_setup_json_string.replace(
+        "%%PANKOSMIADIR%%",
+        maybe_os_quoted_path_str(
+            local_pankosmia_path.to_string()
+        ).as_str()
+    );
     let app_setup_json: Value = match serde_json::from_str(app_setup_json_string.as_str()) {
         Ok(j) => j,
         Err(e) => {
@@ -1606,7 +1629,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             }
         };
     }
-    // Copy web fonts from cli path
+    // Copy web fonts from path in local config
     let template_webfonts_dir_path = launch_config["webfont_path"].as_str().unwrap();
     let webfonts_dir_path = working_dir_path.clone() + os_slash_str() + "webfonts";
     if !Path::new(&webfonts_dir_path).is_dir() {
