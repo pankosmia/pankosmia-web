@@ -26,8 +26,6 @@ pub fn main() {
     let webfont_path = relative!("./webfonts");
     let app_setup_path = relative!("./setup/app_setup.json");
     let local_setup_path = relative!("./setup/local_setup.json");
-    println!("{}", webfont_path);
-    println!("{}", app_setup_path);
     let conf = json!({
         "working_dir": working_dir,
         "webfont_path": webfont_path,

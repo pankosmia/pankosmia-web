@@ -1811,13 +1811,10 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 },
                 typography: match user_settings_json["typography"].clone() {
                     serde_json::Value::Object(v) => serde_json::from_value(serde_json::Value::Object(v)).unwrap(),
-                    _ => serde_json::from_value(
-                        json!({
-                        "font_set": "gentiumPlus",
-                        "size": "medium",
-                        "direction": "ltr"
-                    })
-                    ).unwrap(),
+                    _ => {
+                        println!("Could not read typography from parsed user settings file");
+                        exit(1)
+                    }
                 },
                 bcv: match app_state_json["bcv"].clone() {
                     serde_json::Value::Object(v) => serde_json::from_value(serde_json::Value::Object(v)).unwrap(),

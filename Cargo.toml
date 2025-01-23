@@ -1,12 +1,12 @@
 [package]
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"
 repository = "https://github.com/pankosmia/pankosmia-web"
-readme = "README.md"
+readme = "Crate_README.md"
 
 exclude = [
     "webfonts/*"
