@@ -7,5 +7,6 @@
     "direction": "ltr",
     "font_set": "gentiumPlus",
     "size": "medium"
-  }
+  },
+  "my_clients": []
 }

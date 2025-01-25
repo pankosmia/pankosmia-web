@@ -1647,7 +1647,16 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     };
     // Merge client config into settings JSON
     let mut clients_merged_array: Vec<Value> = Vec::new();
-    for client_record in app_setup_json["clients"].as_array().unwrap().iter() {
+    let mut client_records_merged_array: Vec<Value> = Vec::new();
+    let app_client_records = app_setup_json["clients"].as_array().unwrap();
+    for app_client_record in app_client_records.iter() {
+        client_records_merged_array.push(app_client_record.clone());
+    }
+    let my_client_records = user_settings_json["my_clients"].as_array().unwrap();
+    for my_client_record in my_client_records.iter() {
+        client_records_merged_array.push(my_client_record.clone());
+    }
+    for client_record in client_records_merged_array.iter() {
         // Get requires from metadata
         let client_metadata_path = client_record["path"].as_str().unwrap().to_string() + os_slash_str() + "pankosmia_metadata.json";
         let metadata_json: Value = match fs::read_to_string(&client_metadata_path) {
