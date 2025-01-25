@@ -6,16 +6,12 @@
   },
   "i18n": {
     "title": {
-      "en": "New Project",
-      "fr": "Nouveau Project"
+      "en": "Stub Projet",
+      "fr": "Projet garde-place"
     },
     "summary": {
-      "en": "Create a new project on your machine",
-      "fr": "Créer un nouveau projet sur votre machine"
-    },
-    "stub_content": {
-      "en": "Content goes here",
-      "fr": "Le contenu se met ici"
+      "en": "A stub project for Pankosmia Web testing",
+      "fr": "Un projet pour tester Pankosmia Web"
     }
   }
 }
