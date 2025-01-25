@@ -4,12 +4,11 @@ use serde_json::Value;
 use rocket::fs::relative;
 use tokio::runtime::Runtime;
 
-mod lib;
-
+use pankosmia_web;
 
 fn do_rocket(conf: Value) {
     let rt = Runtime::new().unwrap();
-    let builder = lib::rocket(conf);
+    let builder = pankosmia_web::rocket(conf);
     rt.block_on(
         async move {
             let _ = builder.launch().await;
