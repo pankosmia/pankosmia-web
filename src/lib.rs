@@ -1708,8 +1708,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             "path": client_record["path"].as_str().unwrap(),
             "url": package_json["homepage"].as_str().unwrap(),
             "requires": requires,
-            "exclude_from_menu": client_record["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
-            "exclude_from_dashboard": client_record["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false)
+            "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
+            "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false)
         }));
     }
     let clients_value = serde_json::to_value(clients_merged_array).unwrap();

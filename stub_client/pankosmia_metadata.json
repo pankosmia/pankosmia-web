@@ -4,6 +4,7 @@
     "net": false,
     "debug": false
   },
+  "exclude_from_dashboard": true,
   "i18n": {
     "title": {
       "en": "Stub Projet",
