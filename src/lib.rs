@@ -106,6 +106,7 @@ struct Client {
     id: String,
     requires: BTreeMap<String, bool>,
     exclude_from_menu: bool,
+    exclude_from_dashboard: bool,
     path: String,
     url: String,
 }
@@ -115,6 +116,7 @@ struct PublicClient {
     id: String,
     requires: BTreeMap<String, bool>,
     exclude_from_menu: bool,
+    exclude_from_dashboard: bool,
     url: String,
 }
 
@@ -682,7 +684,6 @@ async fn flat_i18n(state: &State<AppSettings>, filter: PathBuf) -> status::Custo
                                 None => {}
                             }
                             for (i18n_term, term_languages) in terms.as_object().unwrap() {
-                                // println!("      {}", i18n_term);
                                 'user_lang: for user_language in languages.clone() {
                                     for (i18n_language, translation) in term_languages.as_object().unwrap() {
                                         // println!("{} {}", i18n_language, languages[0]);
@@ -1462,6 +1463,7 @@ fn public_serialize_client(c: Client) -> PublicClient {
         id: c.id.clone(),
         requires: c.requires.clone(),
         exclude_from_menu: c.exclude_from_menu.clone(),
+        exclude_from_dashboard: c.exclude_from_dashboard.clone(),
         url: c.url.clone(),
     }
 }
@@ -1706,10 +1708,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             "path": client_record["path"].as_str().unwrap(),
             "url": package_json["homepage"].as_str().unwrap(),
             "requires": requires,
-            "exclude_from_menu": match client_record["exclude_from_menu"].as_bool() {
-                Some(v) => v,
-                None => false
-            }
+            "exclude_from_menu": client_record["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
+            "exclude_from_dashboard": client_record["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false)
         }));
     }
     let clients_value = serde_json::to_value(clients_merged_array).unwrap();
