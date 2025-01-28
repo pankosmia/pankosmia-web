@@ -41,7 +41,7 @@ struct Bcv {
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Typography {
-    font_class: String,
+    font_set: String,
     size: String,
     direction: String,
 }
@@ -376,10 +376,10 @@ fn get_typography(state: &State<AppSettings>) -> status::Custom<(ContentType, St
     }
 }
 
-#[post("/typography/<font_class>/<size>/<direction>")]
-fn post_typography(state: &State<AppSettings>, font_class: &str, size: &str, direction: &str) -> status::Custom<(ContentType, String)> {
+#[post("/typography/<font_set>/<size>/<direction>")]
+fn post_typography(state: &State<AppSettings>, font_set: &str, size: &str, direction: &str) -> status::Custom<(ContentType, String)> {
     *state.typography.lock().unwrap() = Typography {
-        font_class: font_class.to_string(),
+        font_set: font_set.to_string(),
         size: size.to_string(),
         direction: direction.to_string(),
     };
@@ -504,7 +504,7 @@ async fn notifications_stream<'a>(msgs: &'a State<MsgQueue>, state: &'a State<Ap
             count+=1;
             let typography = state.typography.lock().unwrap().clone();
             yield stream::Event::data(
-                format!("{}--{}--{}", typography.font_class, typography.size, typography.direction)
+                format!("{}--{}--{}", typography.font_set, typography.size, typography.direction)
             )
             .event("typography")
             .id(format!("{}", count));
