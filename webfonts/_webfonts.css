@@ -5,6 +5,7 @@
 @import url("pankosmia-Noto_Nastaliq_Urdu.css");
 @import url("pankosmia-Cardo.css");
 
-.fonts-Pankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus {
-  font-family: 'Pankosmia-Ezra SIL', 'Pankosmia-Padauk', 'Pankosmia-Awami Nastaliq', 'Pankosmia-Noto Nastaliq Urdu', 'Pankosmia-Gentium Plus'; font-size: 200%;
+.fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus {
+  font-family: 'Pankosmia-Cardo', 'Pankosmia-Ezra SIL', 'Pankosmia-Padauk', 'Pankosmia-Awami Nastaliq', 'Pankosmia-Noto Nastaliq Urdu', 'Pankosmia-Gentium Plus';
+  font-size: 200%;
 }
