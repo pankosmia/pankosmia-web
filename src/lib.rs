@@ -6,6 +6,7 @@ use copy_dir::copy_dir;
 use git2::{Repository, StatusOptions};
 use hallomai::transform;
 use home::home_dir;
+use rocket::serde::json::Json;
 use rocket::form::Form;
 use rocket::fs::{relative, FileServer, TempFile};
 use rocket::http::{ContentType, Status};
@@ -46,6 +47,14 @@ struct Typography {
     direction: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct GiteaTokenJson {
+    access_token: String,
+    token_type: String,
+    expires_in: i32,
+    refresh_token: String,
+}
+
 #[derive(Serialize, Deserialize)]
 struct AppSettings {
     working_dir: String,
@@ -54,6 +63,7 @@ struct AppSettings {
     auth_endpoints: Mutex<Vec<AuthEndpoint>>,
     bcv: Mutex<Bcv>,
     typography: Mutex<Typography>,
+    gitea_token: Mutex<Option<GiteaTokenJson>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -954,8 +964,8 @@ fn gitea_remote_repos(
     }
 }
 
-#[get("/auth-return")]
-fn gitea_auth_return() -> status::Custom<(ContentType, String)> {
+#[post("/auth-return", format = "json", data = "<json_body>")]
+fn gitea_auth_return(state: &State<AppSettings>, json_body: Json<GiteaTokenJson>) -> status::Custom<(ContentType, String)> {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
         return status::Custom(
             Status::Unauthorized,
@@ -965,6 +975,14 @@ fn gitea_auth_return() -> status::Custom<(ContentType, String)> {
             ),
         );
     }
+    *state.gitea_token.lock().unwrap() = Some(
+        GiteaTokenJson {
+            access_token: json_body.access_token.clone(),
+            token_type: json_body.token_type.clone(),
+            expires_in: json_body.expires_in,
+            refresh_token: json_body.refresh_token.clone()
+        }
+    );
     status::Custom(
         Status::Ok,
         (
@@ -1043,7 +1061,7 @@ async fn add_and_commit(
                 &tree,
                 &[&parent_commit],
             )
-            .unwrap();
+                .unwrap();
             status::Custom(
                 Status::Ok,
                 (
@@ -1217,29 +1235,29 @@ async fn git_status(
                         let i_status = match entry.status() {
                             s if s.contains(git2::Status::INDEX_NEW)
                                 || s.contains(git2::Status::WT_NEW) =>
-                            {
-                                "new"
-                            }
+                                {
+                                    "new"
+                                }
                             s if s.contains(git2::Status::INDEX_MODIFIED)
                                 || s.contains(git2::Status::WT_MODIFIED) =>
-                            {
-                                "modified"
-                            }
+                                {
+                                    "modified"
+                                }
                             s if s.contains(git2::Status::INDEX_DELETED)
                                 || s.contains(git2::Status::WT_DELETED) =>
-                            {
-                                "deleted"
-                            }
+                                {
+                                    "deleted"
+                                }
                             s if s.contains(git2::Status::INDEX_RENAMED)
                                 || s.contains(git2::Status::WT_RENAMED) =>
-                            {
-                                "renamed"
-                            }
+                                {
+                                    "renamed"
+                                }
                             s if s.contains(git2::Status::INDEX_TYPECHANGE)
                                 || s.contains(git2::Status::WT_TYPECHANGE) =>
-                            {
-                                "type_change"
-                            }
+                                {
+                                    "type_change"
+                                }
                             _ => "",
                         };
 
@@ -1343,7 +1361,7 @@ async fn summary_metadata(
                 )
             }
         };
-        let raw_metadata_struct: serde_json::Value =
+        let raw_metadata_struct: Value =
             match serde_json::from_str(file_string.as_str()) {
                 Ok(v) => v,
                 Err(e) => {
@@ -1364,8 +1382,8 @@ async fn summary_metadata(
                 .unwrap()
                 .to_string(),
             description: match raw_metadata_struct["identification"]["description"]["en"].clone() {
-                serde_json::Value::String(v) => v.as_str().to_string(),
-                serde_json::Value::Null => "".to_string(),
+                Value::String(v) => v.as_str().to_string(),
+                Value::Null => "".to_string(),
                 _ => "?".to_string(),
             },
             flavor_type: raw_metadata_struct["type"]["flavorType"]["name"]
@@ -1381,7 +1399,7 @@ async fn summary_metadata(
                 .unwrap()
                 .to_string(),
             script_direction: match raw_metadata_struct["languages"][0]["scriptDirection"].clone() {
-                serde_json::Value::String(v) => v.as_str().to_string(),
+                Value::String(v) => v.as_str().to_string(),
                 _ => "?".to_string(),
             },
         };
@@ -2045,7 +2063,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     }
     i18n_json_map.insert(
         "pages".to_string(),
-        serde_json::Value::Object(i18n_pages_map),
+        Value::Object(i18n_pages_map),
     );
     let i18n_target_path = working_dir_path.clone() + os_slash_str() + "i18n.json";
     let mut i18n_file_handle = match fs::File::create(&i18n_target_path) {
@@ -2059,7 +2077,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         }
     };
     match i18n_file_handle.write_all(
-        serde_json::Value::Object(i18n_json_map)
+        Value::Object(i18n_json_map)
             .to_string()
             .as_bytes(),
     ) {
@@ -2096,14 +2114,14 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                     .collect(),
             ),
             auth_endpoints: match user_settings_json["auth_endpoints"].clone() {
-                serde_json::Value::Array(v) => {
-                    Mutex::new(serde_json::from_value(serde_json::Value::Array(v)).unwrap())
+                Value::Array(v) => {
+                    Mutex::new(serde_json::from_value(Value::Array(v)).unwrap())
                 }
                 _ => Mutex::new(Vec::new()),
             },
             typography: match user_settings_json["typography"].clone() {
-                serde_json::Value::Object(v) => {
-                    serde_json::from_value(serde_json::Value::Object(v)).unwrap()
+                Value::Object(v) => {
+                    serde_json::from_value(Value::Object(v)).unwrap()
                 }
                 _ => {
                     println!("Could not read typography from parsed user settings file");
@@ -2111,16 +2129,17 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 }
             },
             bcv: match app_state_json["bcv"].clone() {
-                serde_json::Value::Object(v) => {
-                    serde_json::from_value(serde_json::Value::Object(v)).unwrap()
+                Value::Object(v) => {
+                    serde_json::from_value(Value::Object(v)).unwrap()
                 }
                 _ => serde_json::from_value(json!({
                     "book_code": "TIT",
                     "chapter": 1,
                     "verse": 1
                 }))
-                .unwrap(),
+                    .unwrap(),
             },
+            gitea_token: Mutex::new(None),
         })
         .mount(
             "/",

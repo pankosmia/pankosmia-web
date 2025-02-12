@@ -24,7 +24,7 @@ fs = "0.0.5"
 git2 = "0.19.0"
 hallomai = "0.1.5"
 home = "0.5.9"
-rocket = "0.5.0"
+rocket = { version = "0.5.0", features = ["json"] }
 rocket-multipart-form-data = "0.10.7"
 s2n-quic = "1.48.0"
 serde = "1.0.210"
