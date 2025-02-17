@@ -6,7 +6,6 @@ use copy_dir::copy_dir;
 use git2::{Repository, StatusOptions};
 use hallomai::transform;
 use home::home_dir;
-use rocket::serde::json::Json;
 use rocket::form::Form;
 use rocket::fs::{relative, FileServer, TempFile};
 use rocket::http::{ContentType, Status};
@@ -28,9 +27,9 @@ use ureq;
 // STRUCTS
 
 #[derive(Serialize, Deserialize, Clone)]
-struct AuthEndpoint {
+struct AuthToken {
     service: String,
-    uri: String,
+    token: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -47,23 +46,14 @@ struct Typography {
     direction: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-struct GiteaTokenJson {
-    access_token: String,
-    token_type: String,
-    expires_in: i32,
-    refresh_token: String,
-}
-
 #[derive(Serialize, Deserialize)]
 struct AppSettings {
     working_dir: String,
     repo_dir: Mutex<String>,
     languages: Mutex<Vec<String>>,
-    auth_endpoints: Mutex<Vec<AuthEndpoint>>,
+    auth_tokens: Mutex<BTreeMap<String, String>>,
     bcv: Mutex<Bcv>,
-    typography: Mutex<Typography>,
-    gitea_token: Mutex<Option<GiteaTokenJson>>,
+    typography: Mutex<Typography>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -321,28 +311,33 @@ fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType, Str
         ),
     }
 }
-#[get("/auth-endpoint/<endpoint_key>")]
-fn get_auth_endpoint(
+#[get("/auth-token/<token_key>")]
+fn get_auth_token(
     state: &State<AppSettings>,
-    endpoint_key: String,
+    token_key: String,
 ) -> status::Custom<(ContentType, String)> {
-    let matching_endpoint_array = state
-        .auth_endpoints
+    let auth_tokens = state
+        .auth_tokens
         .lock()
         .unwrap()
-        .clone()
-        .into_iter()
-        .filter(|a| a.service == endpoint_key)
-        .collect::<Vec<_>>();
-    if matching_endpoint_array.len() == 1 {
-        match serde_json::to_string(&matching_endpoint_array[0]) {
-            Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
+        .clone();
+    if auth_tokens.contains_key(&token_key) {
+        let code = &auth_tokens[&token_key];
+        let ok_json = json!({"is_good": true, "code": code});
+        match serde_json::to_string(&ok_json) {
+            Ok(v) => status::Custom(
+                Status::Ok,
+                (
+                    ContentType::JSON,
+                    v
+                )
+            ),
             Err(e) => status::Custom(
                 Status::InternalServerError,
                 (
                     ContentType::JSON,
                     make_bad_json_data_response(format!(
-                        "Could not parse auth endpoint as JSON array: {}",
+                        "Could not produce JSON for auth token: {}",
                         e
                     )),
                 ),
@@ -354,12 +349,32 @@ fn get_auth_endpoint(
             (
                 ContentType::JSON,
                 make_bad_json_data_response(format!(
-                    "Could not find record for endpoint key '{}'",
-                    endpoint_key
+                    "Could not find record for token key '{}'",
+                    token_key
                 )),
             ),
         )
     }
+}
+
+#[get("/auth-token/<token_key>?<code>")]
+fn get_new_auth_token(
+    state: &State<AppSettings>,
+    token_key: String,
+    code: String,
+) -> status::Custom<(ContentType, String)> {
+    let mut tokens_inner = state
+        .auth_tokens
+        .lock()
+        .unwrap();
+    tokens_inner.insert(token_key, code);
+    status::Custom(
+        Status::Ok,
+        (
+            ContentType::JSON,
+            make_good_json_data_response("ok".to_string()),
+        ),
+    )
 }
 
 #[get("/typography")]
@@ -377,27 +392,6 @@ fn get_typography(state: &State<AppSettings>) -> status::Custom<(ContentType, St
                 )),
             ),
         ),
-    }
-}
-
-#[get("/gitea-token")]
-fn get_gitea_token(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
-    let gitea_token_option = state.gitea_token.lock().unwrap().clone();
-    match gitea_token_option {
-        Some(gt) => match serde_json::to_string(&gt.clone()) {
-            Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-            Err(e) => status::Custom(
-                Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Could not parse gitea_token settings as JSON object: {}",
-                        e
-                    )),
-                ),
-            ),
-        },
-        None => status::Custom(Status::Ok, (ContentType::JSON, "null".to_string())),
     }
 }
 
@@ -983,34 +977,6 @@ fn gitea_remote_repos(
             ),
         ),
     }
-}
-
-#[post("/auth-return", format = "json", data = "<json_body>")]
-fn gitea_auth_return(state: &State<AppSettings>, json_body: Json<GiteaTokenJson>) -> status::Custom<(ContentType, String)> {
-    if !NET_IS_ENABLED.load(Ordering::Relaxed) {
-        return status::Custom(
-            Status::Unauthorized,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("offline mode".to_string()),
-            ),
-        );
-    }
-    *state.gitea_token.lock().unwrap() = Some(
-        GiteaTokenJson {
-            access_token: json_body.access_token.clone(),
-            token_type: json_body.token_type.clone(),
-            expires_in: json_body.expires_in,
-            refresh_token: json_body.refresh_token.clone(),
-        }
-    );
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
 }
 
 // REPO OPERATIONS
@@ -2134,11 +2100,11 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                     })
                     .collect(),
             ),
-            auth_endpoints: match user_settings_json["auth_endpoints"].clone() {
-                Value::Array(v) => {
-                    Mutex::new(serde_json::from_value(Value::Array(v)).unwrap())
+            auth_tokens: match user_settings_json["auth_tokens"].clone() {
+                Value::Object(v) => {
+                    Mutex::new(serde_json::from_value(Value::Object(v)).unwrap())
                 }
-                _ => Mutex::new(Vec::new()),
+                _ => Mutex::new(BTreeMap::new()),
             },
             typography: match user_settings_json["typography"].clone() {
                 Value::Object(v) => {
@@ -2160,7 +2126,6 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 }))
                     .unwrap(),
             },
-            gitea_token: Mutex::new(None),
         })
         .mount(
             "/",
@@ -2171,7 +2136,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             "/settings",
             routes![
                 get_languages,
-                get_auth_endpoint,
+                get_auth_token,
+                get_new_auth_token,
                 get_typography,
                 post_typography
             ],
@@ -2184,9 +2150,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         )
         .mount("/navigation", routes![get_bcv, post_bcv])
         .mount("/gitea", routes![
-            gitea_remote_repos,
-            gitea_auth_return,
-            get_gitea_token
+            gitea_remote_repos
         ])
         .mount(
             "/git",
