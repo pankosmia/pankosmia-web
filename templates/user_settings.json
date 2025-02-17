@@ -8,5 +8,8 @@
     "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
     "size": "medium"
   },
-  "my_clients": []
+  "my_clients": [],
+  "gitea_endpoints": {
+    "door43": "https://git.door43.org"
+  }
 }

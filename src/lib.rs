@@ -11,7 +11,7 @@ use rocket::fs::{relative, FileServer, TempFile};
 use rocket::http::{ContentType, Status};
 use rocket::response::{status, stream, Redirect};
 use rocket::tokio::time;
-use rocket::{catch, catchers, get, post, routes, Build, FromForm, Request, Rocket, State};
+use rocket::{catch, catchers, get, post, routes, Build, FromForm, Request, Rocket, State, Responder};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeMap, VecDeque};
@@ -51,9 +51,10 @@ struct AppSettings {
     working_dir: String,
     repo_dir: Mutex<String>,
     languages: Mutex<Vec<String>>,
+    gitea_endpoints: BTreeMap<String, String>,
     auth_tokens: Mutex<BTreeMap<String, String>>,
     bcv: Mutex<Bcv>,
-    typography: Mutex<Typography>
+    typography: Mutex<Typography>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -316,6 +317,18 @@ fn get_auth_token(
     state: &State<AppSettings>,
     token_key: String,
 ) -> status::Custom<(ContentType, String)> {
+    if !state.gitea_endpoints.contains_key(&token_key) {
+        return status::Custom(
+            Status::BadRequest,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!(
+                    "Unknown GITEA endpoint name: {}",
+                    token_key
+                )),
+            ),
+        );
+    }
     let auth_tokens = state
         .auth_tokens
         .lock()
@@ -330,7 +343,7 @@ fn get_auth_token(
                 (
                     ContentType::JSON,
                     v
-                )
+                ),
             ),
             Err(e) => status::Custom(
                 Status::InternalServerError,
@@ -357,24 +370,37 @@ fn get_auth_token(
     }
 }
 
+#[derive(Responder)]
+enum ContentOrRedirect {
+    Content(status::Custom<(ContentType, String)>),
+    Redirect(Redirect),
+}
 #[get("/auth-token/<token_key>?<code>")]
 fn get_new_auth_token(
     state: &State<AppSettings>,
     token_key: String,
     code: String,
-) -> status::Custom<(ContentType, String)> {
+) -> ContentOrRedirect {
+    if !state.gitea_endpoints.contains_key(&token_key) {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Unknown GITEA endpoint name: {}",
+                        token_key
+                    )),
+                ),
+            )
+        );
+    }
     let mut tokens_inner = state
         .auth_tokens
         .lock()
         .unwrap();
     tokens_inner.insert(token_key, code);
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    ContentOrRedirect::Redirect(Redirect::to("/clients/main"))
 }
 
 #[get("/typography")]
@@ -905,6 +931,14 @@ fn post_bcv(
 }
 
 // GITEA
+
+#[get("/endpoints")]
+fn get_gitea_endpoints(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+    status::Custom(
+        Status::Ok,
+        (ContentType::JSON, serde_json::to_string(&state.gitea_endpoints).unwrap()),
+    )
+}
 
 #[get("/remote-repos/<gitea_server>/<gitea_org>")]
 fn gitea_remote_repos(
@@ -2106,6 +2140,12 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 }
                 _ => Mutex::new(BTreeMap::new()),
             },
+            gitea_endpoints: match user_settings_json["gitea_endpoints"].clone() {
+                Value::Object(v) => {
+                    serde_json::from_value(Value::Object(v)).unwrap()
+                }
+                _ => BTreeMap::new(),
+            },
             typography: match user_settings_json["typography"].clone() {
                 Value::Object(v) => {
                     serde_json::from_value(Value::Object(v)).unwrap()
@@ -2150,7 +2190,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         )
         .mount("/navigation", routes![get_bcv, post_bcv])
         .mount("/gitea", routes![
-            gitea_remote_repos
+            gitea_remote_repos,
+            get_gitea_endpoints
         ])
         .mount(
             "/git",
