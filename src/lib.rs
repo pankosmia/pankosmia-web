@@ -385,18 +385,18 @@ fn get_gitea_token(state: &State<AppSettings>) -> status::Custom<(ContentType, S
     let gitea_token_option = state.gitea_token.lock().unwrap().clone();
     match gitea_token_option {
         Some(gt) => match serde_json::to_string(&gt.clone()) {
-        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-        Err(e) => status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not parse gitea_token settings as JSON object: {}",
-                    e
-                )),
+            Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
+            Err(e) => status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Could not parse gitea_token settings as JSON object: {}",
+                        e
+                    )),
+                ),
             ),
-        ),
-    },
+        },
         None => status::Custom(Status::Ok, (ContentType::JSON, "null".to_string())),
     }
 }
@@ -1001,7 +1001,7 @@ fn gitea_auth_return(state: &State<AppSettings>, json_body: Json<GiteaTokenJson>
             access_token: json_body.access_token.clone(),
             token_type: json_body.token_type.clone(),
             expires_in: json_body.expires_in,
-            refresh_token: json_body.refresh_token.clone()
+            refresh_token: json_body.refresh_token.clone(),
         }
     );
     status::Custom(
