@@ -1,20 +1,11 @@
-@import url("andika.css");
-@import url("awami.css");
-@import url("awamiextrabold.css");
-@import url("awamimedium.css");
-@import url("awamisemibold.css");
-@import url("cardo.css");
-@import url("charis.css");
-@import url("ezra.css");
-@import url("ezrasr.css");
-@import url("gentiumbookplus.css");
-@import url("gentiumplus.css");
-@import url("notonaskharabic.css");
-@import url("opensans.css");
-@import url("padauk.css");
-@import url("padaukbook.css");
-@import url("roboto.css");
-@import url("robotoblack.css");
-@import url("robotolight.css");
-@import url("robotomedium.css");
-@import url("robotothin.css");
+@import url("pankosmia-Awami_Nastaliq.css");
+@import url("pankosmia-Ezra_SIL.css");
+@import url("pankosmia-Padauk.css");
+@import url("pankosmia-Gentium_Plus.css");
+@import url("pankosmia-Noto_Nastaliq_Urdu.css");
+@import url("pankosmia-Cardo.css");
+
+.fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus {
+  font-family: 'Pankosmia-Cardo', 'Pankosmia-Ezra SIL', 'Pankosmia-Padauk', 'Pankosmia-Awami Nastaliq', 'Pankosmia-Noto Nastaliq Urdu', 'Pankosmia-Gentium Plus';
+  font-size: 200%;
+}

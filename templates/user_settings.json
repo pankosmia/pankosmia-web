@@ -5,7 +5,7 @@
   "repo_dir": "%%WORKINGDIR%%/repos",
   "typography": {
     "direction": "ltr",
-    "font_set": "gentiumPlus",
+    "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
     "size": "medium"
   },
   "my_clients": []

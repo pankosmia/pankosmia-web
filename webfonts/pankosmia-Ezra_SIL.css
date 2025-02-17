@@ -4,40 +4,42 @@
 
 /* normal */
 @font-face {
-  font-family: EzraSILW;
+  font-family: 'Pankosmia-Ezra SIL';
   font-style: normal;
   font-weight: normal; /* 400 Normal (Regular) */
   src: url(./ezra/SILEOT.woff2);
+  unicode-range: U+0590-05FF, U+FB00-FB4F;
+  font-display: swap;
 }
 
 /* italic */
 @font-face {
-  font-family: EzraSILW;
+  font-family: 'Pankosmia-Ezra SIL';
   font-style: italic;
   font-weight: normal; /* 400 Normal (Regular) */
   src: url(./ezra/SILEOT.woff2);
+  unicode-range: U+0590-05FF, U+FB00-FB4F;
+  font-display: swap;
 }
 
 /* bold */
 @font-face {
-  font-family: EzraSILW;
+  font-family: 'Pankosmia-Ezra SIL';
   font-style: normal;
   font-weight: bold;
   src: url(./ezra/SILEOT.woff2);
+  unicode-range: U+0590-05FF, U+FB00-FB4F;
+  font-display: swap;
 }
 
 /* bold italic */
 @font-face {
-  font-family: EzraSILW;
+  font-family: 'Pankosmia-Ezra SIL';
   font-style: italic;
   font-weight: bold;
   src: url(./ezra/SILEOT.woff2);
-}
-
-.ezra {
-  font-family: EzraSILW;
-  font-size: 200%;
-  padding: 2em;
+  unicode-range: U+0590-05FF, U+FB00-FB4F;
+  font-display: swap;
 }
 
 /*

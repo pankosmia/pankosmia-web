@@ -3,38 +3,40 @@
 
 /* normal */
 @font-face {
-  font-family: CardoW;
+  font-family: 'Pankosmia-Cardo';
   font-style: normal;
   font-weight: normal; /* 400 Normal (Regular) */
   src: url(./cardo/Cardo-Regular.woff2);
+  unicode-range: U+1F00-1FFF, U+10140-1018F;
+  font-display: swap;
 }
 
 /* italic */
 @font-face {
-  font-family: CardoW;
+  font-family: 'Pankosmia-Cardo';
   font-style: italic;
   font-weight: normal; /* 400 Normal (Regular) */
   src: url(./cardo/Cardo-Italic.woff2);
+  unicode-range: U+1F00-1FFF, U+10140-1018F;
+  font-display: swap;
 }
 
 /* bold */
 @font-face {
-  font-family: CardoW;
+  font-family: 'Pankosmia-Cardo';
   font-style: normal;
   font-weight: bold; /* 700 */
   src: url(./cardo/Cardo-Bold.woff2);
+  unicode-range: U+1F00-1FFF, U+10140-1018F;
+  font-display: swap;
 }
 
 /* bold italic */
 @font-face {
-  font-family: CardoW;
+  font-family: 'Pankosmia-Cardo';
   font-style: italic;
   font-weight: bold; /* 700 */
   src: url(./cardo/Cardo-Bold.woff2);
-}
-
-.cardo {
-  font-family: CardoW;
-  font-size: 200%;
-  padding: 2em;
+  unicode-range: U+1F00-1FFF, U+10140-1018F;
+  font-display: swap;
 }
