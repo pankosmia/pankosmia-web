@@ -47,7 +47,7 @@ struct Typography {
     direction: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone)]
 struct GiteaTokenJson {
     access_token: String,
     token_type: String,
@@ -377,6 +377,27 @@ fn get_typography(state: &State<AppSettings>) -> status::Custom<(ContentType, St
                 )),
             ),
         ),
+    }
+}
+
+#[get("/gitea-token")]
+fn get_gitea_token(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+    let gitea_token_option = state.gitea_token.lock().unwrap().clone();
+    match gitea_token_option {
+        Some(gt) => match serde_json::to_string(&gt.clone()) {
+        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
+        Err(e) => status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!(
+                    "Could not parse gitea_token settings as JSON object: {}",
+                    e
+                )),
+            ),
+        ),
+    },
+        None => status::Custom(Status::Ok, (ContentType::JSON, "null".to_string())),
     }
 }
 
@@ -2162,7 +2183,11 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             routes![raw_i18n, negotiated_i18n, flat_i18n, untranslated_i18n],
         )
         .mount("/navigation", routes![get_bcv, post_bcv])
-        .mount("/gitea", routes![gitea_remote_repos, gitea_auth_return])
+        .mount("/gitea", routes![
+            gitea_remote_repos,
+            gitea_auth_return,
+            get_gitea_token
+        ])
         .mount(
             "/git",
             routes![
