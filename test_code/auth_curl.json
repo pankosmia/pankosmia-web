@@ -1,0 +1,6 @@
+{
+  "access_token": "foo",
+  "token_type": "baa",
+  "expires_in": 23,
+  "refresh_token": "frob"
+}
