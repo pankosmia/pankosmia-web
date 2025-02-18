@@ -577,6 +577,16 @@ async fn notifications_stream<'a>(
             .event("typography")
             .id(format!("{}", count));
             count+=1;
+            let gitea_endpoints = state.gitea_endpoints.clone();
+            let auth_tokens = state.auth_tokens.lock().unwrap().clone();
+            for (ep_name, _) in gitea_endpoints {
+                yield stream::Event::data(
+                    format!("{}--{}", ep_name, auth_tokens.contains_key(&ep_name))
+                )
+                .event("auth")
+                .id(format!("{}", count));
+                count+=1;
+            }
             interval.tick().await;
         }
     }
