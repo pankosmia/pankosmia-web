@@ -399,7 +399,11 @@ fn get_new_auth_token(
         .auth_tokens
         .lock()
         .unwrap();
-    tokens_inner.insert(token_key, code);
+    if code == "" {
+        tokens_inner.remove(&token_key);
+    } else {
+        tokens_inner.insert(token_key, code);
+    }
     ContentOrRedirect::Redirect(Redirect::to("/clients/main"))
 }
 
