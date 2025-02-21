@@ -23,14 +23,9 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use std::{env, fs};
 use ureq;
+use uuid::Uuid;
 
 // STRUCTS
-
-#[derive(Serialize, Deserialize, Clone)]
-struct AuthToken {
-    service: String,
-    token: String,
-}
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Bcv {
@@ -47,12 +42,19 @@ struct Typography {
 }
 
 #[derive(Serialize, Deserialize)]
+struct AuthRequest {
+    code: String,
+    redirect_uri: String,
+    timestamp: std::time::SystemTime,
+}
+#[derive(Serialize, Deserialize)]
 struct AppSettings {
     working_dir: String,
     repo_dir: Mutex<String>,
     languages: Mutex<Vec<String>>,
     gitea_endpoints: BTreeMap<String, String>,
     auth_tokens: Mutex<BTreeMap<String, String>>,
+    auth_requests: Mutex<BTreeMap<String, AuthRequest>>,
     bcv: Mutex<Bcv>,
     typography: Mutex<Typography>,
 }
@@ -121,6 +123,11 @@ struct PublicClient {
     url: String,
 }
 
+#[derive(Responder)]
+enum ContentOrRedirect {
+    Content(status::Custom<(ContentType, String)>),
+    Redirect(Redirect),
+}
 // CONSTANTS AND STATE
 
 static NET_IS_ENABLED: AtomicBool = AtomicBool::new(false);
@@ -370,11 +377,6 @@ fn get_auth_token(
     }
 }
 
-#[derive(Responder)]
-enum ContentOrRedirect {
-    Content(status::Custom<(ContentType, String)>),
-    Redirect(Redirect),
-}
 #[get("/auth-token/<token_key>?<code>")]
 fn get_new_auth_token(
     state: &State<AppSettings>,
@@ -1025,6 +1027,66 @@ fn gitea_remote_repos(
             ),
         ),
     }
+}
+
+#[get("/login/<token_key>/<redir_path..>")]
+fn gitea_proxy_login(
+    state: &State<AppSettings>,
+    token_key: String,
+    redir_path: PathBuf,
+) -> ContentOrRedirect {
+    if !NET_IS_ENABLED.load(Ordering::Relaxed) {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::Unauthorized,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response("offline mode".to_string()),
+                ),
+            )
+        );
+    }
+    if !state.gitea_endpoints.contains_key(&token_key) {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Unknown GITEA endpoint name: {}",
+                        token_key
+                    )),
+                ),
+            )
+        );
+    }
+    // Remove any existing token
+    state
+        .auth_tokens
+        .lock()
+        .unwrap()
+        .remove(&token_key);
+    // Store request info
+    let code = Uuid::new_v4().to_string();
+    let mut auth_requests = state
+        .auth_requests
+        .lock()
+        .unwrap();
+        auth_requests.remove(&token_key);
+        auth_requests.insert(
+            token_key.clone(),
+            AuthRequest {
+                code: code.clone(),
+                redirect_uri: redir_path.display().to_string(),
+                timestamp: std::time::SystemTime::now()
+            }
+        );
+    // Do redirect
+    ContentOrRedirect::Redirect(
+        Redirect::to(
+            format!("{}/auth?client_code={}", state.gitea_endpoints[&token_key].clone(), &code)
+        )
+    )
 }
 
 // REPO OPERATIONS
@@ -2154,6 +2216,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 }
                 _ => Mutex::new(BTreeMap::new()),
             },
+            auth_requests: Mutex::new(BTreeMap::new()),
             gitea_endpoints: match user_settings_json["gitea_endpoints"].clone() {
                 Value::Object(v) => {
                     serde_json::from_value(Value::Object(v)).unwrap()
@@ -2205,7 +2268,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         .mount("/navigation", routes![get_bcv, post_bcv])
         .mount("/gitea", routes![
             gitea_remote_repos,
-            get_gitea_endpoints
+            get_gitea_endpoints,
+            gitea_proxy_login
         ])
         .mount(
             "/git",
