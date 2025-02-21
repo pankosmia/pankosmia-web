@@ -1072,21 +1072,83 @@ fn gitea_proxy_login(
         .auth_requests
         .lock()
         .unwrap();
-        auth_requests.remove(&token_key);
-        auth_requests.insert(
-            token_key.clone(),
-            AuthRequest {
-                code: code.clone(),
-                redirect_uri: redir_path.display().to_string(),
-                timestamp: std::time::SystemTime::now()
-            }
-        );
+    auth_requests.remove(&token_key);
+    auth_requests.insert(
+        token_key.clone(),
+        AuthRequest {
+            code: code.clone(),
+            redirect_uri: redir_path.display().to_string(),
+            timestamp: std::time::SystemTime::now()
+        }
+    );
     // Do redirect
     ContentOrRedirect::Redirect(
         Redirect::to(
             format!("{}/auth?client_code={}", state.gitea_endpoints[&token_key].clone(), &code)
         )
     )
+}
+
+#[get("/logout/<token_key>")]
+fn gitea_proxy_logout(
+    state: &State<AppSettings>,
+    token_key: String
+) -> ContentOrRedirect {
+    if !NET_IS_ENABLED.load(Ordering::Relaxed) {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::Unauthorized,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response("offline mode".to_string()),
+                ),
+            )
+        );
+    }
+    if !state.gitea_endpoints.contains_key(&token_key) {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Unknown GITEA endpoint name: {}",
+                        token_key
+                    )),
+                ),
+            )
+        );
+    }
+    // Logout of proxy server
+    let logout_url = format!("{}/logout", state.gitea_endpoints[&token_key].clone());
+    println!("{}", logout_url);
+    match ureq::get(logout_url.as_str()).call() {
+        Ok(_) => {
+            // Remove any existing token
+            state
+                .auth_tokens
+                .lock()
+                .unwrap()
+                .remove(&token_key);
+            // Do redirect
+            ContentOrRedirect::Redirect(
+                Redirect::to("/")
+            )
+        },
+        Err(e) => ContentOrRedirect::Content(
+            status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Error on logout from proxy {}: {}",
+                        token_key,
+                        e
+                    )),
+                ),
+            )
+        )
+    }
 }
 
 // REPO OPERATIONS
@@ -2269,7 +2331,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         .mount("/gitea", routes![
             gitea_remote_repos,
             get_gitea_endpoints,
-            gitea_proxy_login
+            gitea_proxy_login,
+            gitea_proxy_logout
         ])
         .mount(
             "/git",
