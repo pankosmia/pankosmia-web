@@ -8,12 +8,11 @@ use hallomai::transform;
 use home::home_dir;
 use regex::Regex;
 use rocket::form::Form;
-use rocket::fs::{relative, FileServer, TempFile};
+use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Status};
 use rocket::response::{status, stream, Redirect};
 use rocket::tokio::time;
-use rocket::{catch, catchers, get, post, routes, Build, FromForm, Request, Rocket, State, Responder};
-use serde::{Deserialize, Serialize};
+use rocket::{catch, catchers, get, post, routes, Build, Request, Rocket, State};
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeMap, VecDeque};
 use std::io::Write;
@@ -25,110 +24,23 @@ use std::time::Duration;
 use std::{env, fs};
 use ureq;
 use uuid::Uuid;
+mod structs;
+use crate::structs::{
+    Bcv,
+    Typography,
+    AuthRequest,
+    AppSettings,
+    JsonDataResponse,
+    JsonNetStatusResponse,
+    RemoteRepoRecord,
+    GitStatusRecord,
+    MetadataSummary,
+    Upload,
+    Client,
+    PublicClient,
+    ContentOrRedirect
+};
 
-// STRUCTS
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Bcv {
-    book_code: String,
-    chapter: u16,
-    verse: u16,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Typography {
-    font_set: String,
-    size: String,
-    direction: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct AuthRequest {
-    code: String,
-    redirect_uri: String,
-    timestamp: std::time::SystemTime,
-}
-#[derive(Serialize, Deserialize)]
-struct AppSettings {
-    working_dir: String,
-    repo_dir: Mutex<String>,
-    languages: Mutex<Vec<String>>,
-    gitea_endpoints: BTreeMap<String, String>,
-    auth_tokens: Mutex<BTreeMap<String, String>>,
-    auth_requests: Mutex<BTreeMap<String, AuthRequest>>,
-    bcv: Mutex<Bcv>,
-    typography: Mutex<Typography>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct JsonDataResponse {
-    is_good: bool,
-    reason: String,
-}
-#[derive(Serialize, Deserialize)]
-struct JsonNetStatusResponse {
-    is_enabled: bool,
-}
-
-#[derive(Serialize, Deserialize)]
-struct RemoteRepoRecord {
-    name: String,
-    abbreviation: String,
-    description: String,
-    avatar_url: String,
-    flavor: String,
-    flavor_type: String,
-    language_code: String,
-    script_direction: String,
-    branch_or_tag: String,
-    clone_url: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct GitStatusRecord {
-    path: String,
-    change_type: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct MetadataSummary {
-    name: String,
-    description: String,
-    flavor_type: String,
-    flavor: String,
-    language_code: String,
-    script_direction: String,
-}
-
-#[derive(FromForm)]
-struct Upload<'f> {
-    file: TempFile<'f>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-struct Client {
-    id: String,
-    requires: BTreeMap<String, bool>,
-    exclude_from_menu: bool,
-    exclude_from_dashboard: bool,
-    path: String,
-    url: String,
-}
-
-#[derive(Serialize)]
-struct PublicClient {
-    id: String,
-    requires: BTreeMap<String, bool>,
-    exclude_from_menu: bool,
-    exclude_from_dashboard: bool,
-    url: String,
-}
-
-#[derive(Responder)]
-enum ContentOrRedirect {
-    Content(status::Custom<(ContentType, String)>),
-    Redirect(Redirect),
-}
 // CONSTANTS AND STATE
 
 static NET_IS_ENABLED: AtomicBool = AtomicBool::new(false);
