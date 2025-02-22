@@ -6,6 +6,7 @@ use copy_dir::copy_dir;
 use git2::{Repository, StatusOptions};
 use hallomai::transform;
 use home::home_dir;
+use regex::Regex;
 use rocket::form::Form;
 use rocket::fs::{relative, FileServer, TempFile};
 use rocket::http::{ContentType, Status};
@@ -319,6 +320,53 @@ fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType, Str
         ),
     }
 }
+
+#[post("/languages/<languages..>")]
+fn post_languages(
+    state: &State<AppSettings>,
+    languages: PathBuf
+) -> status::Custom<(ContentType, String)> {
+    let language_vec: Vec<String> = languages
+        .display()
+        .to_string()
+        .split("/")
+        .map(|s| s.to_string())
+        .collect();
+    if language_vec.len() == 0 {
+        return status::Custom(
+            Status::BadRequest,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response("No language code found".to_string()),
+            ),
+        )
+    }
+    let lang_regex = Regex::new(r"^[a-z]{2}$").unwrap();
+    for lang in &language_vec {
+        match lang_regex.find(&lang) {
+            Some(_) => {},
+            None => return status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Bad language code: {}",
+                        lang
+                    )),
+                ),
+            )
+        }
+    }
+    *state.languages.lock().unwrap() = language_vec;
+    status::Custom(
+        Status::Ok,
+        (
+            ContentType::JSON,
+            make_good_json_data_response("ok".to_string()),
+        ),
+    )
+}
+
 #[get("/auth-token/<token_key>")]
 fn get_auth_token(
     state: &State<AppSettings>,
@@ -2315,6 +2363,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             "/settings",
             routes![
                 get_languages,
+                post_languages,
                 get_auth_token,
                 get_new_auth_token,
                 get_typography,
