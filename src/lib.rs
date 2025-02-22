@@ -5,8 +5,6 @@ mod tests;
 use copy_dir::copy_dir;
 use git2::{Repository, StatusOptions};
 use hallomai::transform;
-use home::home_dir;
-use regex::Regex;
 use rocket::form::Form;
 use rocket::fs::{relative, FileServer};
 use rocket::http::{ContentType, Status};
@@ -27,11 +25,8 @@ use uuid::Uuid;
 mod structs;
 use crate::structs::{
     Bcv,
-    Typography,
     AuthRequest,
     AppSettings,
-    JsonDataResponse,
-    JsonNetStatusResponse,
     RemoteRepoRecord,
     GitStatusRecord,
     MetadataSummary,
@@ -40,373 +35,26 @@ use crate::structs::{
     PublicClient,
     ContentOrRedirect
 };
+mod utils;
+use crate::utils::json_responses::{
+    make_good_json_data_response,
+    make_bad_json_data_response,
+    make_net_status_response
+};
+use crate::utils::paths::{
+    os_slash_str,
+    maybe_os_quoted_path_str,
+    check_path_components,
+    check_path_string_components,
+    home_dir_string
+};
+use crate::utils::mime::mime_types;
+mod endpoints;
 
 // CONSTANTS AND STATE
 
 static NET_IS_ENABLED: AtomicBool = AtomicBool::new(false);
 static DEBUG_IS_ENABLED: AtomicBool = AtomicBool::new(false);
-
-// UTILITY FUNCTIONS
-
-fn os_slash_str() -> &'static str {
-    match env::consts::OS {
-        "windows" => "\\",
-        _ => "/",
-    }
-}
-
-fn maybe_os_quoted_path_str(s: String) -> String {
-    match env::consts::OS {
-        "windows" => s.replace("\\", "\\\\").replace("/", "\\\\"),
-        _ => s,
-    }
-}
-
-fn forbidden_path_strings() -> Vec<String> {
-    Vec::from([
-        "..".to_string(),
-        "~".to_string(),
-        "/".to_string(),
-        "\\".to_string(),
-        "&".to_string(),
-        "*".to_string(),
-        "+".to_string(),
-        "|".to_string(),
-        " ".to_string(),
-        "?".to_string(),
-        "#".to_string(),
-        "%".to_string(),
-        "{".to_string(),
-        "}".to_string(),
-        "<".to_string(),
-        ">".to_string(),
-        "$".to_string(),
-        "!".to_string(),
-        "'".to_string(),
-        "\"".to_string(),
-        ":".to_string(),
-        ";".to_string(),
-        "`".to_string(),
-        "=".to_string(),
-    ])
-}
-
-fn mime_types() -> BTreeMap<String, ContentType> {
-    BTreeMap::from([
-        ("aac".to_string(), ContentType::AAC),
-        ("bin".to_string(), ContentType::Binary),
-        ("bmp".to_string(), ContentType::BMP),
-        ("css".to_string(), ContentType::CSS),
-        ("csv".to_string(), ContentType::CSV),
-        ("flac".to_string(), ContentType::FLAC),
-        ("gif".to_string(), ContentType::GIF),
-        ("gz".to_string(), ContentType::GZIP),
-        ("htm".to_string(), ContentType::HTML),
-        ("html".to_string(), ContentType::HTML),
-        ("ico".to_string(), ContentType::Icon),
-        ("ics".to_string(), ContentType::Calendar),
-        ("jpeg".to_string(), ContentType::JPEG),
-        ("jpg".to_string(), ContentType::JPEG),
-        ("js".to_string(), ContentType::JavaScript),
-        ("md".to_string(), ContentType::Markdown),
-        ("mov".to_string(), ContentType::MOV),
-        ("mp4".to_string(), ContentType::MP4),
-        ("mpeg".to_string(), ContentType::MPEG),
-        ("mpeg4".to_string(), ContentType::MP4),
-        ("mpg".to_string(), ContentType::MPEG),
-        ("ogg".to_string(), ContentType::OGG),
-        ("ogv".to_string(), ContentType::OGG),
-        ("otf".to_string(), ContentType::OTF),
-        ("pdf".to_string(), ContentType::PDF),
-        ("png".to_string(), ContentType::PNG),
-        ("svg".to_string(), ContentType::SVG),
-        ("tar".to_string(), ContentType::TAR),
-        ("tif".to_string(), ContentType::TIFF),
-        ("tiff".to_string(), ContentType::TIFF),
-        ("tsv".to_string(), ContentType::CSV),
-        ("ttf".to_string(), ContentType::TTF),
-        ("txt".to_string(), ContentType::Plain),
-        ("usfm".to_string(), ContentType::Plain),
-        ("usj".to_string(), ContentType::JSON),
-        ("usx".to_string(), ContentType::XML),
-        ("vrs".to_string(), ContentType::Plain),
-        ("wasm".to_string(), ContentType::WASM),
-        ("wav".to_string(), ContentType::WAV),
-        ("weba".to_string(), ContentType::WEBA),
-        ("webm".to_string(), ContentType::WEBM),
-        ("webp".to_string(), ContentType::WEBP),
-        ("woff".to_string(), ContentType::WOFF),
-        ("woff2".to_string(), ContentType::WOFF2),
-        ("xml".to_string(), ContentType::XML),
-        ("zip".to_string(), ContentType::ZIP),
-    ])
-}
-
-fn check_path_components(path_components: &mut Components<'_>) -> bool {
-    let mut ret = true;
-    if path_components.clone().collect::<Vec<_>>().len() < 3 {
-        return false;
-    }
-    for path_component in path_components {
-        let path_string = path_component
-            .clone()
-            .as_os_str()
-            .to_str()
-            .unwrap()
-            .to_string();
-        if path_string.starts_with(".") {
-            return false;
-        }
-        for forbidden_string in forbidden_path_strings() {
-            if path_string.contains(&forbidden_string) {
-                ret = false;
-                break;
-            }
-        }
-    }
-    ret
-}
-fn check_path_string_components(path_string: String) -> bool {
-    let mut ret = true;
-    if path_string.starts_with("/") {
-        return false;
-    }
-    let path_string_parts = path_string.split("/");
-    for path_string_part in path_string_parts {
-        if path_string_part.len() < 2 {
-            return false;
-        }
-        if path_string_part.starts_with(".") {
-            return false;
-        }
-        for forbidden_string in forbidden_path_strings() {
-            if path_string_part.contains(&forbidden_string) {
-                ret = false;
-                break;
-            }
-        }
-    }
-    ret
-}
-
-fn make_json_data_response(is_good: bool, reason: String) -> String {
-    let jr: JsonDataResponse = JsonDataResponse { is_good, reason };
-    serde_json::to_string(&jr).unwrap()
-}
-
-fn make_net_status_response(is_enabled: bool) -> String {
-    let nsr: JsonNetStatusResponse = JsonNetStatusResponse { is_enabled };
-    serde_json::to_string(&nsr).unwrap()
-}
-fn make_bad_json_data_response(reason: String) -> String {
-    make_json_data_response(false, reason)
-}
-
-fn make_good_json_data_response(reason: String) -> String {
-    make_json_data_response(true, reason)
-}
-fn home_dir_string() -> String {
-    home_dir()
-        .unwrap()
-        .as_os_str()
-        .to_str()
-        .unwrap()
-        .to_string()
-}
-
-// SETTINGS
-#[get("/languages")]
-fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
-    let languages = state.languages.lock().unwrap().clone();
-    match serde_json::to_string(&languages) {
-        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-        Err(e) => status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not parse language settings as JSON array: {}",
-                    e
-                )),
-            ),
-        ),
-    }
-}
-
-#[post("/languages/<languages..>")]
-fn post_languages(
-    state: &State<AppSettings>,
-    languages: PathBuf
-) -> status::Custom<(ContentType, String)> {
-    let language_vec: Vec<String> = languages
-        .display()
-        .to_string()
-        .split("/")
-        .map(|s| s.to_string())
-        .collect();
-    if language_vec.len() == 0 {
-        return status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("No language code found".to_string()),
-            ),
-        )
-    }
-    let lang_regex = Regex::new(r"^[a-z]{2}$").unwrap();
-    for lang in &language_vec {
-        match lang_regex.find(&lang) {
-            Some(_) => {},
-            None => return status::Custom(
-                Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Bad language code: {}",
-                        lang
-                    )),
-                ),
-            )
-        }
-    }
-    *state.languages.lock().unwrap() = language_vec;
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
-}
-
-#[get("/auth-token/<token_key>")]
-fn get_auth_token(
-    state: &State<AppSettings>,
-    token_key: String,
-) -> status::Custom<(ContentType, String)> {
-    if !state.gitea_endpoints.contains_key(&token_key) {
-        return status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Unknown GITEA endpoint name: {}",
-                    token_key
-                )),
-            ),
-        );
-    }
-    let auth_tokens = state
-        .auth_tokens
-        .lock()
-        .unwrap()
-        .clone();
-    if auth_tokens.contains_key(&token_key) {
-        let code = &auth_tokens[&token_key];
-        let ok_json = json!({"is_good": true, "code": code});
-        match serde_json::to_string(&ok_json) {
-            Ok(v) => status::Custom(
-                Status::Ok,
-                (
-                    ContentType::JSON,
-                    v
-                ),
-            ),
-            Err(e) => status::Custom(
-                Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Could not produce JSON for auth token: {}",
-                        e
-                    )),
-                ),
-            ),
-        }
-    } else {
-        status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not find record for token key '{}'",
-                    token_key
-                )),
-            ),
-        )
-    }
-}
-
-#[get("/auth-token/<token_key>?<code>")]
-fn get_new_auth_token(
-    state: &State<AppSettings>,
-    token_key: String,
-    code: String,
-) -> ContentOrRedirect {
-    if !state.gitea_endpoints.contains_key(&token_key) {
-        return ContentOrRedirect::Content(
-            status::Custom(
-                Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Unknown GITEA endpoint name: {}",
-                        token_key
-                    )),
-                ),
-            )
-        );
-    }
-    let mut tokens_inner = state
-        .auth_tokens
-        .lock()
-        .unwrap();
-    if code == "" {
-        tokens_inner.remove(&token_key);
-    } else {
-        tokens_inner.insert(token_key, code);
-    }
-    ContentOrRedirect::Redirect(Redirect::to("/clients/main"))
-}
-
-#[get("/typography")]
-fn get_typography(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
-    let typography = state.typography.lock().unwrap().clone();
-    match serde_json::to_string(&typography) {
-        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-        Err(e) => status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not parse typography settings as JSON object: {}",
-                    e
-                )),
-            ),
-        ),
-    }
-}
-
-#[post("/typography/<font_set>/<size>/<direction>")]
-fn post_typography(
-    state: &State<AppSettings>,
-    font_set: &str,
-    size: &str,
-    direction: &str,
-) -> status::Custom<(ContentType, String)> {
-    *state.typography.lock().unwrap() = Typography {
-        font_set: font_set.to_string(),
-        size: size.to_string(),
-        direction: direction.to_string(),
-    };
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
-}
 
 // NETWORK OPERATIONS
 #[get("/status")]
@@ -2274,12 +1922,12 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         .mount(
             "/settings",
             routes![
-                get_languages,
-                post_languages,
-                get_auth_token,
-                get_new_auth_token,
-                get_typography,
-                post_typography
+                endpoints::settings::get_languages,
+                endpoints::settings::post_languages,
+                endpoints::settings::get_auth_token,
+                endpoints::settings::get_new_auth_token,
+                endpoints::settings::get_typography,
+                endpoints::settings::post_typography
             ],
         )
         .mount("/net", routes![net_status, net_enable, net_disable])
