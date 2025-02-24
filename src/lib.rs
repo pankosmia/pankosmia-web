@@ -481,7 +481,9 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 endpoints::clients::list_clients
             ],
         )
-        .mount("/notifications", routes![endpoints::sse::notifications_stream,])
+        .mount("/notifications", routes![
+            endpoints::sse::notifications_stream
+        ])
         .mount(
             "/settings",
             routes![
@@ -509,7 +511,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 endpoints::i18n::raw_i18n,
                 endpoints::i18n::negotiated_i18n,
                 endpoints::i18n::flat_i18n,
-                endpoints::i18n::untranslated_i18n
+                endpoints::i18n::untranslated_i18n,
+                endpoints::i18n::used_languages
             ],
         )
         .mount("/navigation", routes![
