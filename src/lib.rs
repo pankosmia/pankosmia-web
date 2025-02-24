@@ -13,37 +13,20 @@ use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::{env, fs};
 mod structs;
-use crate::structs::{
-    AppSettings,
-    Client,
-    PublicClient
-};
+use crate::structs::AppSettings;
 mod utils;
 use crate::utils::paths::{
     os_slash_str,
     maybe_os_quoted_path_str,
     home_dir_string
 };
-mod endpoints;
-
+use crate::utils::client::Clients;
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
+mod endpoints;
+
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
-
-fn public_serialize_client(c: Client) -> PublicClient {
-    PublicClient {
-        id: c.id.clone(),
-        requires: c.requires.clone(),
-        exclude_from_menu: c.exclude_from_menu.clone(),
-        exclude_from_dashboard: c.exclude_from_dashboard.clone(),
-        url: c.url.clone(),
-    }
-}
-fn public_serialize_clients(cv: Vec<Client>) -> Vec<PublicClient> {
-    cv.into_iter().map(|c| public_serialize_client(c)).collect()
-}
-type Clients = Mutex<Vec<Client>>;
 
 pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);

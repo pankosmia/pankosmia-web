@@ -3,7 +3,7 @@
 use rocket::{get, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::{status, Redirect};
-use crate::{public_serialize_clients, Clients};
+use crate::utils::client::{public_serialize_clients, Clients};
 
 #[get("/list-clients")]
 pub(crate) fn list_clients(clients: &State<Clients>) -> status::Custom<(ContentType, String)> {
