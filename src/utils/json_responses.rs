@@ -1,6 +1,4 @@
-#[path="../structs.rs"]
-mod structs;
-use structs::{JsonDataResponse, JsonNetStatusResponse};
+use crate::structs::{JsonDataResponse, JsonNetStatusResponse};
 
 pub(crate) fn make_json_data_response(is_good: bool, reason: String) -> String {
     let jr: JsonDataResponse = JsonDataResponse { is_good, reason };

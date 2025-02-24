@@ -5,12 +5,8 @@ use rocket::response::{status, Redirect};
 use rocket::http::{ContentType, Status};
 use serde_json::json;
 
-#[path="../structs.rs"]
-mod structs;
 use crate::structs::{AppSettings, Typography, ContentOrRedirect};
-#[path="../utils/json_responses.rs"]
-mod json_responses;
-use json_responses::{
+use crate::utils::json_responses::{
     make_good_json_data_response,
     make_bad_json_data_response
 };
