@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod tests;
 
+#[doc(hidden)]
 use copy_dir::copy_dir;
 use rocket::fs::{relative, FileServer};
 use rocket::{catchers, routes, Build, Rocket};
@@ -23,7 +24,7 @@ use crate::utils::paths::{
 use crate::utils::client::Clients;
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
-mod endpoints;
+pub mod endpoints;
 
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
