@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use regex::Regex;
 use rocket::{get, post, State};
 use rocket::response::{status, Redirect};
-use rocket::http::{ContentType, Status};
+use rocket::http::{ContentType, Status, CookieJar};
 use serde_json::json;
 
 use crate::structs::{AppSettings, Typography, ContentOrRedirect};
@@ -78,7 +78,7 @@ pub(crate) fn post_languages(
 #[get("/auth-token/<token_key>")]
 pub(crate) fn get_auth_token(
     state: &State<AppSettings>,
-    token_key: String,
+    token_key: String
 ) -> status::Custom<(ContentType, String)> {
     if !state.gitea_endpoints.contains_key(&token_key) {
         return status::Custom(
@@ -133,12 +133,15 @@ pub(crate) fn get_auth_token(
     }
 }
 
-#[get("/auth-token/<token_key>?<code>")]
-pub(crate) fn get_new_auth_token(
+#[get("/auth-token/<token_key>/<code>/<client_code>")]
+pub(crate) fn get_new_auth_token<'a>(
     state: &State<AppSettings>,
     token_key: String,
     code: String,
+    client_code: String,
+    cj: &CookieJar<'_>
 ) -> ContentOrRedirect {
+    println!("code={}, client_code={}", code, client_code);
     if !state.gitea_endpoints.contains_key(&token_key) {
         return ContentOrRedirect::Content(
             status::Custom(
@@ -161,6 +164,7 @@ pub(crate) fn get_new_auth_token(
         tokens_inner.remove(&token_key);
     } else {
         tokens_inner.insert(token_key, code);
+        cj.add(("client_code", "12345"));
     }
     ContentOrRedirect::Redirect(Redirect::to("/clients/main"))
 }
