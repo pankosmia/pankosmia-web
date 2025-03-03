@@ -20,7 +20,7 @@ pub(crate) struct Typography {
     pub direction: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) struct AuthRequest {
     pub code: String,
     pub redirect_uri: String,

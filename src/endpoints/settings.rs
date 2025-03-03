@@ -8,7 +8,7 @@ use serde_json::json;
 use crate::structs::{AppSettings, Typography, ContentOrRedirect};
 use crate::utils::json_responses::{
     make_good_json_data_response,
-    make_bad_json_data_response
+    make_bad_json_data_response,
 };
 
 #[get("/languages")]
@@ -32,7 +32,7 @@ pub(crate) fn get_languages(state: &State<AppSettings>) -> status::Custom<(Conte
 #[post("/languages/<languages..>")]
 pub(crate) fn post_languages(
     state: &State<AppSettings>,
-    languages: PathBuf
+    languages: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
     let language_vec: Vec<String> = languages
         .display()
@@ -47,12 +47,12 @@ pub(crate) fn post_languages(
                 ContentType::JSON,
                 make_bad_json_data_response("No language code found".to_string()),
             ),
-        )
+        );
     }
     let lang_regex = Regex::new(r"^[a-z]{2}$").unwrap();
     for lang in &language_vec {
         match lang_regex.find(&lang) {
-            Some(_) => {},
+            Some(_) => {}
             None => return status::Custom(
                 Status::BadRequest,
                 (
@@ -78,7 +78,7 @@ pub(crate) fn post_languages(
 #[get("/auth-token/<token_key>")]
 pub(crate) fn get_auth_token(
     state: &State<AppSettings>,
-    token_key: String
+    token_key: String,
 ) -> status::Custom<(ContentType, String)> {
     if !state.gitea_endpoints.contains_key(&token_key) {
         return status::Custom(
@@ -139,9 +139,8 @@ pub(crate) fn get_new_auth_token<'a>(
     token_key: String,
     code: String,
     client_code: String,
-    cj: &CookieJar<'_>
+    cj: &CookieJar<'_>,
 ) -> ContentOrRedirect {
-    println!("code={}, client_code={}", code, client_code);
     if !state.gitea_endpoints.contains_key(&token_key) {
         return ContentOrRedirect::Content(
             status::Custom(
@@ -156,17 +155,53 @@ pub(crate) fn get_new_auth_token<'a>(
             )
         );
     }
+    let mut auth_requests = state
+        .auth_requests
+        .lock()
+        .unwrap();
+    if !auth_requests.contains_key(&token_key) {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "No record auth request found for {}",
+                        token_key
+                    )),
+                ),
+            )
+        );
+    };
+    let auth_request_record = auth_requests.get(&token_key).unwrap();
+    if auth_request_record.code != client_code {
+        return ContentOrRedirect::Content(
+            status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Invalid client code for {}",
+                        token_key
+                    )),
+                ),
+            )
+        );
+    }
+    let redirect_uri = format!("/{}", auth_request_record.redirect_uri.clone());
+    auth_requests.remove(&token_key);
     let mut tokens_inner = state
         .auth_tokens
         .lock()
         .unwrap();
     if code == "" {
+        cj.remove("client_code");
         tokens_inner.remove(&token_key);
     } else {
         tokens_inner.insert(token_key, code);
-        cj.add(("client_code", "12345"));
+        cj.add(("client_code", client_code));
     }
-    ContentOrRedirect::Redirect(Redirect::to("/clients/main"))
+    ContentOrRedirect::Redirect(Redirect::to(redirect_uri))
 }
 
 #[get("/typography")]
