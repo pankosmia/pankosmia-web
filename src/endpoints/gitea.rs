@@ -145,7 +145,7 @@ pub(crate) fn gitea_proxy_login(
     // Do redirect
     ContentOrRedirect::Redirect(
         Redirect::to(
-            format!("{}/auth?client_code={}", state.gitea_endpoints[&token_key].clone(), &code)
+            format!("{}/auth?client_code={}&redir_path=%2F", state.gitea_endpoints[&token_key].clone(), &code)
         )
     )
 }
