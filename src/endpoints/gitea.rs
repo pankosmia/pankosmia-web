@@ -9,13 +9,15 @@ use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::{AppSettings, AuthRequest, ContentOrRedirect, RemoteRepoRecord};
 use crate::utils::json_responses::make_bad_json_data_response;
 
-/// *GET /endpoints*
+/// *```GET /endpoints```*
 ///
-/// Typically mounted as **/gitea/endpoints**
+/// Typically mounted as **`/gitea/endpoints`**
 ///
 /// Returns an object containing gitea gateway keys and urls.
 ///
+/// ```text
 /// {"xenizo_syllogos":"http://xenizo.fr:8089"}
+/// ```
 #[get("/endpoints")]
 pub fn get_gitea_endpoints(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     status::Custom(
@@ -30,7 +32,7 @@ pub fn get_gitea_endpoints(state: &State<AppSettings>) -> status::Custom<(Conten
 ///
 /// Returns an object containing repo info for a given gitea organization.
 ///
-/// ```
+/// ```text
 /// [
 ///   {
 ///     "name": "fr_psle",

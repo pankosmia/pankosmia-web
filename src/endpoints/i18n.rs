@@ -9,13 +9,13 @@ use crate::utils::paths::os_slash_str;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::{make_bad_json_data_response};
 
-/// *`GET /raw`*
+/// *```GET /raw```*
 ///
 /// Typically mounted as **`/i18n/raw/`**
 ///
 /// Returns the raw, nested i18n.json file from the server.
 ///
-/// ```
+/// ```text
 /// {
 ///   "branding": {
 ///

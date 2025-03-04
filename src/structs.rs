@@ -7,27 +7,27 @@ use rocket::http::{ContentType};
 use rocket::response::{status, Redirect};
 
 #[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct Bcv {
+pub struct Bcv {
     pub book_code: String,
     pub chapter: u16,
     pub verse: u16,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub(crate) struct Typography {
+pub struct Typography {
     pub font_set: String,
     pub size: String,
     pub direction: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct AuthRequest {
+pub struct AuthRequest {
     pub code: String,
     pub redirect_uri: String,
     pub timestamp: std::time::SystemTime,
 }
 #[derive(Serialize, Deserialize)]
-pub(crate) struct AppSettings {
+pub struct AppSettings {
     pub working_dir: String,
     pub repo_dir: Mutex<String>,
     pub languages: Mutex<Vec<String>>,
@@ -39,17 +39,17 @@ pub(crate) struct AppSettings {
 }
 
 #[derive(Serialize, Deserialize)]
-pub(crate) struct JsonDataResponse {
+pub struct JsonDataResponse {
     pub is_good: bool,
     pub reason: String,
 }
 #[derive(Serialize, Deserialize)]
-pub(crate) struct JsonNetStatusResponse {
+pub struct JsonNetStatusResponse {
     pub is_enabled: bool,
 }
 
 #[derive(Serialize, Deserialize)]
-pub(crate) struct RemoteRepoRecord {
+pub struct RemoteRepoRecord {
     pub name: String,
     pub abbreviation: String,
     pub description: String,
@@ -63,13 +63,13 @@ pub(crate) struct RemoteRepoRecord {
 }
 
 #[derive(Serialize, Deserialize)]
-pub(crate) struct GitStatusRecord {
+pub struct GitStatusRecord {
     pub path: String,
     pub change_type: String,
 }
 
 #[derive(Serialize, Deserialize)]
-pub(crate) struct MetadataSummary {
+pub struct MetadataSummary {
     pub name: String,
     pub description: String,
     pub flavor_type: String,
@@ -79,12 +79,12 @@ pub(crate) struct MetadataSummary {
 }
 
 #[derive(FromForm)]
-pub(crate) struct Upload<'f> {
+pub struct Upload<'f> {
     pub file: TempFile<'f>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub(crate) struct Client {
+pub struct Client {
     pub id: String,
     pub requires: BTreeMap<String, bool>,
     pub exclude_from_menu: bool,
@@ -94,7 +94,7 @@ pub(crate) struct Client {
 }
 
 #[derive(Serialize)]
-pub(crate) struct PublicClient {
+pub struct PublicClient {
     pub id: String,
     pub requires: BTreeMap<String, bool>,
     pub exclude_from_menu: bool,
@@ -103,7 +103,7 @@ pub(crate) struct PublicClient {
 }
 
 #[derive(Responder)]
-pub(crate) enum ContentOrRedirect {
+pub enum ContentOrRedirect {
     Content(status::Custom<(ContentType, String)>),
     Redirect(Redirect),
 }
