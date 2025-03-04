@@ -9,8 +9,41 @@ use crate::utils::paths::os_slash_str;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::{make_bad_json_data_response};
 
+/// *`GET /raw`*
+///
+/// Typically mounted as **`/i18n/raw/`**
+///
+/// Returns the raw, nested i18n.json file from the server.
+///
+/// ```
+/// {
+///   "branding": {
+///
+///   },
+///   "components": {
+///     "framework": {
+///       "no_entry_if_offline": {
+///         "en": "You need to be online to view this page.",
+///         "fr": "Vous devez vous connecter à l'Internet pour accéder à cette page."
+///       }
+///     },
+///     "header": {
+///       "goto_local_projects_menu_item": {
+///         "en": "Projects on this machine",
+///         "fr": "Projets sur cette machine"
+///       },
+///       "new_reference": {
+///         "en": "New Reference",
+///         "fr": "Nouvelle référence"
+///       }
+///     }
+///   },
+///   "flavors": {
+///   ...
+/// }
+/// ```
 #[get("/raw")]
-pub(crate) async fn raw_i18n(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+pub async fn raw_i18n(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let path_to_serve = state.working_dir.clone() + os_slash_str() + "i18n.json";
     match fs::read_to_string(path_to_serve) {
         Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
@@ -24,8 +57,42 @@ pub(crate) async fn raw_i18n(state: &State<AppSettings>) -> status::Custom<(Cont
     }
 }
 
+/// *`GET /negotiated/<filter>`*
+///
+/// Typically mounted as **`/i18n/negotiated/<filter>`**
+///
+/// Returns a nested object containing each i18n key with the best match based on the language preference settings. The optional filter restricts the keys returned. So, for `/i18n/negotiated/flavors` the response might be
+///
+/// ```
+/// {
+///   "flavors": {
+///     "names": {
+///       "parascriptural/x-bcvArticles": {
+///         "language": "en",
+///         "translation": "Articles by Verse"
+///       },
+///       "parascriptural/x-bcvImages": {
+///         "language": "en",
+///         "translation": "Images by Verse"
+///       },
+///       "parascriptural/x-bcvNotes": {
+///         "language": "en",
+///         "translation": "Notes by Verse"
+///       },
+///       "parascriptural/x-videolinks": {
+///         "language": "en",
+///         "translation": "Video Links"
+///       },
+///       "scripture/textTranslation": {
+///         "language": "en",
+///         "translation": "Scripture (Text)"
+///       }
+///     }
+///   }
+/// }
+/// ```
 #[get("/negotiated/<filter..>")]
-pub(crate) async fn negotiated_i18n(
+pub async fn negotiated_i18n(
     state: &State<AppSettings>,
     filter: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -145,8 +212,23 @@ pub(crate) async fn negotiated_i18n(
     }
 }
 
+/// *`GET /flat/<filter>`*
+///
+/// Typically mounted as **`/i18n/flat/<filter>`**
+///
+/// Returns a flat object containing each i18n key with the best match based on the language preference settings. The optional filter restricts the keys returned. So, for `/i18n/flat/flavors` the response might be
+///
+/// ```
+/// {
+///   "flavors:names:parascriptural/x-bcvArticles": "Articles by Verse",
+///   "flavors:names:parascriptural/x-bcvImages": "Images by Verse",
+///   "flavors:names:parascriptural/x-bcvNotes": "Notes by Verse",
+///   "flavors:names:parascriptural/x-videolinks": "Video Links",
+///   "flavors:names:scripture/textTranslation": "Scripture (Text)"
+/// }
+/// ```
 #[get("/flat/<filter..>")]
-pub(crate) async fn flat_i18n(
+pub async fn flat_i18n(
     state: &State<AppSettings>,
     filter: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -251,8 +333,21 @@ pub(crate) async fn flat_i18n(
     }
 }
 
+/// *`GET /untranslated/<lang>`*
+///
+/// Typically mounted as **`/i18n/untranslated/<lang>`**
+///
+/// Returns an array containing terms that are untranslated in the given language. So, for `/i18n/untranslated/de` the response might be
+///
+/// ```
+/// [
+///   "components:framework:no_entry_if_offline",
+///   "components:header:goto_local_projects_menu_item",
+///   ...
+/// ]
+/// ````
 #[get("/untranslated/<lang>")]
-pub(crate) async fn untranslated_i18n(
+pub async fn untranslated_i18n(
     state: &State<AppSettings>,
     lang: String,
 ) -> status::Custom<(ContentType, String)> {
@@ -315,8 +410,15 @@ pub(crate) async fn untranslated_i18n(
     }
 }
 
+/// *`GET /used-languages`*
+///
+/// Typically mounted as **`/i18n/used-languages`**
+///
+/// Returns an array containing languages into which at least one term is translated.
+///
+/// `["en","fr"]`
 #[get("/used-languages")]
-pub(crate) async fn used_languages(
+pub async fn used_languages(
     state: &State<AppSettings>
 ) -> status::Custom<(ContentType, String)> {
     let path_to_serve = state.working_dir.clone() + os_slash_str() + "i18n.json";

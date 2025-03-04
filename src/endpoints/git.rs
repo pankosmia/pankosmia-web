@@ -11,8 +11,15 @@ use crate::structs::{AppSettings, GitStatusRecord};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::paths::{check_path_components, os_slash_str};
 
+/// *`GET /list-local-repos`*
+///
+/// Typically mounted as **`/git/list-local-repos`**
+///
+/// Returns a JSON array of local repo paths.
+///
+/// `["git.door43.org/BurritoTruck/fr_psle"]`
 #[get("/list-local-repos")]
-pub(crate) fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let root_path = state.repo_dir.lock().unwrap().clone();
     let server_paths = std::fs::read_dir(root_path).unwrap();
     let mut repos: Vec<String> = Vec::new();
@@ -50,8 +57,13 @@ pub(crate) fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(Co
     )
 }
 
+/// *`GET /add-and-commit/<repo_path>`*
+///
+/// Typically mounted as **`/git/add-and-commit/<repo_path>`**
+///
+/// Adds and commits modified files for a given repo.
 #[get("/add-and-commit/<repo_path..>")]
-pub(crate) async fn add_and_commit(
+pub async fn add_and_commit(
     state: &State<AppSettings>,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -99,8 +111,14 @@ pub(crate) async fn add_and_commit(
     };
     result
 }
+
+/// *`GET /fetch-repo/<repo_path>`*
+///
+/// Typically mounted as **`/git/fetch-repo/<repo_path>`**
+///
+/// Makes a local clone of a repo from the given repo path.
 #[get("/fetch-repo/<repo_path..>")]
-pub(crate) async fn fetch_repo(
+pub async fn fetch_repo(
     state: &State<AppSettings>,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -182,8 +200,13 @@ pub(crate) async fn fetch_repo(
     }
 }
 
+/// *`GET /delete-repo/<repo_path>`*
+///
+/// Typically mounted as **`/git/delete-repo/<repo_path>`**
+///
+/// Deletes a local repo from the given repo path.
 #[get("/delete-repo/<repo_path..>")]
-pub(crate) async fn delete_repo(
+pub async fn delete_repo(
     state: &State<AppSettings>,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -221,8 +244,22 @@ pub(crate) async fn delete_repo(
     }
 }
 
+/// *`GET /status/<repo_path>`*
+///
+/// Typically mounted as **`/git/status/<repo_path>`**
+///
+/// Returns an array of changes to the local repo from the given repo path.
+///
+/// ```
+/// [
+///   {
+///     "path": "ingredients/LICENSE.md",
+///     "change_type": "modified"
+///   }
+/// ]
+/// ```
 #[get("/status/<repo_path..>")]
-pub(crate) async fn git_status(
+pub async fn git_status(
     state: &State<AppSettings>,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {

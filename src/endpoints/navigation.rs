@@ -4,9 +4,15 @@ use rocket::response::status;
 use crate::structs::{AppSettings, Bcv};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 
-// NAVIGATION
+/// *`GET /bcv`*
+///
+/// Typically mounted as **`/navigation/bcv`**
+///
+/// Returns an object containing global BCV information
+///
+/// `{"book_code":"TIT","chapter":1,"verse":1}`
 #[get("/bcv")]
-pub(crate) fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let bcv = state.bcv.lock().unwrap().clone();
     match serde_json::to_string(&bcv) {
         Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
@@ -23,8 +29,13 @@ pub(crate) fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType
     }
 }
 
+/// *`POST /bcv/<book_code>/<chapter>/<verse>`*
+///
+/// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>`**
+///
+/// Sets global BCV
 #[post("/bcv/<book_code>/<chapter>/<verse>")]
-pub(crate) fn post_bcv(
+pub fn post_bcv(
     state: &State<AppSettings>,
     book_code: &str,
     chapter: u16,

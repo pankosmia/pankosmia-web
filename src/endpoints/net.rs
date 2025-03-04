@@ -5,9 +5,9 @@ use rocket::response::status;
 use crate::{MsgQueue, NET_IS_ENABLED};
 use crate::utils::json_responses::{make_good_json_data_response, make_net_status_response};
 
-/// *GET /status*
+/// *`GET /status`*
 ///
-/// Typically mounted as **/net/status**
+/// Typically mounted as **`/net/status`**
 ///
 /// Returns the current net-enable state as a JSON object.
 ///
@@ -23,9 +23,9 @@ pub fn net_status() -> status::Custom<(ContentType, String)> {
     )
 }
 
-/// *GET /enable*
+/// *`GET /enable`*
 ///
-/// Typically mounted as **/net/enable**
+/// Typically mounted as **`/net/enable`**
 ///
 /// Enables net state, returns a JSON OK response and generates an SSE notification.
 ///
@@ -45,9 +45,9 @@ pub fn net_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String
     )
 }
 
-/// *GET /disable*
+/// *`GET /disable`*
 ///
-/// Typically mounted as **/net/disable**
+/// Typically mounted as **`/net/disable`**
 ///
 /// Disables net state, returns a JSON OK response and generates an SSE notification.
 ///

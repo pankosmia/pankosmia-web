@@ -9,16 +9,46 @@ use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::{AppSettings, AuthRequest, ContentOrRedirect, RemoteRepoRecord};
 use crate::utils::json_responses::make_bad_json_data_response;
 
+/// *GET /endpoints*
+///
+/// Typically mounted as **/gitea/endpoints**
+///
+/// Returns an object containing gitea gateway keys and urls.
+///
+/// {"xenizo_syllogos":"http://xenizo.fr:8089"}
 #[get("/endpoints")]
-pub(crate) fn get_gitea_endpoints(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+pub fn get_gitea_endpoints(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     status::Custom(
         Status::Ok,
         (ContentType::JSON, serde_json::to_string(&state.gitea_endpoints).unwrap()),
     )
 }
 
+/// *`GET /remote-repos/<gitea_server>/<gitea_org>`*
+///
+/// Typically mounted as **`/gitea/remote-repos/<gitea_server>/<gitea_org>`**
+///
+/// Returns an object containing repo info for a given gitea organization.
+///
+/// ```
+/// [
+///   {
+///     "name": "fr_psle",
+///     "abbreviation": "psle",
+///     "description": "Une traduction littéralement plus simple",
+///     "avatar_url": "https://git.door43.org/repo-avatars/f052d1bba37e57e0ec56bd68b6274290310d3bfc392cd4534b1d4a0814cccb36",
+///     "flavor": "textTranslation",
+///     "flavor_type": "scripture",
+///     "language_code": "fr",
+///     "script_direction": "ltr",
+///     "branch_or_tag": "master",
+///     "clone_url": "2024-11-15T11:06:59Z"
+///   },
+///   ...
+/// ]
+/// ```
 #[get("/remote-repos/<gitea_server>/<gitea_org>")]
-pub (crate) fn gitea_remote_repos(
+pub fn gitea_remote_repos(
     gitea_server: &str,
     gitea_org: &str,
 ) -> status::Custom<(ContentType, String)> {
@@ -90,8 +120,13 @@ pub (crate) fn gitea_remote_repos(
     }
 }
 
+/// *`GET /login/<auth_key>/<redir_path..>`*
+///
+/// Typically mounted as **`/gitea/login/<auth_key>/<redir_path..>`**
+///
+/// Initiates login to a remote server, which may include redirection to that server's login pages.
 #[get("/login/<token_key>/<redir_path..>")]
-pub(crate) fn gitea_proxy_login(
+pub fn gitea_proxy_login(
     state: &State<AppSettings>,
     token_key: String,
     redir_path: PathBuf,
@@ -150,8 +185,13 @@ pub(crate) fn gitea_proxy_login(
     )
 }
 
+/// *`GET /logout/<auth_key>`* (uses cookie with key `<auth_key>_code`)
+///
+/// Typically mounted as **`/gitea/logout/<auth_key>`**
+///
+/// Logs out of a remote server.
 #[get("/logout/<token_key>")]
-pub(crate) fn gitea_proxy_logout(
+pub fn gitea_proxy_logout(
     state: &State<AppSettings>,
     token_key: String
 ) -> ContentOrRedirect {

@@ -10,9 +10,13 @@ use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_d
 use crate::utils::mime::mime_types;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
 
-// METADATA OPERATIONS
+/// *`GET /metadata/raw/<repo_path>`*
+///
+/// Typically mounted as **`/burrito/metadata/raw/<repo_path>`**
+///
+/// Returns the raw metadata.json file for the specified burrito, where *repo_path* is *`<server>/<org>/<repo>`* and refers to a local repo.
 #[get("/metadata/raw/<repo_path..>")]
-pub(crate) async fn raw_metadata(
+pub async fn raw_metadata(
     state: &State<AppSettings>,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -45,8 +49,24 @@ pub(crate) async fn raw_metadata(
     }
 }
 
+/// *`GET /metadata/summary/<repo_path>`*
+///
+/// Typically mounted as **`/burrito/metadata/summary/<repo_path>`**
+///
+/// Returns a flat summary of information from the raw metadata.json file for the specified burrito, where *repo_path* is *`<server>/<org>/<repo>`* and refers to a local repo. eg, the response to `/burrito/metadata/summary/git.door43.org/BurritoTruck/fr_psle` might be
+///
+/// ```
+/// {
+///   "name": "Pain Sur Les Eaux",
+///   "description": "Une traduction littéralement plus simple",
+///   "flavor_type": "scripture",
+///   "flavor": "textTranslation",
+///   "language_code": "fr",
+///   "script_direction": "ltr"
+/// }
+/// ```
 #[get("/metadata/summary/<repo_path..>")]
-pub(crate) async fn summary_metadata(
+pub async fn summary_metadata(
     state: &State<AppSettings>,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
@@ -138,9 +158,13 @@ pub(crate) async fn summary_metadata(
 }
 
 // INGREDIENT OPERATIONS
-
+/// *`GET /ingredient/raw/<repo_path>?ipath=my_burrito_path`*
+///
+/// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
+///
+/// Returns a raw resource. We try to guess the mimetype.
 #[get("/ingredient/raw/<repo_path..>?<ipath>")]
-pub(crate) async fn raw_ingredient(
+pub async fn raw_ingredient(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
@@ -195,8 +219,13 @@ pub(crate) async fn raw_ingredient(
     }
 }
 
+/// *`GET /ingredient/as-usj/<repo_path>?ipath=my_burrito_path`*
+///
+/// Typically mounted as **`/burrito/ingredient/as-usj/<repo_path>?ipath=my_burrito_path`**
+///
+/// Returns a USFM resource as USJ. Currently slow and buggy but works for typical CCBT USFM.
 #[get("/ingredient/as-usj/<repo_path..>?<ipath>")]
-pub(crate) async fn get_ingredient_as_usj(
+pub async fn get_ingredient_as_usj(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
@@ -239,12 +268,17 @@ pub(crate) async fn get_ingredient_as_usj(
     }
 }
 
+/// *`POST /ingredient/as-usj/<repo_path>?ipath=my_burrito_path`*
+///
+/// Typically mounted as **`/burrito/ingredient/as-usj/<repo_path>?ipath=my_burrito_path`**
+///
+/// Returns a USJ document as USFM, where the USJ is provided as an HTTP form file. Currently slow and buggy but works for typical CCBT USFM.
 #[post(
     "/ingredient/as-usj/<repo_path..>?<ipath>",
     format = "multipart/form-data",
     data = "<form>"
 )]
-pub(crate) async fn post_ingredient_as_usj(
+pub async fn post_ingredient_as_usj(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
@@ -286,8 +320,13 @@ pub(crate) async fn post_ingredient_as_usj(
     }
 }
 
+/// *`GET /ingredient/prettified/<repo_path>?ipath=my_burrito_path`*
+///
+/// Typically mounted as **`/burrito/ingredient/prettified/<repo_path>?ipath=my_burrito_path`**
+///
+/// Returns a text-like resource as a web page.
 #[get("/ingredient/prettified/<repo_path..>?<ipath>")]
-pub(crate) async fn get_ingredient_prettified(
+pub async fn get_ingredient_prettified(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,

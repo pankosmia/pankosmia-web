@@ -7,9 +7,13 @@ use crate::MsgQueue;
 use crate::structs::AppSettings;
 use crate::static_vars::{NET_IS_ENABLED, DEBUG_IS_ENABLED};
 
-// SSE
+/// *`GET /`*
+///
+/// Typically mounted as **`/notifications/`**
+///
+/// Opens an SSE stream for notifications about server state. Use an existing SSE client to connect to this unless you like pain.
 #[get("/")]
-pub(crate) async fn notifications_stream<'a>(
+pub async fn notifications_stream<'a>(
     msgs: &'a State<MsgQueue>,
     state: &'a State<AppSettings>,
 ) -> stream::EventStream![stream::Event + 'a] {

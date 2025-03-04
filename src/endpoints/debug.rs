@@ -5,8 +5,15 @@ use rocket::response::status;
 use crate::{MsgQueue, DEBUG_IS_ENABLED};
 use crate::utils::json_responses::{make_good_json_data_response, make_net_status_response};
 
+/// *`GET /status`*
+///
+/// Typically mounted as **`/debug/status`**
+///
+/// Returns the current debug state as a JSON object.
+///
+/// `{"is_enabled":true}`
 #[get("/status")]
-pub(crate) fn debug_status() -> status::Custom<(ContentType, String)> {
+pub fn debug_status() -> status::Custom<(ContentType, String)> {
     status::Custom(
         Status::Ok,
         (
@@ -16,8 +23,15 @@ pub(crate) fn debug_status() -> status::Custom<(ContentType, String)> {
     )
 }
 
+/// *`GET /enable`*
+///
+/// Typically mounted as **`/debug/enable`**
+///
+/// Enables debug state, returns a JSON OK response and generates an SSE notification.
+///
+/// `{"is_good":true,"reason":"ok"}`
 #[get("/enable")]
-pub(crate) fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
+pub fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()
         .push_back("info--5--debug--enable".to_string());
@@ -31,8 +45,15 @@ pub(crate) fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentTyp
     )
 }
 
+/// *`GET /disable`*
+///
+/// Typically mounted as **`/debug/disable`**
+///
+/// Disables debug state, returns a JSON OK response and generates an SSE notification.
+///
+/// `{"is_good":true,"reason":"ok"}`
 #[get("/disable")]
-pub(crate) fn debug_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
+pub fn debug_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()
         .push_back("info--5--debug--disable".to_string());

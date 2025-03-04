@@ -8,4 +8,4 @@ pub mod gitea;
 pub mod git;
 pub mod burrito;
 pub mod clients;
-pub mod error;
+pub(crate) mod error;
