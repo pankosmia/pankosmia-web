@@ -10,6 +10,7 @@ use crate::utils::json_responses::{
     make_good_json_data_response,
     make_bad_json_data_response,
 };
+use crate::utils::paths::os_slash_str;
 
 /// *`GET /languages`*
 ///
@@ -49,7 +50,7 @@ pub fn post_languages(
     let language_vec: Vec<String> = languages
         .display()
         .to_string()
-        .split("/")
+        .split(os_slash_str())
         .map(|s| s.to_string())
         .collect();
     if language_vec.len() == 0 {
