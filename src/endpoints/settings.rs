@@ -195,11 +195,11 @@ pub(crate) fn get_new_auth_token<'a>(
         .lock()
         .unwrap();
     if code == "" {
-        cj.remove("client_code");
+        cj.remove(format!("{}_code", token_key.clone()));
         tokens_inner.remove(&token_key);
     } else {
-        tokens_inner.insert(token_key, code);
-        cj.add(("client_code", client_code));
+        tokens_inner.insert(token_key.clone(), code.clone());
+        cj.add((format!("{}_code", token_key), code));
     }
     ContentOrRedirect::Redirect(Redirect::to(redirect_uri))
 }
