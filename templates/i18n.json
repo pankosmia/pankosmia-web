@@ -11,7 +11,8 @@
       "no_entry_if_offline": {
         "en": "You need to be online to view this page.",
         "fr": "Vous devez vous connecter à l'Internet pour accéder à cette page.",
-        "id": "Halaman ini memerlukan akses internet."
+        "id": "Halaman ini memerlukan akses internet.",
+        "grc": "Πρέπει ἐπὶ τὸ δικτύδιον εἶναι ἵνα ἐκεῖ ἔλθῃς"
       }
     },
     "header": {
@@ -104,7 +105,8 @@
       "scripture/textTranslation": {
         "en": "Scripture (Text)",
         "fr": "Ecriture (texte)",
-        "id": "Kitab Suci (Teks)"
+        "id": "Kitab Suci (Teks)",
+        "grc": "Γραφή"
       },
       "parascriptural/x-bcvImages": {
         "en": "Images by Verse",
