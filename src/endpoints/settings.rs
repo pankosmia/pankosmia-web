@@ -62,7 +62,7 @@ pub fn post_languages(
             ),
         );
     }
-    let lang_regex = Regex::new(r"^[a-z]{2}$").unwrap();
+    let lang_regex = Regex::new(r"^[a-z]{2,3}$").unwrap();
     for lang in &language_vec {
         match lang_regex.find(&lang) {
             Some(_) => {}
