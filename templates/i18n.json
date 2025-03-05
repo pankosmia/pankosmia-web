@@ -10,17 +10,20 @@
     "framework": {
       "no_entry_if_offline": {
         "en": "You need to be online to view this page.",
-        "fr": "Vous devez vous connecter à l'Internet pour accéder à cette page."
+        "fr": "Vous devez vous connecter à l'Internet pour accéder à cette page.",
+        "id": "Halaman ini memerlukan akses internet."
       }
     },
     "header": {
       "new_reference": {
         "en": "New Reference",
-        "fr": "Nouvelle référence"
+        "fr": "Nouvelle référence",
+        "id": "Referensi Baru"
       },
       "goto_local_projects_menu_item": {
         "en": "Projects on this machine",
-        "fr": "Projets sur cette machine"
+        "fr": "Projets sur cette machine",
+        "id": "Proyek baru di mesin ini"
       }
     }
   },
@@ -28,47 +31,56 @@
     "bcv_notes_viewer": {
       "title": {
         "en": "Notes by Verse",
-        "fr": "Notes par verset"
+        "fr": "Notes par verset",
+        "id": "Catatan per Ayat"
       }
     },
     "tasteless": {
       "title": {
         "en": "Default Viewer",
-        "fr": "Vue par défaut"
+        "fr": "Vue par défaut",
+        "id": "Penampil Default"
       },
       "show_metadata": {
         "en": "Show Metadata",
-        "fr": "Afficher les metadonnées"
+        "fr": "Afficher les metadonnées",
+        "id": "Tampilkan Metadata"
       }
     },
     "text_translation_viewer": {
       "title": {
         "en": "Scripture (Text) Viewer",
-        "fr": "Ecriture (texte), lecture seulement"
+        "fr": "Ecriture (texte), lecture seulement",
+        "id": "Penampil Kitab Suci (Teks)"
       }
     },
     "text_translation_editor": {
       "title": {
         "en": "Scripture (Text) Editor",
-        "fr": "Editeur d'Ecriture (texte)"
+        "fr": "Editeur d'Ecriture (texte)",
+        "id": "Editor Kitab Suci (Teks)"
       }
     },
     "video_links_viewer": {
       "title": {
         "en": "Video Links",
-        "fr": "Liens vidéo"
+        "fr": "Liens vidéo",
+        "id": "Tautan video"
       },
       "no_content": {
         "en": "No Content for this Verse",
-        "fr": "Aucun contenu pour ce verset"
+        "fr": "Aucun contenu pour ce verset",
+        "id": "Belum ada Konten untuk Ayat ini"
       },
       "no_video_support": {
         "en": "No Video Support in this Browser",
-        "fr": "Ce navigateur ne permet pas de regarder des vidéos"
+        "fr": "Ce navigateur ne permet pas de regarder des vidéos",
+        "id": "Tidak Ada Dukungan Video di Peramban Web ini"
       },
       "offline_mode": {
         "en": "Video links cannot be displayed in offline. Enable Internet access if it is safe to do so.",
-        "fr": "Impossible de suivre des liens vidéo on mode hors ligne. Activez la connection Internet si ça ne vous met pas en danger."
+        "fr": "Impossible de suivre des liens vidéo on mode hors ligne. Activez la connection Internet si ça ne vous met pas en danger.",
+        "id": "Tautan video tidak dapat ditampilkan tanpa internet. Mengaktifkan internet hanya kalau aman digunakan."
       }
     }
   },
@@ -76,23 +88,28 @@
     "names": {
       "parascriptural/x-videolinks": {
         "en": "Video Links",
-        "fr": "Liens vidéo"
+        "fr": "Liens vidéo",
+        "id": "Tautan video"
       },
       "parascriptural/x-bcvArticles": {
         "en": "Articles by Verse",
-        "fr": "Articles par verset"
+        "fr": "Articles par verset",
+        "id": "Artikel per ayat"
       },
       "parascriptural/x-bcvNotes": {
         "en": "Notes by Verse",
-        "fr": "Notes par verset"
+        "fr": "Notes par verset",
+        "id": "Catatan per Ayat"
       },
       "scripture/textTranslation": {
         "en": "Scripture (Text)",
-        "fr": "Ecriture (texte)"
+        "fr": "Ecriture (texte)",
+        "id": "Kitab Suci (Teks)"
       },
       "parascriptural/x-bcvImages": {
         "en": "Images by Verse",
-        "fr": "Images par verset"
+        "fr": "Images par verset",
+        "id": "Gambar per Ayat"
       }
     }
   },

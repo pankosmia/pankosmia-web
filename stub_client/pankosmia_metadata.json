@@ -7,12 +7,14 @@
   "exclude_from_dashboard": true,
   "i18n": {
     "title": {
-      "en": "Stub Projet",
-      "fr": "Projet garde-place"
+      "en": "Stub Project",
+      "fr": "Projet garde-place",
+      "id": "Proyek Rintisan"
     },
     "summary": {
       "en": "A stub project for Pankosmia Web testing",
-      "fr": "Un projet pour tester Pankosmia Web"
+      "fr": "Un projet pour tester Pankosmia Web",
+      "id": "Sebuah proyek rintisan untuk mencoba Pankosmia Web."
     }
   }
 }
