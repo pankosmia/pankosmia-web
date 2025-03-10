@@ -4,7 +4,6 @@ use rocket::{get, post, State};
 use rocket::response::{status, Redirect};
 use rocket::http::{ContentType, Status, CookieJar};
 use serde_json::json;
-use crate::MsgQueue;
 use crate::structs::{AppSettings, Typography, ContentOrRedirect};
 use crate::utils::json_responses::{
     make_good_json_data_response,
@@ -45,8 +44,7 @@ pub fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType,
 #[post("/languages/<languages..>")]
 pub fn post_languages(
     state: &State<AppSettings>,
-    languages: PathBuf,
-    msgs: &State<MsgQueue>
+    languages: PathBuf
 ) -> status::Custom<(ContentType, String)> {
     let language_vec: Vec<String> = languages
         .display()
@@ -80,9 +78,6 @@ pub fn post_languages(
         }
     }
     *state.languages.lock().unwrap() = language_vec;
-    msgs.lock()
-        .unwrap()
-        .push_back("info--3--uilang--change".to_string());
     status::Custom(
         Status::Ok,
         (

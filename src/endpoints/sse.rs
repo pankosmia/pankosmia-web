@@ -48,27 +48,39 @@ pub async fn notifications_stream<'a>(
             .event("debug")
             .id(format!("{}", count));
             count+=1;
-            let bcv = state.bcv.lock().unwrap().clone();
-            yield stream::Event::data(
-                format!("{}--{}--{}", bcv.book_code, bcv.chapter, bcv.verse)
-            )
-            .event("bcv")
-            .id(format!("{}", count));
-            count+=1;
-            let typography = state.typography.lock().unwrap().clone();
-            yield stream::Event::data(
-                format!("{}--{}--{}", typography.font_set, typography.size, typography.direction)
-            )
-            .event("typography")
-            .id(format!("{}", count));
-            count+=1;
-            let gitea_endpoints = state.gitea_endpoints.clone();
-            let auth_tokens = state.auth_tokens.lock().unwrap().clone();
-            for (ep_name, ep_endpoint) in gitea_endpoints {
+            if count % 4 == 0 {
+                let bcv = state.bcv.lock().unwrap().clone();
                 yield stream::Event::data(
-                    format!("{}--{}--{}", ep_name, ep_endpoint, auth_tokens.contains_key(&ep_name))
+                    format!("{}--{}--{}", bcv.book_code, bcv.chapter, bcv.verse)
                 )
-                .event("auth")
+                .event("bcv")
+                .id(format!("{}", count));
+                count+=1;
+            } else if count % 4 == 1 {
+                let typography = state.typography.lock().unwrap().clone();
+                yield stream::Event::data(
+                    format!("{}--{}--{}", typography.font_set, typography.size, typography.direction)
+                )
+                .event("typography")
+                .id(format!("{}", count));
+                count+=1;
+            } else if count % 4 == 2 {
+                let gitea_endpoints = state.gitea_endpoints.clone();
+                let auth_tokens = state.auth_tokens.lock().unwrap().clone();
+                for (ep_name, ep_endpoint) in gitea_endpoints {
+                    yield stream::Event::data(
+                        format!("{}--{}--{}", ep_name, ep_endpoint, auth_tokens.contains_key(&ep_name))
+                    )
+                    .event("auth")
+                    .id(format!("{}", count));
+                    count+=1;
+                }
+            } else if count % 4 == 3 {
+                let languages = state.languages.lock().unwrap().clone();
+                yield stream::Event::data(
+                    format!("{}", languages.join("/"))
+                )
+                .event("languages")
                 .id(format!("{}", count));
                 count+=1;
             }
