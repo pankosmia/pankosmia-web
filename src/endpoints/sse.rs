@@ -21,6 +21,7 @@ pub async fn notifications_stream<'a>(
         let mut count = 0;
         let mut interval = time::interval(Duration::from_millis(500));
         yield stream::Event::retry(Duration::from_secs(1));
+        let mut languages = state.languages.lock().unwrap().clone().join("/");
         loop {
             while !msgs.lock().unwrap().is_empty() {
                 let msg = msgs.lock().unwrap().pop_front().unwrap();
@@ -87,6 +88,16 @@ pub async fn notifications_stream<'a>(
                 .id(format!("{}", count));
                 count+=1;
                  */
+            }
+            let new_languages = state.languages.lock().unwrap().clone().join("/");
+            if new_languages.clone() != languages.clone() {
+                languages = new_languages;
+                yield stream::Event::data(
+                    format!("{}", languages.clone())
+                )
+                .event("languages")
+                .id(format!("{}", count));
+                count+=1;
             }
             interval.tick().await;
         }
