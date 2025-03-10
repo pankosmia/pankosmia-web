@@ -4,6 +4,7 @@ use rocket::{get, post, State};
 use rocket::response::{status, Redirect};
 use rocket::http::{ContentType, Status, CookieJar};
 use serde_json::json;
+use crate::MsgQueue;
 use crate::structs::{AppSettings, Typography, ContentOrRedirect};
 use crate::utils::json_responses::{
     make_good_json_data_response,
@@ -44,7 +45,8 @@ pub fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType,
 #[post("/languages/<languages..>")]
 pub fn post_languages(
     state: &State<AppSettings>,
-    languages: PathBuf
+    languages: PathBuf,
+    msgs: &State<MsgQueue>
 ) -> status::Custom<(ContentType, String)> {
     let language_vec: Vec<String> = languages
         .display()
@@ -78,6 +80,70 @@ pub fn post_languages(
         }
     }
     *state.languages.lock().unwrap() = language_vec;
+    msgs.lock()
+        .unwrap()
+        .push_back("info--3--uilang--change".to_string());
+    status::Custom(
+        Status::Ok,
+        (
+            ContentType::JSON,
+            make_good_json_data_response("ok".to_string()),
+        ),
+    )
+}
+
+/// *`GET /typography`*
+///
+/// Typically mounted as **`/settings/typography`**
+///
+/// Returns an array containing the current typography settings.
+///
+/// ```text
+/// {
+///   "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
+///   "size": "medium",
+///   "direction": "ltr"
+/// }
+/// ```
+#[get("/typography")]
+pub(crate) fn get_typography(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+    let typography = state.typography.lock().unwrap().clone();
+    match serde_json::to_string(&typography) {
+        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
+        Err(e) => status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!(
+                    "Could not parse typography settings as JSON object: {}",
+                    e
+                )),
+            ),
+        ),
+    }
+}
+
+/// *`POST /typography/<font_set>/<size>/<direction>`*
+///
+/// Typically mounted as **`/settings/typography/<font_set>/<size>/<direction>`**
+///
+/// Sets UI typography and interface direction
+#[post("/typography/<font_set>/<size>/<direction>")]
+pub fn post_typography(
+    state: &State<AppSettings>,
+    msgs: &State<MsgQueue>,
+    font_set: &str,
+    size: &str,
+    direction: &str,
+) -> status::Custom<(ContentType, String)> {
+    *state.typography.lock().unwrap() = Typography {
+        font_set: font_set.to_string(),
+        size: size.to_string(),
+        direction: direction.to_string(),
+    };
+    msgs.lock()
+        .unwrap()
+        .push_back("info--3--typography--change".to_string());
     status::Custom(
         Status::Ok,
         (
@@ -228,61 +294,4 @@ pub fn get_new_auth_token<'a>(
         cj.add((format!("{}_code", token_key), code));
     }
     ContentOrRedirect::Redirect(Redirect::to(redirect_uri))
-}
-
-/// *`GET /typography`*
-///
-/// Typically mounted as **`/settings/typography`**
-///
-/// Returns an array containing the current typography settings.
-///
-/// ```
-/// {
-///   "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
-///   "size": "medium",
-///   "direction": "ltr"
-/// }
-/// ```
-#[get("/typography")]
-pub(crate) fn get_typography(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
-    let typography = state.typography.lock().unwrap().clone();
-    match serde_json::to_string(&typography) {
-        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-        Err(e) => status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not parse typography settings as JSON object: {}",
-                    e
-                )),
-            ),
-        ),
-    }
-}
-
-/// *`POST /typography/<font_set>/<size>/<direction>`*
-///
-/// Typically mounted as **`/settings/typography/<font_set>/<size>/<direction>`**
-///
-/// Sets UI typography and interface direction
-#[post("/typography/<font_set>/<size>/<direction>")]
-pub fn post_typography(
-    state: &State<AppSettings>,
-    font_set: &str,
-    size: &str,
-    direction: &str,
-) -> status::Custom<(ContentType, String)> {
-    *state.typography.lock().unwrap() = Typography {
-        font_set: font_set.to_string(),
-        size: size.to_string(),
-        direction: direction.to_string(),
-    };
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
 }

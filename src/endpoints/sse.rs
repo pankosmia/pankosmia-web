@@ -56,6 +56,7 @@ pub async fn notifications_stream<'a>(
                 .event("bcv")
                 .id(format!("{}", count));
                 count+=1;
+                /*
             } else if count % 4 == 1 {
                 let typography = state.typography.lock().unwrap().clone();
                 yield stream::Event::data(
@@ -64,6 +65,7 @@ pub async fn notifications_stream<'a>(
                 .event("typography")
                 .id(format!("{}", count));
                 count+=1;
+                 */
             } else if count % 4 == 2 {
                 let gitea_endpoints = state.gitea_endpoints.clone();
                 let auth_tokens = state.auth_tokens.lock().unwrap().clone();
@@ -75,6 +77,7 @@ pub async fn notifications_stream<'a>(
                     .id(format!("{}", count));
                     count+=1;
                 }
+                /*
             } else if count % 4 == 3 {
                 let languages = state.languages.lock().unwrap().clone();
                 yield stream::Event::data(
@@ -83,6 +86,7 @@ pub async fn notifications_stream<'a>(
                 .event("languages")
                 .id(format!("{}", count));
                 count+=1;
+                 */
             }
             interval.tick().await;
         }
