@@ -542,7 +542,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 endpoints::burrito::raw_ingredient,
                 endpoints::burrito::get_ingredient_prettified,
                 endpoints::burrito::get_ingredient_as_usj,
-                endpoints::burrito::post_ingredient_as_usj,
+                // endpoints::burrito::post_ingredient_as_usj,
+                endpoints::burrito::post_raw_ingredient,
                 endpoints::burrito::raw_metadata,
                 endpoints::burrito::summary_metadata
             ],

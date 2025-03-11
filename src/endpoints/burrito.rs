@@ -1,3 +1,5 @@
+use std::env;
+use std::fs::{copy};
 use std::path::{Components, PathBuf};
 use hallomai::transform;
 use rocket::{get, post, State};
@@ -5,6 +7,7 @@ use rocket::form::Form;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use serde_json::Value;
+use uuid::Uuid;
 use crate::structs::{AppSettings, MetadataSummary, Upload};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::mime::mime_types;
@@ -55,7 +58,7 @@ pub async fn raw_metadata(
 ///
 /// Returns a flat summary of information from the raw metadata.json file for the specified burrito, where *repo_path* is *`<server>/<org>/<repo>`* and refers to a local repo. eg, the response to `/burrito/metadata/summary/git.door43.org/BurritoTruck/fr_psle` might be
 ///
-/// ```
+/// ```text
 /// {
 ///   "name": "Pain Sur Les Eaux",
 ///   "description": "Une traduction littéralement plus simple",
@@ -272,7 +275,8 @@ pub async fn get_ingredient_as_usj(
 ///
 /// Typically mounted as **`/burrito/ingredient/as-usj/<repo_path>?ipath=my_burrito_path`**
 ///
-/// Returns a USJ document as USFM, where the USJ is provided as an HTTP form file. Currently slow and buggy but works for typical CCBT USFM.
+/// Writes a USJ documents a USFM ingredient, where the document is provided as an HTTP form file. Currently slow and buggy but works for typical CCBT USFM.
+
 #[post(
     "/ingredient/as-usj/<repo_path..>?<ipath>",
     format = "multipart/form-data",
@@ -294,13 +298,68 @@ pub async fn post_ingredient_as_usj(
         && check_path_string_components(ipath)
         && std::fs::metadata(destination.clone()).is_ok()
     {
+        let temp_path = format!("{}{}{}", env::temp_dir().display(), os_slash_str(), Uuid::new_v4());
         let _ = form
             .file
-            .persist_to(transform(
-                destination,
-                "usj".to_string(),
-                "usfm".to_string(),
-            ))
+            .persist_to(temp_path.clone())
+            .await;
+        match copy(&temp_path, &destination) {
+            Ok(_) => status::Custom(
+                Status::Ok,
+                (
+                    ContentType::JSON,
+                    make_good_json_data_response("ok".to_string()),
+                ),
+            ),
+            Err(e) => status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not write to {}", e)),
+                ),
+            )
+        }
+
+    } else {
+        status::Custom(
+            Status::BadRequest,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response("bad repo path".to_string()),
+            ),
+        )
+    }
+}
+
+/// *`POST /ingredient/raw/<repo_path>?ipath=my_burrito_path`*
+///
+/// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
+///
+/// Writes a document, where the document is provided as an HTTP form file.
+#[post(
+    "/ingredient/as-usj/<repo_path..>?<ipath>",
+    format = "multipart/form-data",
+    data = "<form>"
+)]
+pub async fn post_raw_ingredient(
+    state: &State<AppSettings>,
+    repo_path: PathBuf,
+    ipath: String,
+    mut form: Form<Upload<'_>>,
+) -> status::Custom<(ContentType, String)> {
+    let path_components: Components<'_> = repo_path.components();
+    let destination = state.repo_dir.lock().unwrap().clone()
+        + os_slash_str()
+        + &repo_path.display().to_string()
+        + "/ingredients/"
+        + ipath.clone().as_str();
+    if check_path_components(&mut path_components.clone())
+        && check_path_string_components(ipath)
+        && std::fs::metadata(destination.clone()).is_ok()
+    {
+        let _ = form
+            .file
+            .persist_to(destination)
             .await;
         status::Custom(
             Status::Ok,
@@ -319,7 +378,6 @@ pub async fn post_ingredient_as_usj(
         )
     }
 }
-
 /// *`GET /ingredient/prettified/<repo_path>?ipath=my_burrito_path`*
 ///
 /// Typically mounted as **`/burrito/ingredient/prettified/<repo_path>?ipath=my_burrito_path`**

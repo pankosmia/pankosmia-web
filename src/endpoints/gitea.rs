@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use rocket::{get, State};
-use rocket::http::{ContentType, Status};
+use rocket::http::{ContentType, Status, CookieJar};
 use rocket::response::{status, Redirect};
 use serde_json::Value;
 use uuid::Uuid;
@@ -195,7 +195,8 @@ pub fn gitea_proxy_login(
 #[get("/logout/<token_key>")]
 pub fn gitea_proxy_logout(
     state: &State<AppSettings>,
-    token_key: String
+    token_key: String,
+    cj: &CookieJar<'_>
 ) -> ContentOrRedirect {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
         return ContentOrRedirect::Content(
@@ -222,9 +223,14 @@ pub fn gitea_proxy_logout(
             )
         );
     }
+    // Get the cookie;
+    let cookie_name = format!("{}_code", token_key);
+    let cookie_code = match cj.get(cookie_name.as_str()) {
+        Some(c) => c.value(),
+        None => ""
+    };
     // Logout of proxy server
-    let logout_url = format!("{}/logout", state.gitea_endpoints[&token_key].clone());
-    println!("{}", logout_url);
+    let logout_url = format!("{}/logout?client_code={}", state.gitea_endpoints[&token_key].clone(), cookie_code);
     match ureq::get(logout_url.as_str()).call() {
         Ok(_) => {
             // Remove any existing token
@@ -233,6 +239,8 @@ pub fn gitea_proxy_logout(
                 .lock()
                 .unwrap()
                 .remove(&token_key);
+            // Remove cookie
+            cj.remove(cookie_name);
             // Do redirect
             ContentOrRedirect::Redirect(
                 Redirect::to("/")
