@@ -509,6 +509,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         .mount(
             "/i18n",
             routes![
+                endpoints::i18n::post_i18n,
                 endpoints::i18n::raw_i18n,
                 endpoints::i18n::negotiated_i18n,
                 endpoints::i18n::flat_i18n,
@@ -542,7 +543,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
                 endpoints::burrito::raw_ingredient,
                 endpoints::burrito::get_ingredient_prettified,
                 endpoints::burrito::get_ingredient_as_usj,
-                // endpoints::burrito::post_ingredient_as_usj,
+                endpoints::burrito::post_ingredient_as_usj,
                 endpoints::burrito::post_raw_ingredient,
                 endpoints::burrito::raw_metadata,
                 endpoints::burrito::summary_metadata

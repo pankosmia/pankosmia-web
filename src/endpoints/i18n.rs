@@ -1,13 +1,14 @@
 use std::fs;
 use std::path::PathBuf;
-use rocket::{get, State};
+use rocket::{get, post, State};
 use rocket::response::{status};
 use rocket::http::{ContentType, Status};
 use serde_json::{Map, Value};
 use std::collections::HashSet;
+use rocket::serde::json::Json;
 use crate::utils::paths::os_slash_str;
-use crate::structs::AppSettings;
-use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::structs::{AppSettings};
+use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 
 /// *```GET /raw```*
 ///
@@ -63,7 +64,7 @@ pub async fn raw_i18n(state: &State<AppSettings>) -> status::Custom<(ContentType
 ///
 /// Returns a nested object containing each i18n key with the best match based on the language preference settings. The optional filter restricts the keys returned. So, for `/i18n/negotiated/flavors` the response might be
 ///
-/// ```
+/// ```text
 /// {
 ///   "flavors": {
 ///     "names": {
@@ -218,7 +219,7 @@ pub async fn negotiated_i18n(
 ///
 /// Returns a flat object containing each i18n key with the best match based on the language preference settings. The optional filter restricts the keys returned. So, for `/i18n/flat/flavors` the response might be
 ///
-/// ```
+/// ```text
 /// {
 ///   "flavors:names:parascriptural/x-bcvArticles": "Articles by Verse",
 ///   "flavors:names:parascriptural/x-bcvImages": "Images by Verse",
@@ -339,7 +340,7 @@ pub async fn flat_i18n(
 ///
 /// Returns an array containing terms that are untranslated in the given language. So, for `/i18n/untranslated/de` the response might be
 ///
-/// ```
+/// ```text
 /// [
 ///   "components:framework:no_entry_if_offline",
 ///   "components:header:goto_local_projects_menu_item",
@@ -463,4 +464,28 @@ pub async fn used_languages(
             ),
         ),
     }
+}
+
+/// *`POST /`*
+///
+/// Typically mounted as **`/i18n`**
+///
+/// Replaces the local i18n file.
+#[post(
+    "/",
+    format = "json",
+    data = "<payload>"
+)]
+pub async fn post_i18n(
+    payload: Json<Value>
+) -> status::Custom<(ContentType, String)> {
+    let serialized = payload.to_string();
+    fs::write("/home/mark/Downloads/foo.json", serialized).unwrap();
+    status::Custom(
+        Status::Ok,
+        (
+            ContentType::JSON,
+            make_good_json_data_response("ok".to_string()),
+        ),
+    )
 }

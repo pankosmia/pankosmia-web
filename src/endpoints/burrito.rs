@@ -337,7 +337,7 @@ pub async fn post_ingredient_as_usj(
 ///
 /// Writes a document, where the document is provided as an HTTP form file.
 #[post(
-    "/ingredient/as-usj/<repo_path..>?<ipath>",
+    "/ingredient/raw/<repo_path..>?<ipath>",
     format = "multipart/form-data",
     data = "<form>"
 )]
