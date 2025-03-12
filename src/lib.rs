@@ -19,7 +19,7 @@ mod utils;
 use crate::utils::paths::{
     os_slash_str,
     maybe_os_quoted_path_str,
-    home_dir_string
+    home_dir_string,
 };
 use crate::utils::client::Clients;
 mod static_vars;
@@ -390,28 +390,32 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         Value::Object(i18n_pages_map),
     );
     let i18n_target_path = working_dir_path.clone() + os_slash_str() + "i18n.json";
-    let mut i18n_file_handle = match fs::File::create(&i18n_target_path) {
-        Ok(h) => h,
-        Err(e) => {
-            println!(
-                "Could not open target i18n file '{}': {}",
-                i18n_target_path, e
-            );
-            exit(1);
-        }
-    };
-    match i18n_file_handle.write_all(
-        Value::Object(i18n_json_map)
-            .to_string()
-            .as_bytes(),
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            println!(
-                "Could not write target i18n file to '{}': {}",
-                i18n_target_path, e
-            );
-            exit(1);
+    let i18n_file_exists = Path::new(&i18n_target_path).is_file();
+    // Do not overwrite for now
+    if !i18n_file_exists {
+        let mut i18n_file_handle = match fs::File::create(&i18n_target_path) {
+            Ok(h) => h,
+            Err(e) => {
+                println!(
+                    "Could not open target i18n file '{}': {}",
+                    i18n_target_path, e
+                );
+                exit(1);
+            }
+        };
+        match i18n_file_handle.write_all(
+            Value::Object(i18n_json_map)
+                .to_string()
+                .as_bytes(),
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                println!(
+                    "Could not write target i18n file to '{}': {}",
+                    i18n_target_path, e
+                );
+                exit(1);
+            }
         }
     }
     // Throw if no main found

@@ -477,15 +477,27 @@ pub async fn used_languages(
     data = "<payload>"
 )]
 pub async fn post_i18n(
+    state: &State<AppSettings>,
     payload: Json<Value>
 ) -> status::Custom<(ContentType, String)> {
     let serialized = payload.to_string();
-    fs::write("/home/mark/Downloads/foo.json", serialized).unwrap();
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
+    let save_path = state.working_dir.clone() + os_slash_str() + "i18n.json";
+    match fs::write(save_path, serialized) {
+        Ok(_) => status::Custom(
+            Status::Ok,
+            (
+                ContentType::JSON,
+                make_good_json_data_response("ok".to_string()),
+            ),
         ),
-    )
+        Err(e) => status::Custom(
+            Status::BadRequest,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(
+                    format!("could not write i18n: {}", e).to_string(),
+                ),
+            ),
+        )
+    }
 }
