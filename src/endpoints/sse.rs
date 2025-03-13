@@ -35,22 +35,18 @@ pub async fn notifications_stream<'a>(
                 count+=1;
                 interval.tick().await;
             };
+            let net_status = match NET_IS_ENABLED.load(Ordering::Relaxed) {
+                true => "enabled",
+                false => "disabled"
+            };
+            let debug_status = match DEBUG_IS_ENABLED.load(Ordering::Relaxed) {
+                true => "enabled",
+                false => "disabled"
+            };
             yield stream::Event::data(
-                    match NET_IS_ENABLED.load(Ordering::Relaxed) {
-                        true => "enabled",
-                        false => "disabled"
-                    }
+                format!("net--{}--debug--{}", net_status, debug_status)
             )
-            .event("net_status")
-            .id(format!("{}", count));
-            count+=1;
-            yield stream::Event::data(
-                    match DEBUG_IS_ENABLED.load(Ordering::Relaxed) {
-                        true => "enabled",
-                        false => "disabled"
-                    }
-            )
-            .event("debug")
+            .event("status")
             .id(format!("{}", count));
             count+=1;
             let new_bcv = state.bcv.lock().unwrap().clone();
