@@ -80,6 +80,13 @@ pub async fn notifications_stream<'a>(
                     .event("auth")
                     .id(format!("{}", count));
                     count+=1;
+                } else {
+                    yield stream::Event::data(
+                        format!("{}--{}--{}", ep_name, ep_endpoint, auth_tokens.contains_key(&ep_name2))
+                    )
+                    .event("auth")
+                    .id(format!("{}", count));
+                    count+=1;
                 }
             }
             let new_languages = state.languages.lock().unwrap().clone().join("/");
