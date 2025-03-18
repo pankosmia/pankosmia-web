@@ -7,12 +7,14 @@ use copy_dir::copy_dir;
 use rocket::fs::{relative, FileServer};
 use rocket::{catchers, routes, Build, Rocket};
 use serde_json::{json, Map, Value};
+use std;
+use std::{env, fs};
 use std::collections::{BTreeMap, VecDeque};
-use std::io::Write;
+use std::io::{Write};
 use std::path::{Path};
 use std::process::exit;
 use std::sync::{Arc, Mutex};
-use std::{env, fs};
+
 mod structs;
 use crate::structs::AppSettings;
 mod utils;
@@ -26,8 +28,38 @@ mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
 pub mod endpoints;
 
-
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
+
+fn customize_and_copy_template_file(from_path: &str, to_path: &String, working_dir: &String) -> Result<(), std::io::Error> {
+    let json_string = fs::read_to_string(&from_path)?;
+    let quoted_json_string = maybe_os_quoted_path_str(json_string.replace("%%WORKINGDIR%%", &working_dir));
+    let mut file_handle = fs::File::create(&to_path)?;
+    file_handle.write_all(&quoted_json_string.as_bytes())?;
+    Ok(())
+}
+
+fn load_json(from_path: &str) -> Result<Value, std::io::Error> {
+    let json_string = fs::read_to_string(&from_path)?;
+    Ok(serde_json::from_str(json_string.as_str())?)
+}
+
+fn load_and_substitute_json(from_path: &str, from_text: &str, to_text: &str) -> Result<Value, std::io::Error> {
+    let mut json_string = fs::read_to_string(&from_path)?;
+    json_string = json_string.replace(from_text, to_text);
+    Ok(serde_json::from_str(json_string.as_str())?)
+}
+
+fn get_string_value_by_key<'a>(value: &'a Value, key: &'a str) -> &'a String {
+    match &value[key] {
+        Value::String(v) => v,
+        _ => {
+            panic!(
+                "Could not get string value for key  '{}'",
+                key
+            );
+        }
+    }
+}
 
 pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
@@ -47,163 +79,82 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         match fs::create_dir_all(&working_dir_path) {
             Ok(_) => {}
             Err(e) => {
-                println!("Could not create working dir '{}': {}", working_dir_path, e);
-                exit(1);
+                panic!("Could not create working dir '{}': {}", working_dir_path, e);
             }
         };
         // Copy user_settings file to working dir
         let user_settings_template_path = relative!("./templates/user_settings.json");
-        let user_settings_json_string = match fs::read_to_string(&user_settings_template_path) {
-            Ok(s) => maybe_os_quoted_path_str(s.replace("%%WORKINGDIR%%", &working_dir_path)),
+        match customize_and_copy_template_file(&user_settings_template_path, &user_settings_path, &working_dir_path) {
+            Ok(_) => {},
             Err(e) => {
-                println!(
-                    "Could not read user settings template file '{}': {}",
-                    user_settings_template_path, e
-                );
-                exit(1);
-            }
-        };
-        let mut file_handle = match fs::File::create(&user_settings_path) {
-            Ok(h) => h,
-            Err(e) => {
-                println!(
-                    "Could not open user_settings file '{}' to write default: {}",
-                    user_settings_path, e
-                );
-                exit(1);
-            }
-        };
-        match file_handle.write_all(&user_settings_json_string.as_bytes()) {
-            Ok(_) => {}
-            Err(e) => {
-                println!(
-                    "Could not write default user_settings file to '{}: {}'",
-                    user_settings_path, e
-                );
-                exit(1);
+                panic!("Error while copying user settings template file {} to {}: {}", user_settings_template_path, user_settings_path, e);
             }
         }
         // Copy app_state file to working dir
         let app_state_template_path = relative!("./templates/app_state.json");
-        let app_state_json_string = match fs::read_to_string(&app_state_template_path) {
-            Ok(s) => maybe_os_quoted_path_str(s.replace("%%WORKINGDIR%%", &working_dir_path)),
+        match customize_and_copy_template_file(&app_state_template_path, &app_state_path, &working_dir_path) {
+            Ok(_) => {},
             Err(e) => {
-                println!(
-                    "Could not read app state template file '{}': {}",
-                    user_settings_template_path, e
-                );
-                exit(1);
-            }
-        };
-        let mut file_handle = match fs::File::create(&app_state_path) {
-            Ok(h) => h,
-            Err(e) => {
-                println!(
-                    "Could not open app_state file '{}' to write default: {}",
-                    app_state_path, e
-                );
-                exit(1);
-            }
-        };
-        match file_handle.write_all(&app_state_json_string.as_bytes()) {
-            Ok(_) => {}
-            Err(e) => {
-                println!(
-                    "Could not write default app_state file to '{}: {}'",
-                    app_state_path, e
-                );
-                exit(1);
+                panic!("Error while copying app state template file {} to {}: {}", app_state_template_path, app_state_path, e);
             }
         }
     }
-    // Try to load local setup JSON
-    let local_setup_path = launch_config["local_setup_path"].as_str().unwrap();
-    let local_setup_json_string = match fs::read_to_string(&local_setup_path) {
-        Ok(s) => s,
+    // Load local setup JSON
+    let local_setup_path = get_string_value_by_key(&launch_config, "local_setup_path");
+    let local_setup_json = match load_json(local_setup_path.as_str()) {
+        Ok(json) => json,
         Err(e) => {
-            println!(
-                "Could not read local setup file '{}': {}",
-                local_setup_path, e
+            panic!(
+                "Could not read and parse local_json JSON file '{}': {}",
+                local_setup_path,
+                e
             );
-            exit(1);
         }
     };
-    let local_setup_json: Value = match serde_json::from_str(local_setup_json_string.as_str()) {
-        Ok(j) => j,
+    let local_pankosmia_path = get_string_value_by_key(&local_setup_json, "local_pankosmia_path");
+    // Load app_setup JSON, substituting pankosmia path
+    let app_setup_path = get_string_value_by_key(&launch_config, "app_setup_path");
+    let pankosmia_dir = maybe_os_quoted_path_str(local_pankosmia_path.to_string());
+    let app_setup_json = match load_and_substitute_json(app_setup_path, "%%PANKOSMIADIR%%", pankosmia_dir.as_str()) {
+        Ok(json) => json,
         Err(e) => {
-            println!(
-                "Could not parse local setup file '{}': {}",
-                local_setup_path, e
+            panic!(
+                "Could not read and parse substituted app setup JSON file '{}': {}",
+                app_setup_path,
+                e
             );
-            exit(1);
         }
     };
-    let local_pankosmia_path = local_setup_json["local_pankosmia_path"].as_str().unwrap();
-    // Try to load app_setup JSON, substituting pankosmia path
-    let app_setup_path = launch_config["app_setup_path"].as_str().unwrap();
-    let mut app_setup_json_string = match fs::read_to_string(&app_setup_path) {
-        Ok(s) => s,
+    // Load app state JSON
+    let app_state_json = match load_json(&app_state_path) {
+        Ok(json) => json,
         Err(e) => {
-            println!("Could not read app_setup file '{}': {}", app_setup_path, e);
-            exit(1);
-        }
-    };
-    app_setup_json_string = app_setup_json_string.replace(
-        "%%PANKOSMIADIR%%",
-        maybe_os_quoted_path_str(local_pankosmia_path.to_string()).as_str(),
-    );
-    let app_setup_json: Value = match serde_json::from_str(app_setup_json_string.as_str()) {
-        Ok(j) => j,
-        Err(e) => {
-            println!("Could not parse app_setup file '{}': {}", app_setup_path, e);
-            exit(1);
-        }
-    };
-    // Try to load app state JSON
-    let app_state_json_string = match fs::read_to_string(&app_state_path) {
-        Ok(s) => s,
-        Err(e) => {
-            println!("Could not read app_state file '{}': {}", app_state_path, e);
-            exit(1);
-        }
-    };
-    let app_state_json: Value = match serde_json::from_str(app_state_json_string.as_str()) {
-        Ok(j) => j,
-        Err(e) => {
-            println!("Could not parse app_state file '{}': {}", app_state_path, e);
-            exit(1);
-        }
-    };
-    // Try to load user settings JSON
-    let user_settings_json_string = match fs::read_to_string(&user_settings_path) {
-        Ok(s) => s,
-        Err(e) => {
-            println!(
-                "Could not read user_settings file '{}': {}",
-                user_settings_path, e
+            panic!(
+                "Could not read and parse app state JSON file '{}': {}",
+                app_setup_path,
+                e
             );
-            exit(1);
         }
     };
-    let user_settings_json: Value = match serde_json::from_str(user_settings_json_string.as_str()) {
-        Ok(j) => j,
+    // Load user settings JSON
+    let user_settings_json = match load_json(&user_settings_path) {
+        Ok(json) => json,
         Err(e) => {
-            println!(
-                "Could not parse user_settings file '{}': {}",
-                user_settings_path, e
+            panic!(
+                "Could not read and parse user settings JSON file '{}': {}",
+                user_settings_path,
+                e
             );
-            exit(1);
         }
     };
     // Find or make repo_dir
     let repo_dir_path = match user_settings_json["repo_dir"].as_str() {
         Some(v) => v.to_string(),
         None => {
-            println!(
+            panic!(
                 "Could not parse repo_dir in user_settings file '{}' as a string",
                 user_settings_path
             );
-            exit(1);
         }
     };
     let repo_dir_path_exists = Path::new(&repo_dir_path).is_dir();
@@ -211,26 +162,24 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         match fs::create_dir_all(&repo_dir_path) {
             Ok(_) => {}
             Err(e) => {
-                println!(
-                    "Repo dir '{}' doe not exist and could not be created: {}",
+                panic!(
+                    "Repo dir '{}' does not exist and could not be created: {}",
                     repo_dir_path, e
                 );
-                exit(1);
             }
         };
     }
     // Copy web fonts from path in local config
-    let template_webfonts_dir_path = launch_config["webfont_path"].as_str().unwrap();
-    let webfonts_dir_path = working_dir_path.clone() + os_slash_str() + "webfonts";
+    let template_webfonts_dir_path = get_string_value_by_key(&launch_config, "webfont_path");
+    let webfonts_dir_path = format!("{}{}webfonts", &working_dir_path, os_slash_str());
     if !Path::new(&webfonts_dir_path).is_dir() {
         match copy_dir(template_webfonts_dir_path, webfonts_dir_path.clone()) {
             Ok(_) => {}
             Err(e) => {
-                println!(
+                panic!(
                     "Could not copy web fonts to working directory from {}: {}",
                     template_webfonts_dir_path, e
                 );
-                exit(1);
             }
         }
     };
@@ -247,26 +196,16 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     }
     for client_record in client_records_merged_array.iter() {
         // Get requires from metadata
-        let client_metadata_path = client_record["path"].as_str().unwrap().to_string()
-            + os_slash_str()
-            + "pankosmia_metadata.json";
-        let metadata_json: Value = match fs::read_to_string(&client_metadata_path) {
-            Ok(mt) => match serde_json::from_str(&mt) {
-                Ok(m) => m,
-                Err(e) => {
-                    println!(
-                        "Could not parse metadata file {} as JSON: {}\n{}",
-                        &client_metadata_path, e, mt
-                    );
-                    exit(1);
-                }
-            },
+        let client_path = get_string_value_by_key(&client_record, "path");
+        let client_metadata_path = format!("{}{}pankosmia_metadata.json", client_path, os_slash_str());
+        let metadata_json = match load_json(client_metadata_path.as_str()) {
+            Ok(json) => json,
             Err(e) => {
-                println!(
-                    "Could not read metadata file {}: {}",
-                    client_metadata_path, e
+                panic!(
+                    "Could not read and parse metadata JSON file for '{}': {}",
+                    client_record,
+                    e
                 );
-                exit(1);
             }
         };
         let mut debug_flag = false;
@@ -279,25 +218,15 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             "debug": debug_flag
         });
         // Get url from package.json
-        let package_json_path =
-            client_record["path"].as_str().unwrap().to_string() + os_slash_str() + "package.json";
-        let package_json: Value = match fs::read_to_string(&package_json_path) {
-            Ok(pj) => match serde_json::from_str(&pj) {
-                Ok(p) => p,
-                Err(e) => {
-                    println!(
-                        "Could not parse package.json file {} as JSON: {}\n{}",
-                        &package_json_path, e, pj
-                    );
-                    exit(1);
-                }
-            },
+        let package_json_path = format!("{}{}package.json", get_string_value_by_key(&client_record, "path"), os_slash_str());
+        let package_json = match load_json(package_json_path.as_str()) {
+            Ok(json) => json,
             Err(e) => {
-                println!(
-                    "Could not read package.json file {}: {}",
-                    package_json_path, e
+                panic!(
+                    "Could not read and parse package.json file for '{}': {}",
+                    client_record,
+                    e
                 );
-                exit(1);
             }
         };
         // Build client record
@@ -322,13 +251,13 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             exit(1);
         }
     };
-    let i18n_template_path = relative!("./templates").to_string() + os_slash_str() + "i18n.json";
+    let i18n_template_path = format!("{}{}i18n.json", relative!("./templates"), os_slash_str());
     let mut i18n_json_map: Map<String, Value> = match fs::read_to_string(&i18n_template_path) {
         Ok(it) => match serde_json::from_str(&it) {
             Ok(i) => i,
             Err(e) => {
                 println!(
-                    "Could not parse i18n template {} as JSON: {}\n{}",
+                    "Could not parse i18n template {} JSON as map: {}\n{}",
                     &i18n_template_path, e, it
                 );
                 exit(1);
@@ -346,39 +275,33 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Iterate over clients to build i18n
     for client_record in inner_clients {
         if !Path::new(&client_record.path.clone()).is_dir() {
-            println!(
+            panic!(
                 "Client path {} from app_setup file {} is not a directory",
                 client_record.path, app_setup_path
             );
-            exit(1);
         }
         let build_path = format!("{}/build", client_record.path.clone());
         if !Path::new(&build_path.clone()).is_dir() {
-            println!("Client build path within {} from app_setup file {} does not exist or is not a directory", client_record.path.clone(), app_setup_path);
-            exit(1);
+            panic!(
+                "Client build path within {} from app_setup file {} does not exist or is not a directory. Do you need to build the client {}?",
+                client_record.path.clone(),
+                app_setup_path,
+                client_record.id
+            );
         }
-        let client_metadata_path =
-            client_record.path.clone() + os_slash_str() + "pankosmia_metadata.json";
-        let metadata_json: Value = match fs::read_to_string(&client_metadata_path) {
-            Ok(mt) => match serde_json::from_str(&mt) {
-                Ok(m) => m,
-                Err(e) => {
-                    println!(
-                        "Could not parse metadata file {} as JSON: {}\n{}",
-                        &client_metadata_path, e, mt
-                    );
-                    exit(1);
-                }
-            },
+        let client_metadata_path = format!("{}{}pankosmia_metadata.json", &client_record.path, os_slash_str());
+        let metadata_json = match load_json(client_metadata_path.as_str()) {
+            Ok(json) => json,
             Err(e) => {
-                println!(
-                    "Could not read metadata file {}: {}",
-                    client_metadata_path, e
+                panic!(
+                    "Could not read and parse pankosmia metadata file for '{}': {}",
+                    client_record.id,
+                    e
                 );
-                exit(1);
             }
+
         };
-        let metadata_id = metadata_json["id"].as_str().unwrap().to_string();
+        let metadata_id = get_string_value_by_key(&metadata_json, "id");
         let metadata_i18n = metadata_json["i18n"].clone();
         i18n_pages_map.insert(metadata_id.clone(), metadata_i18n);
         if client_record.url.clone() == "/clients/main".to_string() {
@@ -389,7 +312,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         "pages".to_string(),
         Value::Object(i18n_pages_map),
     );
-    let i18n_target_path = working_dir_path.clone() + os_slash_str() + "i18n.json";
+    let i18n_target_path = format!("{}{}i18n.json", &working_dir_path, os_slash_str());
     let i18n_file_exists = Path::new(&i18n_target_path).is_file();
     // Do not overwrite for now
     if !i18n_file_exists {
