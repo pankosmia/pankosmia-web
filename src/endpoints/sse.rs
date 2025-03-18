@@ -26,6 +26,7 @@ pub async fn notifications_stream<'a>(
         let mut bcv = state.bcv.lock().unwrap().clone();
         let gitea_endpoints = state.gitea_endpoints.clone();
         let mut auth_tokens = state.auth_tokens.lock().unwrap().clone();
+        let mut first_time = true;
         loop {
             while !msgs.lock().unwrap().is_empty() {
                 let msg = msgs.lock().unwrap().pop_front().unwrap();
@@ -50,7 +51,7 @@ pub async fn notifications_stream<'a>(
             .id(format!("{}", count));
             count+=1;
             let new_bcv = state.bcv.lock().unwrap().clone();
-            if bcv.book_code != new_bcv.book_code || bcv.chapter != new_bcv.chapter || bcv.verse != new_bcv.verse || count < 10  {
+            if bcv.book_code != new_bcv.book_code || bcv.chapter != new_bcv.chapter || bcv.verse != new_bcv.verse || first_time  {
                 bcv = new_bcv;
                 yield stream::Event::data(
                     format!("{}--{}--{}", bcv.book_code, bcv.chapter, bcv.verse)
@@ -60,7 +61,7 @@ pub async fn notifications_stream<'a>(
                 count+=1;
             }
             let new_typography = state.typography.lock().unwrap().clone();
-                if typography.font_set != new_typography.font_set || typography.size != new_typography.size || typography.direction != new_typography.direction || count < 10  {
+                if typography.font_set != new_typography.font_set || typography.size != new_typography.size || typography.direction != new_typography.direction || first_time  {
                 typography = new_typography;
                 yield stream::Event::data(
                     format!("{}--{}--{}", typography.font_set, typography.size, typography.direction)
@@ -80,7 +81,7 @@ pub async fn notifications_stream<'a>(
                     .event("auth")
                     .id(format!("{}", count));
                     count+=1;
-                } else if count < 10 {
+                } else if first_time {
                     yield stream::Event::data(
                         format!("{}--{}--{}", ep_name, ep_endpoint, auth_tokens.contains_key(&ep_name2))
                     )
@@ -90,7 +91,7 @@ pub async fn notifications_stream<'a>(
                 }
             }
             let new_languages = state.languages.lock().unwrap().clone().join("/");
-            if new_languages.clone() != languages.clone() || count < 10 {
+            if new_languages.clone() != languages.clone() || first_time {
                 languages = new_languages;
                 yield stream::Event::data(
                     format!("{}", languages.clone())
@@ -99,6 +100,7 @@ pub async fn notifications_stream<'a>(
                 .id(format!("{}", count));
                 count+=1;
             }
+            first_time = false;
             interval.tick().await;
         }
     }
