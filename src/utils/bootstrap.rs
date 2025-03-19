@@ -9,13 +9,13 @@ use crate::utils::files::{
 use crate::utils::paths::{
     user_settings_path,
     app_state_path,
-    webfonts_path,
     maybe_os_quoted_path_str,
 };
 use crate::utils::files::{
     load_json,
     load_and_substitute_json
 };
+use crate::utils::json::get_string_value_by_key;
 pub(crate) fn initialize_working_dir(working_dir_path: &String) -> () {
     // Make working dir
     match fs::create_dir_all(working_dir_path) {
@@ -44,17 +44,6 @@ pub(crate) fn initialize_working_dir(working_dir_path: &String) -> () {
     }
 }
 
-fn get_string_value_by_key<'a>(value: &'a Value, key: &'a str) -> &'a String {
-    match &value[key] {
-        Value::String(v) => v,
-        _ => {
-            panic!(
-                "Could not get string value for key  '{}'",
-                key
-            );
-        }
-    }
-}
 pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> (Value, Value, Value) {
     // Load local setup JSON
     let local_setup_path = get_string_value_by_key(&launch_config, "local_setup_path");

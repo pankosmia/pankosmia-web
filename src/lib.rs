@@ -3,7 +3,6 @@
 mod tests;
 
 #[doc(hidden)]
-use copy_dir::copy_dir;
 use rocket::fs::{relative, FileServer};
 use rocket::{catchers, routes, Build, Rocket};
 use serde_json::{json, Map, Value};
@@ -24,23 +23,12 @@ use crate::utils::files::{
     load_json
 };
 use crate::utils::bootstrap::{copy_webfonts, initialize_working_dir, load_configs, maybe_make_repo_dir};
+use crate::utils::json::get_string_value_by_key;
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
 pub mod endpoints;
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
-
-fn get_string_value_by_key<'a>(value: &'a Value, key: &'a str) -> &'a String {
-    match &value[key] {
-        Value::String(v) => v,
-        _ => {
-            panic!(
-                "Could not get string value for key  '{}'",
-                key
-            );
-        }
-    }
-}
 
 pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
