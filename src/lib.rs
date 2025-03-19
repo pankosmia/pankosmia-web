@@ -32,7 +32,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
 
     // Override default if another value is supplied
     let launch_working_dir = get_string_value_by_key(&launch_config, "working_dir");
-    if launch_working_dir.len() > 3 { // Try not to mangle entire FS
+    if launch_working_dir.len() > 3 { // Try not to mangle entire FS with empty path strings
         working_dir_path = launch_working_dir.clone();
     };
 
@@ -66,11 +66,19 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
 
     // *** LAUNCH ROCKET ***
     let mut my_rocket = rocket::build();
+
+    // Error handlers
     my_rocket = add_catchers(my_rocket);
-    my_rocket = add_app_settings(my_rocket, &repo_dir_path, &working_dir_path, &user_settings_json, &app_state_json);
+
+    // Routes
     my_rocket = add_routes(my_rocket);
     let client_vec = clients.lock().unwrap().clone();
     my_rocket = add_static_routes(my_rocket, client_vec, &webfonts_dir_path);
+
+    // State
+    my_rocket = add_app_settings(my_rocket, &repo_dir_path, &working_dir_path, &user_settings_json, &app_state_json);
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
-    my_rocket.manage(msg_queue).manage(clients)
+    my_rocket = my_rocket.manage(msg_queue).manage(clients);
+
+    my_rocket
 }
