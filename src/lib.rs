@@ -44,18 +44,21 @@ fn get_string_value_by_key<'a>(value: &'a Value, key: &'a str) -> &'a String {
 
 pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
-    // Set up managed state;
+    // Set up managed state for message;
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
-    // Get settings path, default to well-known homedir location
+    // Default workspace path
     let root_path = home_dir_string() + os_slash_str();
-    let mut working_dir_path = root_path.clone() + "pankosmia_working";
-    if launch_config["working_dir"].as_str().unwrap().len() > 0 {
-        working_dir_path = launch_config["working_dir"].as_str().unwrap().to_string();
+    let mut working_dir_path = format!("{}pankosmia_working", root_path.clone());
+    // Override default if another value is supplied
+    let launch_working_dir = get_string_value_by_key(&launch_config, "working_dir");
+    if launch_working_dir.len() > 3 { // Try not to mangle entire FS
+        working_dir_path = launch_working_dir.clone();
     };
-    let workspace_dir_exists = Path::new(&working_dir_path).is_dir();
-    if !workspace_dir_exists {
+    // Make new working dir if necessary
+    if !Path::new(&working_dir_path).is_dir() {
         initialize_working_dir(&working_dir_path);
     }
+    // Load the config JSONs
     let (app_setup_json, user_settings_json, app_state_json) = load_configs(&working_dir_path, &launch_config);
     // Find or make repo_dir
     let repo_dir_path = get_string_value_by_key(&user_settings_json, "repo_dir");
