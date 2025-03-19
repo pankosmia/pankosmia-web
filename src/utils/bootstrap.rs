@@ -1,15 +1,19 @@
 use copy_dir::copy_dir;
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 use rocket::fs::relative;
-use serde_json::Value;
+use serde_json::{json, Map, Value};
+use crate::utils::client::Clients;
 use crate::utils::files::{
     customize_and_copy_template_file,
 };
 use crate::utils::paths::{
     user_settings_path,
     app_state_path,
+    app_setup_path,
     maybe_os_quoted_path_str,
+    os_slash_str
 };
 use crate::utils::files::{
     load_json,
@@ -125,4 +129,166 @@ pub(crate) fn copy_webfonts (template_path: &String, target_path: &String) -> ()
             }
         }
     };
+}
+
+pub(crate) fn merged_clients (app_setup_json: &Value, user_settings_json: &Value) -> Vec<Value> {
+    let mut client_records_merged_array: Vec<Value> = Vec::new();
+    let app_client_records = app_setup_json["clients"].as_array().unwrap();
+    for app_client_record in app_client_records.iter() {
+        client_records_merged_array.push(app_client_record.clone());
+    }
+    let my_client_records = user_settings_json["my_clients"].as_array().unwrap();
+    for my_client_record in my_client_records.iter() {
+        client_records_merged_array.push(my_client_record.clone());
+    }
+    client_records_merged_array
+}
+
+pub(crate) fn build_client_record(client_record: &Value) -> Value {
+    // Get requires from metadata
+    let client_path = get_string_value_by_key(&client_record, "path");
+    let client_metadata_path = format!("{}{}pankosmia_metadata.json", client_path, os_slash_str());
+    let metadata_json = match load_json(client_metadata_path.as_str()) {
+        Ok(json) => json,
+        Err(e) => {
+            panic!(
+                "Could not read and parse metadata JSON file for '{}': {}",
+                client_record,
+                e
+            );
+        }
+    };
+    let mut debug_flag = false;
+    let md_require = metadata_json["require"].as_object().unwrap();
+    if md_require.contains_key("debug") {
+        debug_flag = md_require.clone()["debug"].as_bool().unwrap();
+    }
+    let requires = json!({
+            "net": md_require.clone()["net"].as_bool().unwrap(),
+            "debug": debug_flag
+        });
+    // Get url from package.json
+    let package_json_path = format!("{}{}package.json", get_string_value_by_key(&client_record, "path"), os_slash_str());
+    let package_json = match load_json(package_json_path.as_str()) {
+        Ok(json) => json,
+        Err(e) => {
+            panic!(
+                "Could not read and parse package.json file for '{}': {}",
+                client_record,
+                e
+            );
+        }
+    };
+    // Build client record
+    json!({
+            "id": metadata_json["id"].as_str().unwrap(),
+            "path": client_record["path"].as_str().unwrap(),
+            "url": package_json["homepage"].as_str().unwrap(),
+            "requires": requires,
+            "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
+            "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false)
+        })
+}
+
+pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, working_dir_path: &String) -> Clients {
+    let clients_value = serde_json::to_value(clients_merged_array).unwrap();
+    let clients: Clients = match serde_json::from_value(clients_value) {
+        Ok(v) => v,
+        Err(e) => {
+            panic!(
+                "Could not parse clients array in settings file '{}' as client records: {}",
+                app_setup_path(&working_dir_path), e
+            );
+        }
+    };
+    let i18n_template_path = format!("{}{}i18n.json", relative!("./templates"), os_slash_str());
+    let mut i18n_json_map: Map<String, Value> = match fs::read_to_string(&i18n_template_path) {
+        Ok(it) => match serde_json::from_str(&it) {
+            Ok(i) => i,
+            Err(e) => {
+                panic!(
+                    "Could not parse i18n template {} JSON as map: {}\n{}",
+                    &i18n_template_path, e, it
+                );
+            }
+        },
+        Err(e) => {
+            panic!("Could not read i18n template {}: {}", i18n_template_path, e);
+        }
+    };
+    let mut i18n_pages_map = Map::new();
+    let mut found_main = false;
+    let mut locked_clients = clients.lock().unwrap().clone();
+    let inner_clients = &mut *locked_clients;
+    // Iterate over clients to build i18n
+    for client_record in inner_clients {
+        if !Path::new(&client_record.path.clone()).is_dir() {
+            panic!(
+                "Client path {} from app_setup file {} is not a directory",
+                client_record.path, app_setup_path(&working_dir_path)
+            );
+        }
+        let build_path = format!("{}/build", client_record.path.clone());
+        if !Path::new(&build_path.clone()).is_dir() {
+            panic!(
+                "Client build path within {} from app_setup file {} does not exist or is not a directory. Do you need to build the client {}?",
+                client_record.path.clone(),
+                app_setup_path(&working_dir_path),
+                client_record.id
+            );
+        }
+        let client_metadata_path = format!("{}{}pankosmia_metadata.json", &client_record.path, os_slash_str());
+        let metadata_json = match load_json(client_metadata_path.as_str()) {
+            Ok(json) => json,
+            Err(e) => {
+                panic!(
+                    "Could not read and parse pankosmia metadata file for '{}': {}",
+                    client_record.id,
+                    e
+                );
+            }
+
+        };
+        let metadata_id = get_string_value_by_key(&metadata_json, "id");
+        let metadata_i18n = metadata_json["i18n"].clone();
+        i18n_pages_map.insert(metadata_id.clone(), metadata_i18n);
+        if client_record.url.clone() == "/clients/main".to_string() {
+            found_main = true;
+        }
+    }
+    i18n_json_map.insert(
+        "pages".to_string(),
+        Value::Object(i18n_pages_map),
+    );
+    let i18n_target_path = format!("{}{}i18n.json", &working_dir_path, os_slash_str());
+    let i18n_file_exists = Path::new(&i18n_target_path).is_file();
+    if !i18n_file_exists { // Do not overwrite for now
+        let mut i18n_file_handle = match fs::File::create(&i18n_target_path) {
+            Ok(h) => h,
+            Err(e) => {
+                panic!(
+                    "Could not open target i18n file '{}': {}",
+                    i18n_target_path, e
+                );
+            }
+        };
+        match i18n_file_handle.write_all(
+            Value::Object(i18n_json_map)
+                .to_string()
+                .as_bytes(),
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!(
+                    "Could not write target i18n file to '{}': {}",
+                    i18n_target_path, e
+                );
+            }
+        }
+    }
+    // Throw if no main found
+    if !found_main {
+        panic!("Could not find a client registered at /main among clients in settings file");
+    };
+    clients
 }
