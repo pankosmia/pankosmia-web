@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 use rocket::fs::relative;
 use serde_json::Value;
 use crate::utils::files::{
@@ -104,4 +105,19 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
         }
     };
     (app_setup_json, user_settings_json, app_state_json)
+}
+
+pub(crate) fn maybe_make_repo_dir (repo_dir_path: &String) -> () {
+    let repo_dir_path_exists = Path::new(&repo_dir_path).is_dir();
+    if !repo_dir_path_exists {
+        match fs::create_dir_all(&repo_dir_path) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!(
+                    "Repo dir '{}' does not exist and could not be created: {}",
+                    repo_dir_path, e
+                );
+            }
+        };
+    }
 }

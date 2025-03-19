@@ -21,17 +21,13 @@ mod utils;
 use crate::utils::paths::{
     os_slash_str,
     home_dir_string,
-    user_settings_path as user_settings_path_fn,
     app_setup_path as app_setup_path_fn,
 };
 use crate::utils::client::Clients;
 use crate::utils::files::{
     load_json
 };
-use crate::utils::bootstrap::{
-    initialize_working_dir,
-    load_configs
-};
+use crate::utils::bootstrap::{initialize_working_dir, load_configs, maybe_make_repo_dir};
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
 pub mod endpoints;
@@ -60,34 +56,14 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     if launch_config["working_dir"].as_str().unwrap().len() > 0 {
         working_dir_path = launch_config["working_dir"].as_str().unwrap().to_string();
     };
-    let user_settings_path = user_settings_path_fn(&working_dir_path);
     let workspace_dir_exists = Path::new(&working_dir_path).is_dir();
     if !workspace_dir_exists {
         initialize_working_dir(&working_dir_path);
     }
     let (app_setup_json, user_settings_json, app_state_json) = load_configs(&working_dir_path, &launch_config);
     // Find or make repo_dir
-    let repo_dir_path = match user_settings_json["repo_dir"].as_str() {
-        Some(v) => v.to_string(),
-        None => {
-            panic!(
-                "Could not parse repo_dir in user_settings file '{}' as a string",
-                user_settings_path
-            );
-        }
-    };
-    let repo_dir_path_exists = Path::new(&repo_dir_path).is_dir();
-    if !repo_dir_path_exists {
-        match fs::create_dir_all(&repo_dir_path) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!(
-                    "Repo dir '{}' does not exist and could not be created: {}",
-                    repo_dir_path, e
-                );
-            }
-        };
-    }
+    let repo_dir_path = get_string_value_by_key(&user_settings_json, "repo_dir");
+    maybe_make_repo_dir(&repo_dir_path);
     // Copy web fonts from path in local config
     let template_webfonts_dir_path = get_string_value_by_key(&launch_config, "webfont_path");
     let webfonts_dir_path = format!("{}{}webfonts", &working_dir_path, os_slash_str());
