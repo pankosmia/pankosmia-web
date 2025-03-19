@@ -5,7 +5,6 @@ mod tests;
 #[doc(hidden)]
 use rocket::{Build, Rocket};
 use serde_json::{Value};
-use std;
 use std::env;
 use std::collections::{VecDeque};
 use std::path::Path;
