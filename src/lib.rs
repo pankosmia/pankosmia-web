@@ -53,7 +53,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     let webfonts_dir_path = webfonts_path(&working_dir_path);
     copy_webfonts(template_webfonts_dir_path, &webfonts_dir_path);
 
-    // Merge client config into settings JSON
+    // Merge client config (from app setup and user settings) into settings JSON
     let client_records_merged_array = merged_clients(&app_setup_json, &user_settings_json);
 
     // Construct clients as Values
