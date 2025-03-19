@@ -1,3 +1,4 @@
+use copy_dir::copy_dir;
 use std::fs;
 use std::path::Path;
 use rocket::fs::relative;
@@ -8,6 +9,7 @@ use crate::utils::files::{
 use crate::utils::paths::{
     user_settings_path,
     app_state_path,
+    webfonts_path,
     maybe_os_quoted_path_str,
 };
 use crate::utils::files::{
@@ -120,4 +122,18 @@ pub(crate) fn maybe_make_repo_dir (repo_dir_path: &String) -> () {
             }
         };
     }
+}
+
+pub(crate) fn copy_webfonts (template_path: &String, target_path: &String) -> () {
+    if !Path::new(&target_path).is_dir() {
+        match copy_dir(template_path, target_path.clone()) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!(
+                    "Could not copy web fonts to working directory from {}: {}",
+                    template_path, e
+                );
+            }
+        }
+    };
 }

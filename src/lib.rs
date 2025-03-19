@@ -18,16 +18,12 @@ use std::sync::{Arc, Mutex};
 mod structs;
 use crate::structs::AppSettings;
 mod utils;
-use crate::utils::paths::{
-    os_slash_str,
-    home_dir_string,
-    app_setup_path as app_setup_path_fn,
-};
+use crate::utils::paths::{os_slash_str, home_dir_string, app_setup_path as app_setup_path_fn, webfonts_path};
 use crate::utils::client::Clients;
 use crate::utils::files::{
     load_json
 };
-use crate::utils::bootstrap::{initialize_working_dir, load_configs, maybe_make_repo_dir};
+use crate::utils::bootstrap::{copy_webfonts, initialize_working_dir, load_configs, maybe_make_repo_dir};
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
 pub mod endpoints;
@@ -66,18 +62,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     maybe_make_repo_dir(&repo_dir_path);
     // Copy web fonts from path in local config
     let template_webfonts_dir_path = get_string_value_by_key(&launch_config, "webfont_path");
-    let webfonts_dir_path = format!("{}{}webfonts", &working_dir_path, os_slash_str());
-    if !Path::new(&webfonts_dir_path).is_dir() {
-        match copy_dir(template_webfonts_dir_path, webfonts_dir_path.clone()) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!(
-                    "Could not copy web fonts to working directory from {}: {}",
-                    template_webfonts_dir_path, e
-                );
-            }
-        }
-    };
+    let webfonts_dir_path = webfonts_path(&working_dir_path);
+    copy_webfonts(template_webfonts_dir_path, &webfonts_dir_path);
     // Merge client config into settings JSON
     let mut clients_merged_array: Vec<Value> = Vec::new();
     let mut client_records_merged_array: Vec<Value> = Vec::new();

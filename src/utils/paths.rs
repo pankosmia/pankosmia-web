@@ -112,3 +112,7 @@ pub(crate) fn app_state_path (working_dir: &String) -> String {
 pub(crate) fn user_settings_path (working_dir: &String) -> String {
     format!("{}/user_settings.json", working_dir)
 }
+
+pub(crate) fn webfonts_path (working_dir: &String) -> String {
+    format!("{}/webfonts", working_dir)
+}
