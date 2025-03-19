@@ -100,3 +100,15 @@ pub(crate) fn home_dir_string() -> String {
         .unwrap()
         .to_string()
 }
+
+pub(crate) fn app_setup_path (working_dir: &String) -> String {
+    format!("{}/app_setup.json", working_dir)
+}
+
+pub(crate) fn app_state_path (working_dir: &String) -> String {
+    format!("{}/app_state.json", working_dir)
+}
+
+pub(crate) fn user_settings_path (working_dir: &String) -> String {
+    format!("{}/user_settings.json", working_dir)
+}

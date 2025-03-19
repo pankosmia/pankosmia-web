@@ -20,34 +20,23 @@ use crate::structs::AppSettings;
 mod utils;
 use crate::utils::paths::{
     os_slash_str,
-    maybe_os_quoted_path_str,
     home_dir_string,
+    user_settings_path as user_settings_path_fn,
+    app_setup_path as app_setup_path_fn,
 };
 use crate::utils::client::Clients;
+use crate::utils::files::{
+    load_json
+};
+use crate::utils::bootstrap::{
+    initialize_working_dir,
+    load_configs
+};
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
 pub mod endpoints;
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
-
-fn customize_and_copy_template_file(from_path: &str, to_path: &String, working_dir: &String) -> Result<(), std::io::Error> {
-    let json_string = fs::read_to_string(&from_path)?;
-    let quoted_json_string = maybe_os_quoted_path_str(json_string.replace("%%WORKINGDIR%%", &working_dir));
-    let mut file_handle = fs::File::create(&to_path)?;
-    file_handle.write_all(&quoted_json_string.as_bytes())?;
-    Ok(())
-}
-
-fn load_json(from_path: &str) -> Result<Value, std::io::Error> {
-    let json_string = fs::read_to_string(&from_path)?;
-    Ok(serde_json::from_str(json_string.as_str())?)
-}
-
-fn load_and_substitute_json(from_path: &str, from_text: &str, to_text: &str) -> Result<Value, std::io::Error> {
-    let mut json_string = fs::read_to_string(&from_path)?;
-    json_string = json_string.replace(from_text, to_text);
-    Ok(serde_json::from_str(json_string.as_str())?)
-}
 
 fn get_string_value_by_key<'a>(value: &'a Value, key: &'a str) -> &'a String {
     match &value[key] {
@@ -71,82 +60,12 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     if launch_config["working_dir"].as_str().unwrap().len() > 0 {
         working_dir_path = launch_config["working_dir"].as_str().unwrap().to_string();
     };
-    let user_settings_path = format!("{}/user_settings.json", working_dir_path);
-    let app_state_path = format!("{}/app_state.json", working_dir_path);
+    let user_settings_path = user_settings_path_fn(&working_dir_path);
     let workspace_dir_exists = Path::new(&working_dir_path).is_dir();
     if !workspace_dir_exists {
-        // Make working dir, argument is webfonts dir
-        match fs::create_dir_all(&working_dir_path) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("Could not create working dir '{}': {}", working_dir_path, e);
-            }
-        };
-        // Copy user_settings file to working dir
-        let user_settings_template_path = relative!("./templates/user_settings.json");
-        match customize_and_copy_template_file(&user_settings_template_path, &user_settings_path, &working_dir_path) {
-            Ok(_) => {},
-            Err(e) => {
-                panic!("Error while copying user settings template file {} to {}: {}", user_settings_template_path, user_settings_path, e);
-            }
-        }
-        // Copy app_state file to working dir
-        let app_state_template_path = relative!("./templates/app_state.json");
-        match customize_and_copy_template_file(&app_state_template_path, &app_state_path, &working_dir_path) {
-            Ok(_) => {},
-            Err(e) => {
-                panic!("Error while copying app state template file {} to {}: {}", app_state_template_path, app_state_path, e);
-            }
-        }
+        initialize_working_dir(&working_dir_path);
     }
-    // Load local setup JSON
-    let local_setup_path = get_string_value_by_key(&launch_config, "local_setup_path");
-    let local_setup_json = match load_json(local_setup_path.as_str()) {
-        Ok(json) => json,
-        Err(e) => {
-            panic!(
-                "Could not read and parse local_json JSON file '{}': {}",
-                local_setup_path,
-                e
-            );
-        }
-    };
-    let local_pankosmia_path = get_string_value_by_key(&local_setup_json, "local_pankosmia_path");
-    // Load app_setup JSON, substituting pankosmia path
-    let app_setup_path = get_string_value_by_key(&launch_config, "app_setup_path");
-    let pankosmia_dir = maybe_os_quoted_path_str(local_pankosmia_path.to_string());
-    let app_setup_json = match load_and_substitute_json(app_setup_path, "%%PANKOSMIADIR%%", pankosmia_dir.as_str()) {
-        Ok(json) => json,
-        Err(e) => {
-            panic!(
-                "Could not read and parse substituted app setup JSON file '{}': {}",
-                app_setup_path,
-                e
-            );
-        }
-    };
-    // Load app state JSON
-    let app_state_json = match load_json(&app_state_path) {
-        Ok(json) => json,
-        Err(e) => {
-            panic!(
-                "Could not read and parse app state JSON file '{}': {}",
-                app_setup_path,
-                e
-            );
-        }
-    };
-    // Load user settings JSON
-    let user_settings_json = match load_json(&user_settings_path) {
-        Ok(json) => json,
-        Err(e) => {
-            panic!(
-                "Could not read and parse user settings JSON file '{}': {}",
-                user_settings_path,
-                e
-            );
-        }
-    };
+    let (app_setup_json, user_settings_json, app_state_json) = load_configs(&working_dir_path, &launch_config);
     // Find or make repo_dir
     let repo_dir_path = match user_settings_json["repo_dir"].as_str() {
         Some(v) => v.to_string(),
@@ -246,7 +165,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         Err(e) => {
             println!(
                 "Could not parse clients array in settings file '{}' as client records: {}",
-                app_setup_path, e
+                app_setup_path_fn(&working_dir_path), e
             );
             exit(1);
         }
@@ -277,7 +196,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         if !Path::new(&client_record.path.clone()).is_dir() {
             panic!(
                 "Client path {} from app_setup file {} is not a directory",
-                client_record.path, app_setup_path
+                client_record.path, app_setup_path_fn(&working_dir_path)
             );
         }
         let build_path = format!("{}/build", client_record.path.clone());
@@ -285,7 +204,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             panic!(
                 "Client build path within {} from app_setup file {} does not exist or is not a directory. Do you need to build the client {}?",
                 client_record.path.clone(),
-                app_setup_path,
+                app_setup_path_fn(&working_dir_path),
                 client_record.id
             );
         }
