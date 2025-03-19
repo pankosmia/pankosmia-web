@@ -25,8 +25,6 @@ type MsgQueue = Arc<Mutex<VecDeque<String>>>;
 
 pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
-    // Set up managed state for message;
-    let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
 
     // Default workspace path
     let root_path = home_dir_string() + os_slash_str();
@@ -73,5 +71,6 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     my_rocket = add_routes(my_rocket);
     let client_vec = clients.lock().unwrap().clone();
     my_rocket = add_static_routes(my_rocket, client_vec, &webfonts_dir_path);
+    let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
     my_rocket.manage(msg_queue).manage(clients)
 }
