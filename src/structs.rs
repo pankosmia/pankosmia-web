@@ -38,6 +38,41 @@ pub struct AppSettings {
     pub typography: Mutex<Typography>,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
+pub enum ClientSource {
+    App,
+    User
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Client {
+    pub id: String,
+    pub src: String,
+    pub requires: BTreeMap<String, bool>,
+    pub exclude_from_menu: bool,
+    pub exclude_from_dashboard: bool,
+    pub path: String,
+    pub url: String,
+}
+
+#[derive(Serialize)]
+pub struct PublicClient {
+    pub id: String,
+    pub requires: BTreeMap<String, bool>,
+    pub exclude_from_menu: bool,
+    pub exclude_from_dashboard: bool,
+    pub url: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UserSettings {
+    pub languages: Vec<String>,
+    pub repo_dir: String,
+    pub typography: Typography,
+    pub my_clients: Vec<Client>,
+    pub gitea_endpoints: BTreeMap<String, String>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct JsonDataResponse {
     pub is_good: bool,
@@ -81,25 +116,6 @@ pub struct MetadataSummary {
 #[derive(FromForm)]
 pub struct Upload<'f> {
     pub file: TempFile<'f>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Client {
-    pub id: String,
-    pub requires: BTreeMap<String, bool>,
-    pub exclude_from_menu: bool,
-    pub exclude_from_dashboard: bool,
-    pub path: String,
-    pub url: String,
-}
-
-#[derive(Serialize)]
-pub struct PublicClient {
-    pub id: String,
-    pub requires: BTreeMap<String, bool>,
-    pub exclude_from_menu: bool,
-    pub exclude_from_dashboard: bool,
-    pub url: String,
 }
 
 #[derive(Responder)]

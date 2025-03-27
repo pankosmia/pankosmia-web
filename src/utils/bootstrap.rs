@@ -135,11 +135,21 @@ pub(crate) fn merged_clients (app_setup_json: &Value, user_settings_json: &Value
     let mut client_records_merged_array: Vec<Value> = Vec::new();
     let app_client_records = app_setup_json["clients"].as_array().unwrap();
     for app_client_record in app_client_records.iter() {
-        client_records_merged_array.push(app_client_record.clone());
+        let mut record2 = app_client_record.clone();
+        let mut_record = record2.as_object_mut().unwrap();
+        let src_key = "src".to_string();
+        let src_value = Value::from("App");
+        mut_record.insert(src_key, src_value);
+        client_records_merged_array.push(Value::Object(mut_record.clone()));
     }
     let my_client_records = user_settings_json["my_clients"].as_array().unwrap();
     for my_client_record in my_client_records.iter() {
-        client_records_merged_array.push(my_client_record.clone());
+        let mut record2 = my_client_record.clone();
+        let mut_record = record2.as_object_mut().unwrap();
+        let src_key = "src".to_string();
+        let src_value = Value::from("User");
+        mut_record.insert(src_key, src_value);
+        client_records_merged_array.push(Value::Object(mut_record.clone()));
     }
     client_records_merged_array
 }
@@ -186,7 +196,8 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
             "url": package_json["homepage"].as_str().unwrap(),
             "requires": requires,
             "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
-            "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false)
+            "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false),
+            "src": client_record["src"].as_str().unwrap(),
         })
 }
 

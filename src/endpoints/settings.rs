@@ -6,11 +6,13 @@ use rocket::http::{ContentType, Status, CookieJar};
 use serde_json::json;
 use crate::MsgQueue;
 use crate::structs::{AppSettings, Typography, ContentOrRedirect};
+use crate::utils::client::Clients;
 use crate::utils::json_responses::{
     make_good_json_data_response,
     make_bad_json_data_response,
 };
 use crate::utils::paths::os_slash_str;
+use crate::utils::files::write_user_settings;
 
 /// *`GET /languages`*
 ///
@@ -45,6 +47,7 @@ pub fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType,
 #[post("/languages/<languages..>")]
 pub fn post_languages(
     state: &State<AppSettings>,
+    clients: &State<Clients>,
     languages: PathBuf
 ) -> status::Custom<(ContentType, String)> {
     let language_vec: Vec<String> = languages
@@ -79,6 +82,19 @@ pub fn post_languages(
         }
     }
     *state.languages.lock().unwrap() = language_vec;
+    match write_user_settings(&state, &clients) {
+        Ok(_) => {},
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!(
+                    "Could not write out user settings: {}",
+                    e
+                )),
+            ),
+        )
+    }
     status::Custom(
         Status::Ok,
         (
@@ -127,6 +143,7 @@ pub(crate) fn get_typography(state: &State<AppSettings>) -> status::Custom<(Cont
 #[post("/typography/<font_set>/<size>/<direction>")]
 pub fn post_typography(
     state: &State<AppSettings>,
+    clients: &State<Clients>,
     msgs: &State<MsgQueue>,
     font_set: &str,
     size: &str,
@@ -140,6 +157,19 @@ pub fn post_typography(
     msgs.lock()
         .unwrap()
         .push_back("info--3--typography--change".to_string());
+    match write_user_settings(&state, &clients) {
+        Ok(_) => {},
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!(
+                    "Could not write out user settings: {}",
+                    e
+                )),
+            ),
+        )
+    }
     status::Custom(
         Status::Ok,
         (
