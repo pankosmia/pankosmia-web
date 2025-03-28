@@ -9,9 +9,9 @@
   src: url(./padauk/Padauk-Regular.woff2);
   unicode-range: U+1000-109F, U+AA60-AA7F, U+A9E0-A9FF, U+116D0-116FF, U+A900-A92F;
   font-display: swap;
-  font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -moz-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -webkit-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
+  font-feature-settings: %%FONTFEATURES%%;
+  -moz-font-feature-settings: %%FONTFEATURES%%;
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
 }
 
 /* italic */
@@ -22,9 +22,9 @@
   src: url(./padauk/Padauk-Regular.woff2);
   unicode-range: U+1000-109F, U+AA60-AA7F, U+A9E0-A9FF, U+116D0-116FF, U+A900-A92F;
   font-display: swap;
-  font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -moz-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -webkit-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
+  font-feature-settings: %%FONTFEATURES%%;
+  -moz-font-feature-settings: %%FONTFEATURES%%;
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
 }
 
 /* bold */
@@ -35,9 +35,9 @@
   src: url(./padauk/Padauk-Bold.woff2);
   unicode-range: U+1000-109F, U+AA60-AA7F, U+A9E0-A9FF, U+116D0-116FF, U+A900-A92F;
   font-display: swap;
-  font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -moz-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -webkit-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
+  font-feature-settings: %%FONTFEATURES%%;
+  -moz-font-feature-settings: %%FONTFEATURES%%;
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
 }
 
 /* bold italic */
@@ -48,7 +48,7 @@
   src: url(./padauk/Padauk-Bold.woff2);
   unicode-range: U+1000-109F, U+AA60-AA7F, U+A9E0-A9FF, U+116D0-116FF, U+A900-A92F;
   font-display: swap;
-  font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -moz-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
-  -webkit-font-feature-settings: "cv01" 0, "cv02" 0, "cv03" 0, "cv04" 0, "cv05" 0, "cv06" 0, "cv07" 0, "cv09" 0, "cv10" 0, "lldt" 0, "ulon" 0, "utal" 0, "dotc" 1, "nnya" 0, "vtta" 0, "dotr" 0;
+  font-feature-settings: %%FONTFEATURES%%;
+  -moz-font-feature-settings: %%FONTFEATURES%%;
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
 }

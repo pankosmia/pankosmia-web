@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 mod structs;
 mod utils;
 use crate::utils::paths::{os_slash_str, home_dir_string, webfonts_path};
-use crate::utils::bootstrap::{copy_webfonts, initialize_working_dir, load_configs, maybe_make_repo_dir, merged_clients, build_client_record, build_clients_and_i18n};
+use crate::utils::bootstrap::{copy_and_customize_webfonts, initialize_working_dir, load_configs, maybe_make_repo_dir, merged_clients, build_client_record, build_clients_and_i18n};
 use crate::utils::json::get_string_value_by_key;
 use crate::utils::launch::{add_catchers, add_routes, add_app_settings, add_static_routes};
 mod static_vars;
@@ -50,7 +50,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Copy web fonts from path in local config
     let template_webfonts_dir_path = get_string_value_by_key(&launch_config, "webfont_path");
     let webfonts_dir_path = webfonts_path(&working_dir_path);
-    copy_webfonts(template_webfonts_dir_path, &webfonts_dir_path);
+    copy_and_customize_webfonts(template_webfonts_dir_path, &webfonts_dir_path, &user_settings_json);
 
     // Merge client config (from app setup and user settings) into settings JSON
     let client_records_merged_array = merged_clients(&app_setup_json, &user_settings_json);

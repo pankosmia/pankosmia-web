@@ -117,7 +117,7 @@ pub(crate) fn maybe_make_repo_dir (repo_dir_path: &String) -> () {
     }
 }
 
-pub(crate) fn copy_webfonts (template_path: &String, target_path: &String) -> () {
+pub(crate) fn copy_and_customize_webfonts (template_path: &String, target_path: &String, user_settings: &Value) -> () {
     if !Path::new(&target_path).is_dir() {
         match copy_dir(template_path, target_path.clone()) {
             Ok(_) => {}
@@ -126,6 +126,36 @@ pub(crate) fn copy_webfonts (template_path: &String, target_path: &String) -> ()
                     "Could not copy web fonts to working directory from {}: {}",
                     template_path, e
                 );
+            }
+        }
+        let typography_json = match user_settings["typography"].as_object() {
+            Some(json) => json,
+            None => {panic!("Could not read typography from user_settings as object")}
+        };
+        let features_json = match typography_json["features"].as_object() {
+            Some(json) => json,
+            None => {panic!("Could not read features from user_settings as object")}
+        };
+        for (font_name, features) in features_json.iter() {
+            let font_filename = format!("{}{}pankosmia-{}.css", &target_path, os_slash_str(), font_name);
+            if Path::new(&font_filename).is_file() {
+                let mut css_string = match fs::read_to_string(&font_filename) {
+                    Ok(css_string) => css_string,
+                    Err(e) => {
+                        panic!("Could not read css file '{}': {}", font_filename, e);
+                    }
+                };
+                let mut font_feature_collector = Vec::new();
+                for feature_pair in features.as_array().unwrap() {
+                    font_feature_collector.push(format!("{}: {}", feature_pair["key"], feature_pair["value"]));
+                }
+                css_string = css_string.replace("%%FONTFEATURES%%", &font_feature_collector.join(", "));
+                match fs::write(&font_filename, css_string) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        panic!("Could not write css file '{}': {}", font_filename, e);
+                    }
+                }
             }
         }
     };
