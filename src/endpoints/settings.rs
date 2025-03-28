@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use regex::Regex;
 use rocket::{get, post, State};
@@ -48,7 +49,7 @@ pub fn get_languages(state: &State<AppSettings>) -> status::Custom<(ContentType,
 pub fn post_languages(
     state: &State<AppSettings>,
     clients: &State<Clients>,
-    languages: PathBuf
+    languages: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
     let language_vec: Vec<String> = languages
         .display()
@@ -83,7 +84,7 @@ pub fn post_languages(
     }
     *state.languages.lock().unwrap() = language_vec;
     match write_user_settings(&state, &clients) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => return status::Custom(
             Status::InternalServerError,
             (
@@ -140,6 +141,7 @@ pub(crate) fn get_typography(state: &State<AppSettings>) -> status::Custom<(Cont
 /// Typically mounted as **`/settings/typography/<font_set>/<size>/<direction>`**
 ///
 /// Sets UI typography and interface direction
+#[allow(irrefutable_let_patterns)]
 #[post("/typography/<font_set>/<size>/<direction>")]
 pub fn post_typography(
     state: &State<AppSettings>,
@@ -149,27 +151,38 @@ pub fn post_typography(
     size: &str,
     direction: &str,
 ) -> status::Custom<(ContentType, String)> {
-    *state.typography.lock().unwrap() = Typography {
-        font_set: font_set.to_string(),
-        size: size.to_string(),
-        direction: direction.to_string(),
-    };
-    msgs.lock()
-        .unwrap()
-        .push_back("info--3--typography--change".to_string());
-    match write_user_settings(&state, &clients) {
-        Ok(_) => {},
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not write out user settings: {}",
-                    e
-                )),
-            ),
-        )
+    if let mut typo_inner = state.typography.lock().unwrap() {
+        let mut existing_features = BTreeMap::new();
+        for (key, value) in &mut typo_inner.features {
+            existing_features.insert(key.to_string(), value.to_vec());
+        }
+        *typo_inner = Typography {
+            font_set: font_set.to_string(),
+            size: size.to_string(),
+            direction: direction.to_string(),
+            features: existing_features,
+        };
+        msgs.lock()
+            .unwrap()
+            .push_back("info--3--typography--change".to_string());
     }
+    match write_user_settings(&state, &clients) {
+        Ok(_) => {
+        }
+        Err(e) => {
+            return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Could not write out user settings: {}",
+                        e
+                    )),
+                ),
+            )
+        }
+    }
+    println!("here6");
     status::Custom(
         Status::Ok,
         (

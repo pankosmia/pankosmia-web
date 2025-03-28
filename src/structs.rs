@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex};
 use std::collections::{BTreeMap};
+use std::fmt;
 use rocket::fs::{TempFile};
 use rocket::{Responder, FromForm};
 use rocket::http::{ContentType};
@@ -13,11 +14,24 @@ pub struct Bcv {
     pub verse: u16,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TypographyFeature {
+    key: String,
+    value: u8
+}
+
+impl fmt::Display for TypographyFeature {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.key, self.value)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Typography {
     pub font_set: String,
     pub size: String,
     pub direction: String,
+    pub features: BTreeMap<String, Vec<TypographyFeature>>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
