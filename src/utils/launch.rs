@@ -28,7 +28,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::settings::get_auth_token,
                 endpoints::settings::get_new_auth_token,
                 endpoints::settings::get_typography,
-                endpoints::settings::post_typography
+                endpoints::settings::post_typography,
+                endpoints::settings::post_typography_feature,
             ],
         )
         .mount("/net", routes![

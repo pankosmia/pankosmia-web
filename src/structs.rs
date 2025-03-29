@@ -16,8 +16,8 @@ pub struct Bcv {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypographyFeature {
-    key: String,
-    value: u8
+    pub key: String,
+    pub value: u8
 }
 
 impl fmt::Display for TypographyFeature {

@@ -6,7 +6,7 @@ use rocket::response::{status, Redirect};
 use rocket::http::{ContentType, Status, CookieJar};
 use serde_json::json;
 use crate::MsgQueue;
-use crate::structs::{AppSettings, Typography, ContentOrRedirect};
+use crate::structs::{AppSettings, Typography, ContentOrRedirect, TypographyFeature};
 use crate::utils::client::Clients;
 use crate::utils::json_responses::{
     make_good_json_data_response,
@@ -183,6 +183,73 @@ pub fn post_typography(
         }
     }
     println!("here6");
+    status::Custom(
+        Status::Ok,
+        (
+            ContentType::JSON,
+            make_good_json_data_response("ok".to_string()),
+        ),
+    )
+}
+
+/// *`POST /typography-feature/<font_name>/<feature>/<value>`*
+///
+/// Typically mounted as **`/settings//typography-feature/<font_name>/<feature>/<value>`**
+///
+/// Sets the value of a font feature. Currently silently ignores unknown fonts and fields.
+#[allow(irrefutable_let_patterns)]
+#[post("/typography-feature/<font_name>/<feature>/<new_value>")]
+pub fn post_typography_feature(
+    state: &State<AppSettings>,
+    clients: &State<Clients>,
+    msgs: &State<MsgQueue>,
+    font_name: &str,
+    feature: &str,
+    new_value: u8
+) -> status::Custom<(ContentType, String)> {
+    if let mut typo_inner = state.typography.lock().unwrap() {
+        let mut new_fonts = BTreeMap::new();
+        for (font_key, font_value) in &mut typo_inner.features {
+            if font_key == font_name {
+                let mut new_fields = Vec::new();
+                for field_kv in &mut *font_value {
+                    if field_kv.key == feature {
+                        new_fields.push(TypographyFeature{key: field_kv.key.to_string(), value: new_value});
+                    } else {
+                        new_fields.push(TypographyFeature{key: field_kv.key.to_string(), value: field_kv.value});
+                    }
+                }
+                new_fonts.insert(font_key.to_string(), new_fields);
+            } else {
+                new_fonts.insert(font_key.to_string(), font_value.to_vec());
+            }
+        }
+        *typo_inner = Typography {
+            font_set: typo_inner.font_set.clone(),
+            size: typo_inner.size.clone(),
+            direction: typo_inner.direction.clone(),
+            features: new_fonts,
+        };
+        msgs.lock()
+            .unwrap()
+            .push_back("info--3--typography-feature--change".to_string());
+    }
+    match write_user_settings(&state, &clients) {
+        Ok(_) => {
+        }
+        Err(e) => {
+            return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Could not write out user settings: {}",
+                        e
+                    )),
+                ),
+            )
+        }
+    }
     status::Custom(
         Status::Ok,
         (
