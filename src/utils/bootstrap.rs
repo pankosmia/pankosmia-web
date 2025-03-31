@@ -5,19 +5,17 @@ use std::path::Path;
 use rocket::fs::relative;
 use serde_json::{json, Map, Value};
 use crate::utils::client::Clients;
-use crate::utils::files::{
-    customize_and_copy_template_file,
-};
+use crate::utils::files::{copy_and_customize_webfont_css, customize_and_copy_template_file};
 use crate::utils::paths::{
     user_settings_path,
     app_state_path,
     app_setup_path,
     maybe_os_quoted_path_str,
-    os_slash_str
+    os_slash_str,
 };
 use crate::utils::files::{
     load_json,
-    load_and_substitute_json
+    load_and_substitute_json,
 };
 use crate::utils::json::get_string_value_by_key;
 pub(crate) fn initialize_working_dir(working_dir_path: &String) -> () {
@@ -102,7 +100,7 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
     (app_setup_json, user_settings_json, app_state_json)
 }
 
-pub(crate) fn maybe_make_repo_dir (repo_dir_path: &String) -> () {
+pub(crate) fn maybe_make_repo_dir(repo_dir_path: &String) -> () {
     let repo_dir_path_exists = Path::new(&repo_dir_path).is_dir();
     if !repo_dir_path_exists {
         match fs::create_dir_all(&repo_dir_path) {
@@ -117,7 +115,7 @@ pub(crate) fn maybe_make_repo_dir (repo_dir_path: &String) -> () {
     }
 }
 
-pub(crate) fn copy_and_customize_webfonts (template_path: &String, target_path: &String, user_settings: &Value) -> () {
+pub(crate) fn copy_and_customize_webfonts(template_path: &String, target_path: &String, user_settings: &Value) -> () {
     if !Path::new(&target_path).is_dir() {
         match copy_dir(template_path, target_path.clone()) {
             Ok(_) => {}
@@ -130,38 +128,25 @@ pub(crate) fn copy_and_customize_webfonts (template_path: &String, target_path: 
         }
         let typography_json = match user_settings["typography"].as_object() {
             Some(json) => json,
-            None => {panic!("Could not read typography from user_settings as object")}
+            None => { panic!("Could not read typography from user_settings as object") }
         };
         let features_json = match typography_json["features"].as_object() {
             Some(json) => json,
-            None => {panic!("Could not read features from user_settings as object")}
+            None => { panic!("Could not read features from user_settings as object") }
         };
-        for (font_name, features) in features_json.iter() {
+        for font_name in features_json.keys() {
             let font_filename = format!("{}{}pankosmia-{}.css", &target_path, os_slash_str(), font_name);
             if Path::new(&font_filename).is_file() {
-                let mut css_string = match fs::read_to_string(&font_filename) {
-                    Ok(css_string) => css_string,
-                    Err(e) => {
-                        panic!("Could not read css file '{}': {}", font_filename, e);
-                    }
-                };
-                let mut font_feature_collector = Vec::new();
-                for feature_pair in features.as_array().unwrap() {
-                    font_feature_collector.push(format!("{}: {}", feature_pair["key"], feature_pair["value"]));
-                }
-                css_string = css_string.replace("%%FONTFEATURES%%", &font_feature_collector.join(", "));
-                match fs::write(&font_filename, css_string) {
+                match copy_and_customize_webfont_css(template_path, target_path, user_settings, font_name) {
                     Ok(_) => {},
-                    Err(e) => {
-                        panic!("Could not write css file '{}': {}", font_filename, e);
-                    }
+                    Err(e) => { panic!("Could not customize webfont {}: {}", font_name, e) }
                 }
             }
         }
     };
 }
 
-pub(crate) fn merged_clients (app_setup_json: &Value, user_settings_json: &Value) -> Vec<Value> {
+pub(crate) fn merged_clients(app_setup_json: &Value, user_settings_json: &Value) -> Vec<Value> {
     let mut client_records_merged_array: Vec<Value> = Vec::new();
     let app_client_records = app_setup_json["clients"].as_array().unwrap();
     for app_client_record in app_client_records.iter() {
@@ -288,7 +273,6 @@ pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, working_d
                     e
                 );
             }
-
         };
         let metadata_id = get_string_value_by_key(&metadata_json, "id");
         let metadata_i18n = metadata_json["i18n"].clone();

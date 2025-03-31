@@ -7,6 +7,18 @@ use rocket::{Responder, FromForm};
 use rocket::http::{ContentType};
 use rocket::response::{status, Redirect};
 
+#[derive(Debug)]
+pub struct PankosmiaError(pub String);
+
+impl fmt::Display for PankosmiaError {
+
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PankosmiaError: {}", self.0)
+    }
+}
+
+impl std::error::Error for PankosmiaError {}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Bcv {
     pub book_code: String,

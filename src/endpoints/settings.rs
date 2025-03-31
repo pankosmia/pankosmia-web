@@ -12,8 +12,8 @@ use crate::utils::json_responses::{
     make_good_json_data_response,
     make_bad_json_data_response,
 };
-use crate::utils::paths::os_slash_str;
-use crate::utils::files::write_user_settings;
+use crate::utils::paths::{os_slash_str, source_webfonts_path, webfonts_path};
+use crate::utils::files::{copy_and_customize_webfont_css2, write_user_settings};
 
 /// *`GET /languages`*
 ///
@@ -167,8 +167,7 @@ pub fn post_typography(
             .push_back("info--3--typography--change".to_string());
     }
     match write_user_settings(&state, &clients) {
-        Ok(_) => {
-        }
+        Ok(_) => {}
         Err(e) => {
             return status::Custom(
                 Status::InternalServerError,
@@ -205,18 +204,37 @@ pub fn post_typography_feature(
     msgs: &State<MsgQueue>,
     font_name: &str,
     feature: &str,
-    new_value: u8
+    new_value: u8,
 ) -> status::Custom<(ContentType, String)> {
     if let mut typo_inner = state.typography.lock().unwrap() {
         let mut new_fonts = BTreeMap::new();
         for (font_key, font_value) in &mut typo_inner.features {
             if font_key == font_name {
                 let mut new_fields = Vec::new();
-                for field_kv in &mut *font_value {
+                let font_inner = &mut *font_value;
+                for field_kv in font_inner.clone() {
                     if field_kv.key == feature {
-                        new_fields.push(TypographyFeature{key: field_kv.key.to_string(), value: new_value});
+                        new_fields.push(TypographyFeature { key: field_kv.key.to_string(), value: new_value });
                     } else {
-                        new_fields.push(TypographyFeature{key: field_kv.key.to_string(), value: field_kv.value});
+                        new_fields.push(TypographyFeature { key: field_kv.key.to_string(), value: field_kv.value });
+                    }
+                }
+                let working_dir = state.working_dir.clone();
+                let src_webfonts_dir = source_webfonts_path();
+                let target_webfonts_dir = webfonts_path(&working_dir);
+                match copy_and_customize_webfont_css2(&src_webfonts_dir, &target_webfonts_dir, &new_fields, &font_name.to_string()) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return status::Custom(
+                            Status::InternalServerError,
+                            (
+                                ContentType::JSON,
+                                make_bad_json_data_response(format!(
+                                    "Could not rewrite CSS: {}",
+                                    e
+                                )),
+                            ),
+                        )
                     }
                 }
                 new_fonts.insert(font_key.to_string(), new_fields);
@@ -235,8 +253,7 @@ pub fn post_typography_feature(
             .push_back("info--3--typography-feature--change".to_string());
     }
     match write_user_settings(&state, &clients) {
-        Ok(_) => {
-        }
+        Ok(_) => {}
         Err(e) => {
             return status::Custom(
                 Status::InternalServerError,

@@ -1,8 +1,10 @@
 use serde_json::Value;
 use std::io::{Write};
+use std::fs;
+use std::path::Path;
 use rocket::State;
-use crate::utils::paths::{maybe_os_quoted_path_str, user_settings_path};
-use crate::structs::{AppSettings, UserSettings};
+use crate::utils::paths::{maybe_os_quoted_path_str, os_slash_str, user_settings_path};
+use crate::structs::{PankosmiaError, AppSettings, UserSettings, TypographyFeature};
 use crate::utils::client::Clients;
 
 pub(crate) fn customize_and_copy_template_file(from_path: &str, to_path: &String, working_dir: &String) -> Result<(), std::io::Error> {
@@ -29,7 +31,7 @@ pub(crate) fn write_user_settings(state: &State<AppSettings>, clients: &State<Cl
         languages: (*state.languages.lock().unwrap()).to_owned(),
         repo_dir: state.repo_dir.lock().unwrap().clone(),
         typography: (*state.typography.lock().unwrap()).to_owned(),
-        my_clients: clients.lock().unwrap().iter().filter(|c| {c.src == "User".to_string()}).map(|c|{c.clone()}).collect(),
+        my_clients: clients.lock().unwrap().iter().filter(|c| { c.src == "User".to_string() }).map(|c| { c.clone() }).collect(),
         gitea_endpoints: state.gitea_endpoints.clone(),
     };
     let working_dir = state.working_dir.clone();
@@ -37,4 +39,62 @@ pub(crate) fn write_user_settings(state: &State<AppSettings>, clients: &State<Cl
     let file_handle = std::fs::File::create(&to_path)?;
     serde_json::to_writer_pretty(file_handle, &user_record)?;
     Ok(())
+}
+
+pub(crate) fn copy_and_customize_webfont_css(template_path: &String, target_path: &String, user_settings: &Value, font_name: &String) -> Result<(), PankosmiaError> {
+    let typography_json = user_settings["typography"].as_object().unwrap();
+    let features_json = typography_json["features"].as_object().unwrap();
+    let feature_json = match &features_json[font_name] {
+        Value::Array(f) => f,
+        _ => return Err(PankosmiaError(format!("No feature data in user_settings for font {}", font_name)))
+    };
+    let source_font_file_path = format!("{}{}pankosmia-{}.css", &template_path, os_slash_str(), &font_name);
+    let target_font_file_path = format!("{}{}pankosmia-{}.css", &target_path, os_slash_str(), &font_name);
+    if Path::new(&source_font_file_path).is_file() {
+        let mut css_string = match fs::read_to_string(&source_font_file_path) {
+            Ok(css_string) => css_string,
+            Err(e) => {
+                panic!("Could not read css file '{}': {}", source_font_file_path, e);
+            }
+        };
+        let mut font_feature_collector = Vec::new();
+        for feature_pair in feature_json {
+            font_feature_collector.push(format!("{}: {}", feature_pair["key"], feature_pair["value"]));
+        }
+        css_string = css_string.replace("%%FONTFEATURES%%", &font_feature_collector.join(", "));
+        match fs::write(&target_font_file_path, css_string) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                panic!("Could not write css file '{}': {}", target_font_file_path, e);
+            }
+        }
+    } else {
+        Err(PankosmiaError(format!("Could not find source font file '{}'", source_font_file_path)))
+    }
+}
+
+pub(crate) fn copy_and_customize_webfont_css2(template_path: &String, target_path: &String, font_features: &Vec<TypographyFeature>, font_name: &String) -> Result<(), PankosmiaError> {
+    let source_font_file_path = format!("{}{}pankosmia-{}.css", &template_path, os_slash_str(), &font_name);
+    let target_font_file_path = format!("{}{}pankosmia-{}.css", &target_path, os_slash_str(), &font_name);
+    if Path::new(&source_font_file_path).is_file() {
+        let mut css_string = match fs::read_to_string(&source_font_file_path) {
+            Ok(css_string) => css_string,
+            Err(e) => {
+                panic!("Could not read css file '{}': {}", source_font_file_path, e);
+            }
+        };
+        let mut font_feature_collector = Vec::new();
+        for feature_pair in font_features {
+            font_feature_collector.push(format!("{}: {}", feature_pair.key, feature_pair.value));
+        }
+        css_string = css_string.replace("%%FONTFEATURES%%", &font_feature_collector.join(", "));
+        match fs::write(&target_font_file_path, css_string) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                panic!("Could not write css file '{}': {}", target_font_file_path, e);
+            }
+        }
+    } else {
+        Err(PankosmiaError(format!("Could not find source font file '{}'", source_font_file_path)))
+    }
 }
