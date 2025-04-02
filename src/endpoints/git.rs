@@ -250,7 +250,7 @@ pub async fn delete_repo(
 ///
 /// Returns an array of changes to the local repo from the given repo path.
 ///
-/// ```
+/// ```text
 /// [
 ///   {
 ///     "path": "ingredients/LICENSE.md",
