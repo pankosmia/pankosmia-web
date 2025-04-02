@@ -26,6 +26,7 @@ pub async fn notifications_stream<'a>(
         let mut bcv = state.bcv.lock().unwrap().clone();
         let gitea_endpoints = state.gitea_endpoints.clone();
         let mut auth_tokens = state.auth_tokens.lock().unwrap().clone();
+        let mut current_project = state.current_project.lock().unwrap().clone();
         let mut first_time = true;
         loop {
             while !msgs.lock().unwrap().is_empty() {
@@ -60,6 +61,46 @@ pub async fn notifications_stream<'a>(
                 .id(format!("{}", count));
                 count+=1;
             }
+            let new_current_project = state.current_project.lock().unwrap().clone();
+            match  new_current_project {
+                Some(np) => {
+                    match current_project.clone() {
+                        Some(op) => {
+                            if np.source != op.source || np.organization != op.organization || np.project != op.project || first_time  {
+                                current_project = Some(np.clone());
+                                yield stream::Event::data(
+                                    format!("{}--{}--{}", np.source, np.organization, np.project)
+                                )
+                                .event("current_project")
+                                .id(format!("{}", count));
+                                count+=1;
+                        }
+                    },
+                        None => {
+                                current_project = Some(np.clone());
+                                yield stream::Event::data(
+                                    format!("{}--{}--{}", np.source, np.organization, np.project)
+                                )
+                                .event("current_project")
+                                .id(format!("{}", count));
+                                count+=1;
+                        }
+
+                    }
+                },
+                None => {
+                    match current_project.clone() {
+                        None => {},
+                        Some(_) => {
+                            current_project = None;
+                                yield stream::Event::data("null")
+                                .event("current_project")
+                                .id(format!("{}", count));
+                                count+=1;
+                        }
+                    }
+                }
+            };
             let new_typography = state.typography.lock().unwrap().clone();
                 if typography.font_set != new_typography.font_set || typography.size != new_typography.size || typography.direction != new_typography.direction || first_time  {
                 typography = new_typography;
