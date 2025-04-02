@@ -9,3 +9,4 @@ pub mod git;
 pub mod burrito;
 pub mod clients;
 pub(crate) mod error;
+pub mod app_state;

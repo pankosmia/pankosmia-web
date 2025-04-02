@@ -4,8 +4,8 @@ use rocket::{catchers, routes, Build, Rocket};
 use rocket::fs::FileServer;
 use serde_json::{json, Value};
 use crate::endpoints;
-use crate::structs::{AppSettings, Client};
-use crate::utils::paths::os_slash_str;
+use crate::structs::{AppSettings, Client, ProjectIdentifier};
+use crate::utils::paths::{os_slash_str};
 
 pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
     rocket_instance
@@ -56,6 +56,11 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         .mount("/navigation", routes![
             endpoints::navigation::get_bcv,
             endpoints::navigation::post_bcv
+        ])
+        .mount("/app-state", routes![
+            endpoints::app_state::get_current_project,
+            endpoints::app_state::post_current_project,
+            endpoints::app_state::post_empty_current_project,
         ])
         .mount("/gitea", routes![
             endpoints::gitea::gitea_remote_repos,
@@ -142,6 +147,19 @@ pub(crate) fn add_app_settings(rocket_instance: Rocket<Build>, repo_dir_path: &S
             "verse": 1
             }))
                 .unwrap(),
+        },
+        current_project: match app_state_json["current_project"].clone() {
+            Value::Object(p) => {
+                Mutex::new(
+                    Some(
+                        ProjectIdentifier {
+                            source: p["source"].as_str().unwrap().to_string(),
+                            organization: p["organization"].as_str().unwrap().to_string(),
+                            project: p["project"].as_str().unwrap().to_string(),
+                        })
+                )
+            }
+            _ => Mutex::new(None)
         },
     })
 }

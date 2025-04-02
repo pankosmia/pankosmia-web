@@ -52,6 +52,14 @@ pub struct AuthRequest {
     pub redirect_uri: String,
     pub timestamp: std::time::SystemTime,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ProjectIdentifier {
+    pub source: String,
+    pub organization: String,
+    pub project: String
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct AppSettings {
     pub working_dir: String,
@@ -62,6 +70,7 @@ pub struct AppSettings {
     pub auth_requests: Mutex<BTreeMap<String, AuthRequest>>,
     pub bcv: Mutex<Bcv>,
     pub typography: Mutex<Typography>,
+    pub current_project: Mutex<Option<ProjectIdentifier>>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
