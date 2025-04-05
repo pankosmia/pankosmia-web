@@ -5,7 +5,7 @@ use rocket::{get, State};
 use rocket::response::stream;
 use crate::MsgQueue;
 use crate::structs::AppSettings;
-use crate::static_vars::{NET_IS_ENABLED, DEBUG_IS_ENABLED};
+use crate::static_vars::{NET_IS_ENABLED, DEBUG_IS_ENABLED, I18N_UPDATE_COUNT};
 
 /// *`GET /`*
 ///
@@ -22,6 +22,7 @@ pub async fn notifications_stream<'a>(
         let mut interval = time::interval(Duration::from_millis(1000));
         yield stream::Event::retry(Duration::from_secs(1));
         let mut languages = state.languages.lock().unwrap().clone().join("/");
+        let mut i18n_update_count = I18N_UPDATE_COUNT.load(Ordering::Relaxed);
         let mut typography = state.typography.lock().unwrap().clone();
         let mut bcv = state.bcv.lock().unwrap().clone();
         let gitea_endpoints = state.gitea_endpoints.clone();
@@ -132,7 +133,13 @@ pub async fn notifications_stream<'a>(
                 }
             }
             let new_languages = state.languages.lock().unwrap().clone().join("/");
-            if new_languages.clone() != languages.clone() || first_time {
+            let mut i18n_updated = false;
+            let new_i18n_update = I18N_UPDATE_COUNT.load(Ordering::Relaxed);
+            if new_i18n_update > i18n_update_count {
+                i18n_updated = true;
+                i18n_update_count = new_i18n_update;
+            }
+            if new_languages.clone() != languages.clone() || first_time || i18n_updated {
                 languages = new_languages;
                 yield stream::Event::data(
                     format!("{}", languages.clone())
