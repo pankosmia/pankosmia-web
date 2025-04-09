@@ -9,6 +9,7 @@
   "components": {
     "framework": {
       "no_entry_if_offline": {
+        "ar": "يجب أن تكون على الأنترنيت لترى هذه الصفحة  ",
         "en": "You need to be online to view this page.",
         "fr": "Vous devez vous connecter à l'Internet pour accéder à cette page.",
         "id": "Halaman ini memerlukan akses internet.",
@@ -17,11 +18,13 @@
     },
     "header": {
       "new_reference": {
+        "ar": "مرجع كتابي",
         "en": "New Reference",
         "fr": "Nouvelle référence",
         "id": "Referensi Baru"
       },
       "goto_local_projects_menu_item": {
+        "ar": "المشاريع على هذا الحاسوب",
         "en": "Projects on this machine",
         "fr": "Projets sur cette machine",
         "id": "Proyek-proyek di mesin ini"
@@ -31,6 +34,7 @@
   "munchers": {
     "bcv_notes_viewer": {
       "title": {
+        "ar": "ملاحظات بالآية",
         "en": "Notes by Verse",
         "fr": "Notes par verset",
         "id": "Catatan per Ayat"
@@ -43,6 +47,7 @@
         "id": "Penampil Default"
       },
       "show_metadata": {
+        "ar": "معلومات حول الكتالوج",
         "en": "Show Metadata",
         "fr": "Afficher les metadonnées",
         "id": "Tampilkan Metadata"
@@ -50,6 +55,7 @@
     },
     "text_translation_viewer": {
       "title": {
+        "ar": "الكتاب المقدس، قراءة فقط",
         "en": "Scripture (Text) Viewer",
         "fr": "Ecriture (texte), lecture seulement",
         "id": "Penampil Kitab Suci (Teks)"
@@ -57,6 +63,7 @@
     },
     "text_translation_editor": {
       "title": {
+        "ar": "محرر الكتاب المقدس",
         "en": "Scripture (Text) Editor",
         "fr": "Editeur d'Ecriture (texte)",
         "id": "Editor Kitab Suci (Teks)"
@@ -64,6 +71,7 @@
     },
     "video_links_viewer": {
       "title": {
+        "ar": "لينك الفيديو",
         "en": "Video Links",
         "fr": "Liens vidéo",
         "id": "Tautan video"
