@@ -15,7 +15,7 @@ cargo run # Creates a pankosmia_working directory at the root of the user direct
 - npm 10.7.0
 - node 18.20.4
 - rustc 1.83.0 -- See https://www.rust-lang.org/tools/install
-- cmake 3.31.0 -- See https://cmake.org/download/
+- cmake 3.31.0 -- _Version 3 is required._ See https://cmake.org/download/
 
 ## Using within Tauri
 See the Pithekos repo for example code.
