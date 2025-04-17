@@ -4,6 +4,7 @@ mod tests;
 
 #[doc(hidden)]
 use rocket::{Build, Rocket};
+use rocket::fs::relative;
 use serde_json::{Value};
 use std::env;
 use std::collections::{VecDeque};
@@ -37,7 +38,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
 
     // Make new working dir if necessary
     if !Path::new(&working_dir_path).is_dir() {
-        initialize_working_dir(&working_dir_path);
+        let app_resources_dir = get_string_value_by_key(&launch_config, "app_resources_path");
+        initialize_working_dir(&app_resources_dir, &working_dir_path);
     }
 
     // Load the config JSONs
@@ -46,6 +48,15 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Find or make repo_dir
     let repo_dir_path = get_string_value_by_key(&user_settings_json, "repo_dir");
     maybe_make_repo_dir(&repo_dir_path);
+    // Check for app_resources_dir
+    let app_resources_dir_path = match &user_settings_json["app_resources_dir"] {
+        Value::Null => relative!("").to_string(),
+        Value::String(s) => s.to_string(),
+        _ => panic!("app_resources_dir exists in user_settings.json but is not a string"),
+    };
+    if !Path::new(&app_resources_dir_path).is_dir() {
+        panic!("app_resources_dir setting '{}' in user_settings.json is not a directory", app_resources_dir_path);
+    }
 
     // Copy web fonts from path in local config
     let template_webfonts_dir_path = get_string_value_by_key(&launch_config, "webfont_path");
@@ -75,7 +86,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     my_rocket = add_static_routes(my_rocket, client_vec, &webfonts_dir_path);
 
     // State
-    my_rocket = add_app_settings(my_rocket, &repo_dir_path, &working_dir_path, &user_settings_json, &app_state_json);
+    my_rocket = add_app_settings(my_rocket, &repo_dir_path, &app_resources_dir_path, &working_dir_path, &user_settings_json, &app_state_json);
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
     my_rocket = my_rocket.manage(msg_queue).manage(clients);
 

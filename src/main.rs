@@ -25,11 +25,13 @@ pub fn main() {
     let webfont_path = relative!("./webfonts");
     let app_setup_path = relative!("./setup/app_setup.json");
     let local_setup_path = relative!("./setup/local_setup.json");
+    let app_resources_path = relative!("");
     let conf = json!({
         "working_dir": working_dir,
         "webfont_path": webfont_path,
         "app_setup_path": app_setup_path,
-        "local_setup_path": local_setup_path
+        "local_setup_path": local_setup_path,
+        "app_resources_path": app_resources_path,
     });
     let _ = do_rocket(conf);
 }

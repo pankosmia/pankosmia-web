@@ -7,9 +7,12 @@ use crate::utils::paths::{maybe_os_quoted_path_str, os_slash_str, user_settings_
 use crate::structs::{PankosmiaError, AppSettings, UserSettings, TypographyFeature};
 use crate::utils::client::Clients;
 
-pub(crate) fn customize_and_copy_template_file(from_path: &str, to_path: &String, working_dir: &String) -> Result<(), std::io::Error> {
+pub(crate) fn customize_and_copy_template_file(from_path: &str, to_path: &String, working_dir: &String, app_resources_dir: &String) -> Result<(), std::io::Error> {
     let json_string = std::fs::read_to_string(&from_path)?;
-    let quoted_json_string = maybe_os_quoted_path_str(json_string.replace("%%WORKINGDIR%%", &working_dir));
+    let quoted_json_string = maybe_os_quoted_path_str(json_string
+        .replace("%%WORKINGDIR%%", &working_dir)
+        .replace("%%APPRESOURCESDIR%%", &app_resources_dir)
+    );
     let mut file_handle = std::fs::File::create(&to_path)?;
     file_handle.write_all(&quoted_json_string.as_bytes())?;
     Ok(())

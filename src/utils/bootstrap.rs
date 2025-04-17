@@ -18,7 +18,7 @@ use crate::utils::files::{
     load_and_substitute_json,
 };
 use crate::utils::json::get_string_value_by_key;
-pub(crate) fn initialize_working_dir(working_dir_path: &String) -> () {
+pub(crate) fn initialize_working_dir(app_resources_dir_path: &String, working_dir_path: &String) -> () {
     // Make working dir
     match fs::create_dir_all(working_dir_path) {
         Ok(_) => {}
@@ -27,9 +27,9 @@ pub(crate) fn initialize_working_dir(working_dir_path: &String) -> () {
         }
     };
     // Copy user_settings file to working dir
-    let user_settings_template_path = relative!("./templates/user_settings.json");
+    let user_settings_template_path = format!("{}/templates/user_settings.json", &app_resources_dir_path);
     let user_settings = user_settings_path(working_dir_path);
-    match customize_and_copy_template_file(&user_settings_template_path, &user_settings, working_dir_path) {
+    match customize_and_copy_template_file(&user_settings_template_path, &user_settings, &working_dir_path, &app_resources_dir_path) {
         Ok(_) => {}
         Err(e) => {
             panic!("Error while copying user settings template file {} to {}: {}", user_settings_template_path, user_settings, e);
@@ -38,7 +38,7 @@ pub(crate) fn initialize_working_dir(working_dir_path: &String) -> () {
     // Copy app_state file to working dir
     let app_state_template_path = relative!("./templates/app_state.json");
     let app_state = app_state_path(working_dir_path);
-    match customize_and_copy_template_file(&app_state_template_path, &app_state, working_dir_path) {
+    match customize_and_copy_template_file(&app_state_template_path, &app_state, &working_dir_path, &app_resources_dir_path) {
         Ok(_) => {}
         Err(e) => {
             panic!("Error while copying app state template file {} to {}: {}", app_state_template_path, app_state, e);
@@ -75,6 +75,7 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
     };
     // Load app state JSON
     let app_state = app_state_path(working_dir_path);
+    println!("{} | {}", working_dir_path, app_state);
     let app_state_json = match load_json(&app_state) {
         Ok(json) => json,
         Err(e) => {
