@@ -75,7 +75,6 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
     };
     // Load app state JSON
     let app_state = app_state_path(working_dir_path);
-    println!("{} | {}", working_dir_path, app_state);
     let app_state_json = match load_json(&app_state) {
         Ok(json) => json,
         Err(e) => {
