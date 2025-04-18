@@ -3,3 +3,9 @@
 address = "127.0.0.1"
 port = 19119
 limits = { form = "1 MiB", json = "10 MiB" }
+
+[default.shutdown]
+ctrlc = true
+signals = ["term", "hup"]
+grace = 5
+mercy = 2
