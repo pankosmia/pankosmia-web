@@ -2,7 +2,6 @@ use copy_dir::copy_dir;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
-use rocket::fs::relative;
 use serde_json::{json, Map, Value};
 use crate::utils::client::Clients;
 use crate::utils::files::{copy_and_customize_webfont_css, customize_and_copy_template_file};
@@ -36,7 +35,7 @@ pub(crate) fn initialize_working_dir(app_resources_dir_path: &String, working_di
         }
     }
     // Copy app_state file to working dir
-    let app_state_template_path = relative!("./templates/app_state.json");
+    let app_state_template_path = format!("{}templates/app_state.json", &app_resources_dir_path);
     let app_state = app_state_path(working_dir_path);
     match customize_and_copy_template_file(&app_state_template_path, &app_state, &working_dir_path, &app_resources_dir_path) {
         Ok(_) => {}
@@ -216,7 +215,7 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
         })
 }
 
-pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, working_dir_path: &String) -> Clients {
+pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, app_resources_path: &String, working_dir_path: &String) -> Clients {
     let clients_value = serde_json::to_value(clients_merged_array).unwrap();
     let clients: Clients = match serde_json::from_value(clients_value) {
         Ok(v) => v,
@@ -227,7 +226,7 @@ pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, working_d
             );
         }
     };
-    let i18n_template_path = format!("{}{}i18n.json", relative!("./templates"), os_slash_str());
+    let i18n_template_path = format!("{}templates/i18n.json", app_resources_path);
     let mut i18n_json_map: Map<String, Value> = match fs::read_to_string(&i18n_template_path) {
         Ok(it) => match serde_json::from_str(&it) {
             Ok(i) => i,

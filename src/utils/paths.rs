@@ -1,7 +1,6 @@
 use std::env;
 use std::path::{Components};
 use home::home_dir;
-use rocket::fs::relative;
 
 pub(crate) fn os_slash_str() -> &'static str {
     match env::consts::OS {
@@ -118,6 +117,6 @@ pub(crate) fn webfonts_path (working_dir: &String) -> String {
     format!("{}/webfonts", working_dir)
 }
 
-pub(crate) fn source_webfonts_path() -> String {
-    relative!("./webfonts").to_string()
+pub(crate) fn source_webfonts_path(app_resources_dir: &String) -> String {
+    format!("{}/webfonts", app_resources_dir)
 }

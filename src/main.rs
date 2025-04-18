@@ -22,10 +22,13 @@ pub fn main() {
     if args.len() == 2 {
         working_dir = args[1].clone();
     };
-    let webfont_path = relative!("./webfonts");
-    let app_setup_path = relative!("./setup/app_setup.json");
-    let local_setup_path = relative!("./setup/local_setup.json");
-    let app_resources_path = relative!("");
+    let mut app_resources_path = relative!("").to_string();
+    if env::var("APP_RESOURCES_DIR").is_ok() {
+        app_resources_path = env::var("APP_RESOURCES_DIR").unwrap();
+    }
+    let webfont_path = format!("{}webfonts", app_resources_path);
+    let app_setup_path = format!("{}setup/app_setup.json", app_resources_path);
+    let local_setup_path = format!("{}setup/local_setup.json", app_resources_path);
     let conf = json!({
         "working_dir": working_dir,
         "webfont_path": webfont_path,

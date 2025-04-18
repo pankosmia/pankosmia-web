@@ -103,7 +103,7 @@ pub(crate) fn add_catchers(rocket_instance: Rocket<Build>) -> Rocket<Build> {
 pub(crate) fn add_app_settings(rocket_instance: Rocket<Build>, repo_dir_path: &String, app_resources_dir_path: &String, working_dir_path: &String, user_settings_json: &Value, app_state_json: &Value) -> Rocket<Build> {
     rocket_instance.manage(AppSettings {
         repo_dir: Mutex::new(repo_dir_path.clone()),
-        app_resources_dir: Mutex::new(app_resources_dir_path.clone()),
+        app_resources_dir: app_resources_dir_path.clone(),
         working_dir: working_dir_path.clone(),
         languages: Mutex::new(
             user_settings_json["languages"]

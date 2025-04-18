@@ -181,7 +181,6 @@ pub fn post_typography(
             )
         }
     }
-    println!("here6");
     status::Custom(
         Status::Ok,
         (
@@ -220,7 +219,8 @@ pub fn post_typography_feature(
                     }
                 }
                 let working_dir = state.working_dir.clone();
-                let src_webfonts_dir = source_webfonts_path();
+                let app_resources_dir = state.app_resources_dir.clone();
+                let src_webfonts_dir = source_webfonts_path(&app_resources_dir);
                 let target_webfonts_dir = webfonts_path(&working_dir);
                 match copy_and_customize_webfont_css2(&src_webfonts_dir, &target_webfonts_dir, &new_fields, &font_name.to_string()) {
                     Ok(_) => {}

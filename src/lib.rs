@@ -4,7 +4,6 @@ mod tests;
 
 #[doc(hidden)]
 use rocket::{Build, Rocket};
-use rocket::fs::relative;
 use serde_json::{Value};
 use std::env;
 use std::collections::{VecDeque};
@@ -50,7 +49,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     maybe_make_repo_dir(&repo_dir_path);
     // Check for app_resources_dir
     let app_resources_dir_path = match &user_settings_json["app_resources_dir"] {
-        Value::Null => relative!("").to_string(),
+        Value::Null => panic!("app_resources_dir does not exist in user_settings.json"),
         Value::String(s) => s.to_string(),
         _ => panic!("app_resources_dir exists in user_settings.json but is not a string"),
     };
@@ -72,7 +71,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         clients_merged_array.push(build_client_record(&client_record));
     }
     // Build complete clients with i18n
-    let clients = build_clients_and_i18n(clients_merged_array, &working_dir_path);
+    let clients = build_clients_and_i18n(clients_merged_array, &app_resources_dir_path, &working_dir_path);
 
     // *** LAUNCH ROCKET ***
     let mut my_rocket = rocket::build();

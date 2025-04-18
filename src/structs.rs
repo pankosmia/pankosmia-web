@@ -64,7 +64,7 @@ pub struct ProjectIdentifier {
 pub struct AppSettings {
     pub working_dir: String,
     pub repo_dir: Mutex<String>,
-    pub app_resources_dir: Mutex<String>,
+    pub app_resources_dir: String,
     pub languages: Mutex<Vec<String>>,
     pub gitea_endpoints: BTreeMap<String, String>,
     pub auth_tokens: Mutex<BTreeMap<String, String>>,
