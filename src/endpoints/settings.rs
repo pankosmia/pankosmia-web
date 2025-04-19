@@ -206,7 +206,7 @@ pub fn post_typography_feature(
     new_value: u8,
 ) -> status::Custom<(ContentType, String)> {
     if let mut typo_inner = state.typography.lock().unwrap() {
-        let mut new_fonts = BTreeMap::new();
+        let mut new_font_fields = BTreeMap::new();
         for (font_key, font_value) in &mut typo_inner.features {
             if font_key == font_name {
                 let mut new_fields = Vec::new();
@@ -237,16 +237,16 @@ pub fn post_typography_feature(
                         )
                     }
                 }
-                new_fonts.insert(font_key.to_string(), new_fields);
+                new_font_fields.insert(font_key.to_string(), new_fields);
             } else {
-                new_fonts.insert(font_key.to_string(), font_value.to_vec());
+                new_font_fields.insert(font_key.to_string(), font_value.to_vec());
             }
         }
         *typo_inner = Typography {
             font_set: typo_inner.font_set.clone(),
             size: typo_inner.size.clone(),
             direction: typo_inner.direction.clone(),
-            features: new_fonts,
+            features: new_font_fields,
         };
         msgs.lock()
             .unwrap()

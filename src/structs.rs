@@ -104,6 +104,7 @@ pub struct PublicClient {
 pub struct UserSettings {
     pub languages: Vec<String>,
     pub repo_dir: String,
+    pub app_resources_dir: String,
     pub typography: Typography,
     pub my_clients: Vec<Client>,
     pub gitea_endpoints: BTreeMap<String, String>,

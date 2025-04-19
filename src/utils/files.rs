@@ -33,6 +33,7 @@ pub(crate) fn write_user_settings(state: &State<AppSettings>, clients: &State<Cl
     let user_record = UserSettings {
         languages: (*state.languages.lock().unwrap()).to_owned(),
         repo_dir: state.repo_dir.lock().unwrap().clone(),
+        app_resources_dir: state.app_resources_dir.clone(),
         typography: (*state.typography.lock().unwrap()).to_owned(),
         my_clients: clients.lock().unwrap().iter().filter(|c| { c.src == "User".to_string() }).map(|c| { c.clone() }).collect(),
         gitea_endpoints: state.gitea_endpoints.clone(),
