@@ -3,11 +3,12 @@
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use git2::{Repository, StatusOptions};
-use rocket::{get, State};
+use rocket::{get, post, State};
+use rocket::form::Form;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use crate::static_vars::NET_IS_ENABLED;
-use crate::structs::{AppSettings, GitStatusRecord};
+use crate::structs::{AppSettings, GitStatusRecord, NewContentForm};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::paths::{check_path_components, os_slash_str};
 
@@ -56,6 +57,14 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
         ),
     )
 }
+
+/// *`GET /list-repos-templates`*
+///
+/// Typically mounted as **`/git/list-repos-templates`**
+///
+/// Returns a JSON array of local repo template names.
+///
+/// `["text_translation"]`
 #[get("/list-repo-templates")]
 pub fn list_repos_templates(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let root_path = state.app_resources_dir.clone();
@@ -72,6 +81,38 @@ pub fn list_repos_templates(state: &State<AppSettings>) -> status::Custom<(Conte
         (
             ContentType::JSON,
             repos_json_string,
+        ),
+    )
+}
+
+/// *`POST /new`*
+///
+/// Typically mounted as **`/git/new`**
+///
+/// Creates a new, local content repo. It requires the following fields as multipart form data:
+/// - content_name
+/// - content_abbr
+/// - content_type
+/// - content_language_code
+#[post("/new",
+    format = "multipart/form-data",
+    data = "<form>")]
+pub fn new_repo(
+    state: &State<AppSettings>,
+    form: Form<NewContentForm>,
+) -> status::Custom<(ContentType, String)> {
+    // Check template type exists
+    // Make path for new repo
+    // Check path doesn't already exist
+    // Init repo
+    // Read and customize metadata
+    // Add and commit metadata
+    println!("{} ({}): {}, {}", form.content_name, form.content_abbr, form.content_type, form.content_language_code);
+    status::Custom(
+        Status::Ok,
+        (
+            ContentType::JSON,
+            make_good_json_data_response("ok".to_string()),
         ),
     )
 }

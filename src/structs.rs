@@ -160,3 +160,11 @@ pub enum ContentOrRedirect {
     Content(status::Custom<(ContentType, String)>),
     Redirect(Redirect),
 }
+
+#[derive(FromForm)]
+pub struct NewContentForm {
+    pub content_name: String,
+    pub content_abbr: String,
+    pub content_type: String,
+    pub content_language_code: String,
+}
