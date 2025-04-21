@@ -1,0 +1,70 @@
+{
+  "format": "scripture burrito",
+  "meta": {
+    "version": "1.0.0",
+    "category": "source",
+    "generator": {
+      "softwareName": "Pankosmia Web by MVH Solutions",
+      "softwareVersion": "0.0.1",
+      "userName": "A Pankosmia Web User"
+    },
+    "defaultLocale": "en",
+    "dateCreated": "%%CREATED_TIMESTAMP%%",
+    "normalization": "NFC"
+  },
+  "idAuthorities": {
+    "_local_": {
+      "id": "_local_",
+      "name": {
+        "en": "Local Project"
+      }
+    }
+  },
+  "identification": {
+    "primary": {
+      "_local_": {
+        "%%ABBR%%": {
+          "revision": "1",
+          "timestamp": "%%CREATED_TIMESTAMP%%"
+        }
+      }
+    },
+    "name": {
+      "en": "%%CONTENT_NAME%%"
+    },
+    "description": {
+      "en": "%%CONTENT_NAME%%"
+    },
+    "abbreviation": {
+      "en": "%%ABBR%%"
+    }
+  },
+  "languages": [
+    {
+      "tag": "en",
+      "name": {
+        "en": "English"
+      },
+      "scriptDirection": "ltr"
+    }
+  ],
+  "type": {
+    "flavorType": {
+      "name": "scripture",
+      "flavor": {
+        "name": "textTranslation",
+        "usfmVersion": "3.0",
+        "translationType": "revision",
+        "audience": "common",
+        "projectType": "standard"
+      },
+      "currentScope": {}
+    }
+  },
+  "confidential": false,
+  "localizedNames": {},
+  "ingredients": {},
+  "copyright": {
+    "shortStatements": []
+  }
+}
