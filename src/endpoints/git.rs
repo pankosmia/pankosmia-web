@@ -58,33 +58,6 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
     )
 }
 
-/// *`GET /list-repos-templates`*
-///
-/// Typically mounted as **`/git/list-repos-templates`**
-///
-/// Returns a JSON array of local repo template names.
-///
-/// `["text_translation"]`
-#[get("/list-repo-templates")]
-pub fn list_repos_templates(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
-    let root_path = state.app_resources_dir.clone();
-    let template_paths = std::fs::read_dir(format!("{}{}{}{}{}", root_path, os_slash_str(), "templates", os_slash_str(), "project_templates")).unwrap();
-    let mut templates: Vec<String> = Vec::new();
-    for template_path in template_paths {
-        let template_path_ob = template_path.unwrap().path();
-        let template_filename = template_path_ob.file_name().unwrap();
-        templates.push(template_filename.to_str().unwrap().to_string().split(".").next().unwrap().to_string());
-    }
-    let repos_json_string = serde_json::to_string_pretty(&templates).unwrap();
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            repos_json_string,
-        ),
-    )
-}
-
 /// *`POST /new`*
 ///
 /// Typically mounted as **`/git/new`**
