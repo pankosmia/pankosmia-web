@@ -146,6 +146,22 @@ pub fn new_repo(
             ),
         )
     };
+    // Make ingredients dir
+    let path_to_ingredients = format!(
+        "{}{}ingredients",
+        path_to_new_repo,
+        os_slash_str(),
+    );
+    match std::fs::create_dir(&path_to_ingredients) {
+        Ok(_) => (),
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not create ingredients directory for repo: {}", e)),
+            ),
+        )
+    }
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -162,7 +178,15 @@ pub fn new_repo(
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
-    // Add metadata.json
+    // If book:
+    // - Read and customize USFM template
+    // - If ve
+    // --- add cv else
+    // --- add 1:1
+    // - add ingredient to metadata
+    // - Write USFM
+    // Write metadata
+    // git add and commit metadata
     let path_to_repo_metadata = format!(
         "{}{}metadata.json",
         &path_to_new_repo,
