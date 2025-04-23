@@ -89,7 +89,7 @@ pub(crate) fn copy_and_customize_webfont_css2(template_path: &String, target_pat
         };
         let mut font_feature_collector = Vec::new();
         for feature_pair in font_features {
-            font_feature_collector.push(format!("{}: {}", feature_pair.key, feature_pair.value));
+            font_feature_collector.push(format!("\"{}\" {}", feature_pair.key, feature_pair.value));
         }
         css_string = css_string.replace("%%FONTFEATURES%%", &font_feature_collector.join(", "));
         match fs::write(&target_font_file_path, css_string) {
