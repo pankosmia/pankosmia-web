@@ -9,6 +9,346 @@
     "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
     "size": "medium",
     "features": {
+      "Andika": [
+        {
+          "key": "smcp",
+          "value": 0
+        },
+        {
+          "key": "c2sc",
+          "value": 0
+        },
+        {
+          "key": "ss01",
+          "value": 0
+        },
+        {
+          "key": "ss13",
+          "value": 0
+        },
+        {
+          "key": "ss14",
+          "value": 0
+        },
+        {
+          "key": "ss04",
+          "value": 0
+        },
+        {
+          "key": "ss05",
+          "value": 0
+        },
+        {
+          "key": "cv13",
+          "value": 0
+        },
+        {
+          "key": "cv17",
+          "value": 0
+        },
+        {
+          "key": "cv28",
+          "value": 0
+        },
+        {
+          "key": "cv31",
+          "value": 0
+        },
+        {
+          "key": "cv35",
+          "value": 0
+        },
+        {
+          "key": "cv37",
+          "value": 0
+        },
+        {
+          "key": "cv39",
+          "value": 0
+        },
+        {
+          "key": "cv43",
+          "value": 0
+        },
+        {
+          "key": "cv44",
+          "value": 0
+        },
+        {
+          "key": "cv46",
+          "value": 0
+        },
+        {
+          "key": "cv47",
+          "value": 0
+        },
+        {
+          "key": "cv49",
+          "value": 0
+        },
+        {
+          "key": "cv52",
+          "value": 0
+        },
+        {
+          "key": "cv51",
+          "value": 0
+        },
+        {
+          "key": "cv55",
+          "value": 0
+        },
+        {
+          "key": "cv56",
+          "value": 0
+        },
+        {
+          "key": "cv57",
+          "value": 0
+        },
+        {
+          "key": "cv62",
+          "value": 0
+        },
+        {
+          "key": "cv68",
+          "value": 0
+        },
+        {
+          "key": "cv67",
+          "value": 0
+        },
+        {
+          "key": "cv20",
+          "value": 0
+        },
+        {
+          "key": "cv19",
+          "value": 0
+        },
+        {
+          "key": "cv25",
+          "value": 0
+        },
+        {
+          "key": "cv69",
+          "value": 0
+        },
+        {
+          "key": "cv75",
+          "value": 0
+        },
+        {
+          "key": "cv79",
+          "value": 0
+        },
+        {
+          "key": "cv76",
+          "value": 0
+        },
+        {
+          "key": "cv77",
+          "value": 0
+        },
+        {
+          "key": "cv70",
+          "value": 0
+        },
+        {
+          "key": "cv71",
+          "value": 0
+        },
+        {
+          "key": "cv98",
+          "value": 0
+        },
+        {
+          "key": "cv80",
+          "value": 0
+        },
+        {
+          "key": "cv81",
+          "value": 0
+        },
+        {
+          "key": "cv82",
+          "value": 0
+        },
+        {
+          "key": "cv84",
+          "value": 0
+        },
+        {
+          "key": "cv90",
+          "value": 0
+        },
+        {
+          "key": "cv91",
+          "value": 0
+        },
+        {
+          "key": "cv92",
+          "value": 0
+        },
+        {
+          "key": "subs",
+          "value": 0
+        },
+        {
+          "key": "sups",
+          "value": 0
+        },
+        {
+          "key": "frac",
+          "value": 0
+        },
+        {
+          "key": "cv10",
+          "value": 0
+        },
+        {
+          "key": "cv01",
+          "value": 0
+        },
+        {
+          "key": "cv04",
+          "value": 0
+        },
+        {
+          "key": "cv06",
+          "value": 0
+        },
+        {
+          "key": "cv07",
+          "value": 0
+        }
+      ],
+      "Awami_Nastaliq_Extra_Bold": [
+        {
+          "key": "hehk",
+          "value": 0
+        },
+        {
+          "key": "hedo",
+          "value": 1
+        },
+        {
+          "key": "lamv",
+          "value": 0
+        },
+        {
+          "key": "cv85",
+          "value": 0
+        },
+        {
+          "key": "cv78",
+          "value": 1
+        },
+        {
+          "key": "hamz",
+          "value": 0
+        },
+        {
+          "key": "wdsp",
+          "value": 2
+        },
+        {
+          "key": "agca",
+          "value": 3
+        },
+        {
+          "key": "shrt",
+          "value": 2
+        },
+        {
+          "key": "punc",
+          "value": 2
+        }
+      ],
+      "Awami_Nastaliq_Medium": [
+        {
+          "key": "hehk",
+          "value": 0
+        },
+        {
+          "key": "hedo",
+          "value": 1
+        },
+        {
+          "key": "lamv",
+          "value": 0
+        },
+        {
+          "key": "cv85",
+          "value": 0
+        },
+        {
+          "key": "cv78",
+          "value": 1
+        },
+        {
+          "key": "hamz",
+          "value": 0
+        },
+        {
+          "key": "wdsp",
+          "value": 2
+        },
+        {
+          "key": "agca",
+          "value": 3
+        },
+        {
+          "key": "shrt",
+          "value": 2
+        },
+        {
+          "key": "punc",
+          "value": 2
+        }
+      ],
+      "Awami_Nastaliq_Semi_Bold": [
+        {
+          "key": "hehk",
+          "value": 0
+        },
+        {
+          "key": "hedo",
+          "value": 1
+        },
+        {
+          "key": "lamv",
+          "value": 0
+        },
+        {
+          "key": "cv85",
+          "value": 0
+        },
+        {
+          "key": "cv78",
+          "value": 1
+        },
+        {
+          "key": "hamz",
+          "value": 0
+        },
+        {
+          "key": "wdsp",
+          "value": 2
+        },
+        {
+          "key": "agca",
+          "value": 3
+        },
+        {
+          "key": "shrt",
+          "value": 2
+        },
+        {
+          "key": "punc",
+          "value": 2
+        }
+      ],
       "Awami_Nastaliq": [
         {
           "key": "hehk",
@@ -49,6 +389,354 @@
         {
           "key": "punc",
           "value": 2
+        }
+      ],
+      "Charis_SIL": [
+        {
+          "key": "smcp",
+          "value": 0
+        },
+        {
+          "key": "c2sc",
+          "value": 0
+        },
+        {
+          "key": "ss01",
+          "value": 0
+        },
+        {
+          "key": "ss11",
+          "value": 0
+        },
+        {
+          "key": "ss12",
+          "value": 0
+        },
+        {
+          "key": "ss04",
+          "value": 0
+        },
+        {
+          "key": "ss05",
+          "value": 0
+        },
+        {
+          "key": "cv13",
+          "value": 0
+        },
+        {
+          "key": "cv17",
+          "value": 0
+        },
+        {
+          "key": "cv28",
+          "value": 0
+        },
+        {
+          "key": "cv37",
+          "value": 0
+        },
+        {
+          "key": "cv43",
+          "value": 0
+        },
+        {
+          "key": "cv44",
+          "value": 0
+        },
+        {
+          "key": "cv46",
+          "value": 0
+        },
+        {
+          "key": "cv47",
+          "value": 0
+        },
+        {
+          "key": "cv49",
+          "value": 0
+        },
+        {
+          "key": "cv55",
+          "value": 0
+        },
+        {
+          "key": "cv57",
+          "value": 0
+        },
+        {
+          "key": "cv62",
+          "value": 0
+        },
+        {
+          "key": "cv68",
+          "value": 0
+        },
+        {
+          "key": "cv20",
+          "value": 0
+        },
+        {
+          "key": "cv19",
+          "value": 0
+        },
+        {
+          "key": "cv25",
+          "value": 0
+        },
+        {
+          "key": "cv69",
+          "value": 0
+        },
+        {
+          "key": "cv75",
+          "value": 0
+        },
+        {
+          "key": "cv79",
+          "value": 0
+        },
+        {
+          "key": "cv76",
+          "value": 0
+        },
+        {
+          "key": "cv77",
+          "value": 0
+        },
+        {
+          "key": "cv70",
+          "value": 0
+        },
+        {
+          "key": "cv71",
+          "value": 0
+        },
+        {
+          "key": "cv98",
+          "value": 0
+        },
+        {
+          "key": "cv80",
+          "value": 0
+        },
+        {
+          "key": "cv81",
+          "value": 0
+        },
+        {
+          "key": "cv82",
+          "value": 0
+        },
+        {
+          "key": "cv84",
+          "value": 0
+        },
+        {
+          "key": "cv90",
+          "value": 0
+        },
+        {
+          "key": "cv91",
+          "value": 0
+        },
+        {
+          "key": "cv92",
+          "value": 0
+        },
+        {
+          "key": "subs",
+          "value": 0
+        },
+        {
+          "key": "sups",
+          "value": 0
+        },
+        {
+          "key": "frac",
+          "value": 0
+        }
+      ],
+      "Gentium_Book_Plus": [
+        {
+          "key": "smcp",
+          "value": 0
+        },
+        {
+          "key": "c2sc",
+          "value": 0
+        },
+        {
+          "key": "ss01",
+          "value": 0
+        },
+        {
+          "key": "ss11",
+          "value": 0
+        },
+        {
+          "key": "ss12",
+          "value": 0
+        },
+        {
+          "key": "ss04",
+          "value": 0
+        },
+        {
+          "key": "ss05",
+          "value": 0
+        },
+        {
+          "key": "cv13",
+          "value": 0
+        },
+        {
+          "key": "cv17",
+          "value": 0
+        },
+        {
+          "key": "cv28",
+          "value": 0
+        },
+        {
+          "key": "cv37",
+          "value": 0
+        },
+        {
+          "key": "cv43",
+          "value": 0
+        },
+        {
+          "key": "cv44",
+          "value": 0
+        },
+        {
+          "key": "cv46",
+          "value": 0
+        },
+        {
+          "key": "cv47",
+          "value": 0
+        },
+        {
+          "key": "cv49",
+          "value": 0
+        },
+        {
+          "key": "cv55",
+          "value": 0
+        },
+        {
+          "key": "cv57",
+          "value": 0
+        },
+        {
+          "key": "cv62",
+          "value": 0
+        },
+        {
+          "key": "cv68",
+          "value": 0
+        },
+        {
+          "key": "cv20",
+          "value": 0
+        },
+        {
+          "key": "cv19",
+          "value": 0
+        },
+        {
+          "key": "cv25",
+          "value": 0
+        },
+        {
+          "key": "cv69",
+          "value": 0
+        },
+        {
+          "key": "ss07",
+          "value": 0
+        },
+        {
+          "key": "cv75",
+          "value": 0
+        },
+        {
+          "key": "cv79",
+          "value": 0
+        },
+        {
+          "key": "cv76",
+          "value": 0
+        },
+        {
+          "key": "cv77",
+          "value": 0
+        },
+        {
+          "key": "cv70",
+          "value": 0
+        },
+        {
+          "key": "cv71",
+          "value": 0
+        },
+        {
+          "key": "cv98",
+          "value": 0
+        },
+        {
+          "key": "cv80",
+          "value": 0
+        },
+        {
+          "key": "cv81",
+          "value": 0
+        },
+        {
+          "key": "cv82",
+          "value": 0
+        },
+        {
+          "key": "cv84",
+          "value": 0
+        },
+        {
+          "key": "cv78",
+          "value": 0
+        },
+        {
+          "key": "cv83",
+          "value": 0
+        },
+        {
+          "key": "cv14",
+          "value": 0
+        },
+        {
+          "key": "cv90",
+          "value": 0
+        },
+        {
+          "key": "cv91",
+          "value": 0
+        },
+        {
+          "key": "cv92",
+          "value": 0
+        },
+        {
+          "key": "subs",
+          "value": 0
+        },
+        {
+          "key": "sups",
+          "value": 0
+        },
+        {
+          "key": "frac",
+          "value": 0
         }
       ],
       "Gentium_Plus": [
@@ -230,6 +918,72 @@
         },
         {
           "key": "frac",
+          "value": 0
+        }
+      ],
+      "Padauk_Book": [
+        {
+          "key": "cv01",
+          "value": 0
+        },
+        {
+          "key": "cv02",
+          "value": 0
+        },
+        {
+          "key": "cv03",
+          "value": 0
+        },
+        {
+          "key": "cv04",
+          "value": 0
+        },
+        {
+          "key": "cv05",
+          "value": 0
+        },
+        {
+          "key": "cv06",
+          "value": 0
+        },
+        {
+          "key": "cv07",
+          "value": 0
+        },
+        {
+          "key": "cv09",
+          "value": 0
+        },
+        {
+          "key": "cv10",
+          "value": 0
+        },
+        {
+          "key": "lldt",
+          "value": 0
+        },
+        {
+          "key": "ulon",
+          "value": 0
+        },
+        {
+          "key": "utal",
+          "value": 0
+        },
+        {
+          "key": "dotc",
+          "value": 1
+        },
+        {
+          "key": "nnya",
+          "value": 0
+        },
+        {
+          "key": "vtta",
+          "value": 0
+        },
+        {
+          "key": "dotr",
           "value": 0
         }
       ],
