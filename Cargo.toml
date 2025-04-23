@@ -20,6 +20,7 @@ crate-type = [
 path = "src/lib.rs"
 
 [dependencies]
+chrono = "0.4.40"
 copy_dir = "0.1.3"
 fs = "0.0.5"
 git2 = "0.20.0"

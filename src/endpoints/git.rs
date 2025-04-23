@@ -7,6 +7,7 @@ use rocket::{get, post, State};
 use rocket::serde::json::Json;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
+use chrono::prelude::Utc;
 use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::{AppSettings, GitStatusRecord, NewContentForm};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
@@ -90,7 +91,6 @@ pub fn new_repo(
         json_form.content_type.clone(),
         os_slash_str(),
     );
-    println!("Metadata: {}", &path_to_template);
     if !std::path::Path::new(&path_to_template).is_file() {
         return status::Custom(
             Status::BadRequest,
@@ -114,7 +114,6 @@ pub fn new_repo(
         json_form.content_abbr.clone()
 
     );
-    println!("Repo Path: {}", &path_to_new_repo);
     // Check path doesn't already exist
     if std::path::Path::new(&path_to_new_repo).exists() {
         return status::Custom(
@@ -137,7 +136,7 @@ pub fn new_repo(
         )
     }
     // Init repo
-    let new_repo = match Repository::init(path_to_new_repo) {
+    let new_repo = match Repository::init(&path_to_new_repo) {
         Ok(repo) => repo,
         Err(e) => return status::Custom(
             Status::InternalServerError,
@@ -148,7 +147,37 @@ pub fn new_repo(
         )
     };
     // Read and customize metadata
+    let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
+        Ok(v) => v,
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not load metadata template as string: {}", e)),
+            ),
+        )
+    };
+    let now_time = Utc::now();
+    metadata_string = metadata_string
+        .replace("%%ABBR%%", json_form.content_abbr.as_str())
+        .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
+        .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
     // Add metadata.json
+    let path_to_repo_metadata = format!(
+        "{}{}metadata.json",
+        &path_to_new_repo,
+        os_slash_str()
+    );
+    match std::fs::write(path_to_repo_metadata, metadata_string) {
+        Ok(_) => (),
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not write metadata template to repo: {}", e)),
+            ),
+        )
+    }
     // Make ingredients dir
     // If book:
     // - Read and customize template
