@@ -161,10 +161,16 @@ pub enum ContentOrRedirect {
     Redirect(Redirect),
 }
 
-#[derive(FromForm)]
+#[derive(FromForm, Deserialize)]
 pub struct NewContentForm {
     pub content_name: String,
     pub content_abbr: String,
     pub content_type: String,
     pub content_language_code: String,
+    pub add_book: bool,
+    pub book_code: Option<String>,
+    pub book_title: Option<String>,
+    pub book_abbr: Option<String>,
+    pub add_cv: Option<bool>,
+    pub versification: Option<String>
 }

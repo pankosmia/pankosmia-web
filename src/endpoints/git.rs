@@ -4,7 +4,7 @@ use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use git2::{Repository, StatusOptions};
 use rocket::{get, post, State};
-use rocket::form::Form;
+use rocket::serde::json::Json;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use crate::static_vars::NET_IS_ENABLED;
@@ -62,25 +62,98 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
 ///
 /// Typically mounted as **`/git/new`**
 ///
-/// Creates a new, local content repo. It requires the following fields as multipart form data:
-/// - content_name
-/// - content_abbr
-/// - content_type
+/// Creates a new, local content repo. It requires the following fields as a JSON body:
+/// - content_name (string)
+/// - content_abbr (string)
+/// - content_type (string)
 /// - content_language_code
+/// - add_book (boolean)
+/// - book_code (null or string)
+/// - book_title (null or string)
+/// - book_abbr (null or string)
+/// - add_cv (null or boolean)
+/// - versification (null or string)
 #[post("/new",
-    format = "multipart/form-data",
-    data = "<form>")]
+    format = "json",
+    data = "<json_form>")]
 pub fn new_repo(
     state: &State<AppSettings>,
-    form: Form<NewContentForm>,
+    json_form: Json<NewContentForm>,
 ) -> status::Custom<(ContentType, String)> {
     // Check template type exists
-    // Make path for new repo
+    let path_to_template = format!(
+        "{}{}templates{}content_templates{}{}{}metadata.json",
+        &state.app_resources_dir,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        json_form.content_type.clone(),
+        os_slash_str(),
+    );
+    println!("Metadata: {}", &path_to_template);
+    if !std::path::Path::new(&path_to_template).is_file() {
+        return status::Custom(
+            Status::BadRequest,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Metadata template {} not found", json_form.content_type)),
+            ),
+        )
+    }
+    // Build path for new repo and parent
+    let path_to_new_repo_parent = format!(
+        "{}{}_local_{}_local_",
+        state.repo_dir.lock().unwrap().clone(),
+        os_slash_str(),
+        os_slash_str(),
+    );
+    let path_to_new_repo = format!(
+        "{}{}{}",
+        path_to_new_repo_parent.clone(),
+        os_slash_str(),
+        json_form.content_abbr.clone()
+
+    );
+    println!("Repo Path: {}", &path_to_new_repo);
     // Check path doesn't already exist
+    if std::path::Path::new(&path_to_new_repo).exists() {
+        return status::Custom(
+            Status::BadRequest,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Local content called '{}' already exists", json_form.content_abbr)),
+            ),
+        )
+    }
+    // Make parents?
+    match std::fs::create_dir_all(path_to_new_repo_parent) {
+        Ok(_) => (),
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not create local content directories: {}", e)),
+            ),
+        )
+    }
     // Init repo
+    let new_repo = match Repository::init(path_to_new_repo) {
+        Ok(repo) => repo,
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not create repo: {}", e)),
+            ),
+        )
+    };
     // Read and customize metadata
+    // Add metadata.json
+    // Make ingredients dir
+    // If book:
+    // - Read and customize template
+    // - If ve
     // Add and commit metadata
-    println!("{} ({}): {}, {}", form.content_name, form.content_abbr, form.content_type, form.content_language_code);
     status::Custom(
         Status::Ok,
         (
