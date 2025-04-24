@@ -8,8 +8,10 @@ use rocket::serde::json::Json;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use chrono::prelude::Utc;
+use serde_json::{ Value};
 use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::{AppSettings, GitStatusRecord, NewContentForm};
+use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::paths::{check_path_components, os_slash_str};
 
@@ -179,14 +181,146 @@ pub fn new_repo(
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
     // If book:
-    // - Read and customize USFM template
-    // - If ve
-    // --- add cv else
-    // --- add 1:1
-    // - add ingredient to metadata
-    // - Write USFM
+    if json_form.add_book {
+        // - Read and customize USFM template
+        let path_to_usfm_template = format!(
+            "{}{}templates{}content_templates{}{}{}book.usfm",
+            &state.app_resources_dir,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+            json_form.content_type.clone(),
+            os_slash_str(),
+        );
+        let mut usfm_string = match std::fs::read_to_string(&path_to_usfm_template) {
+            Ok(v) => v,
+            Err(e) => return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not load USFM template as string: {}", e)),
+                ),
+            )
+        };
+        usfm_string = usfm_string
+            .replace("%%BOOKCODE%%", json_form.book_code.clone().unwrap().as_str())
+            .replace("%%BOOKNAME%%", json_form.book_title.clone().unwrap().as_str())
+            .replace("%%CONTENTNAME%%", json_form.content_name.clone().as_str())
+            .replace("%%BOOKABBR%%", json_form.book_abbr.clone().unwrap().as_str());
+        // - If ve
+        if json_form.add_cv.unwrap() {
+            // Get versification file as JSON
+            let path_to_versification = format!(
+                "{}{}templates{}content_templates{}bcv{}{}.json",
+                &state.app_resources_dir,
+                os_slash_str(),
+                os_slash_str(),
+                os_slash_str(),
+                os_slash_str(),
+                json_form.versification.clone().unwrap(),
+            );
+             let versification_schema = match load_json(&path_to_versification) {
+                Ok(j) => j,
+                Err(e) => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(format!("Could not load versification JSON: {}", e)),
+                    ),
+                )
+            };
+            // Generate cv USFM
+            let mut cv_bits = Vec::new();
+            let versification_ob = match &versification_schema {
+                Value::Object(o) => o,
+                _ => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(
+                            format!(
+                                "Could not find versification JSON object for {}",
+                                json_form.versification.clone().unwrap()
+                            )
+                        ),
+                    ),
+                )
+            };
+            let max_verses_ob = match &versification_ob["maxVerses"] {
+                Value::Object(o) => o,
+                _ => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(
+                            format!(
+                                "Could not find maxVerses in versification JSON for {}",
+                                json_form.versification.clone().unwrap()
+                            )
+                        ),
+                    ),
+                )
+            };
+            let book_max_verses_arr = match &max_verses_ob[&json_form.book_code.clone().unwrap()] {
+                Value::Array(a) => a,
+                _ => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(
+                            format!(
+                                "Could not find maxVerses for {} in versification JSON for {}",
+                                json_form.book_code.clone().unwrap(),
+                                json_form.versification.clone().unwrap()
+                            )
+                        ),
+                    ),
+                )
+            };
+            let mut chapter_number = 0;
+            for max_verse in book_max_verses_arr {
+                chapter_number += 1;
+                cv_bits.push(format!("\\c {}", chapter_number));
+                cv_bits.push("\\p".to_string());
+                let max_verse_number = max_verse.as_str().unwrap().parse::<i32>().unwrap();
+                for verse_number in 1..=max_verse_number {
+                    cv_bits.push(format!("\\v {}", verse_number));
+                }
+            }
+            // Insert
+            usfm_string = usfm_string
+                .replace(
+                    "%%STUBCONTENT%%",
+                    cv_bits.join("\n").as_str(),
+                );
+        } else {
+            usfm_string = usfm_string
+                .replace(
+                    "%%STUBCONTENT%%",
+                    "\\c 1\n\\p\n\\v 1\nFirst verse..."
+                );
+        }
+        // - add ingredient to metadata
+        // - Write USFM
+        let path_to_usfm_destination = format!(
+            "{}{}ingredients{}{}.usfm",
+            &path_to_new_repo,
+            os_slash_str(),
+            os_slash_str(),
+            json_form.book_code.clone().unwrap(),
+        );
+        match std::fs::write(path_to_usfm_destination, usfm_string) {
+            Ok(_) => (),
+            Err(e) => return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not write usfm to repo: {}", e)),
+                ),
+            )
+        }
+    }
     // Write metadata
-    // git add and commit metadata
     let path_to_repo_metadata = format!(
         "{}{}metadata.json",
         &path_to_new_repo,
@@ -202,10 +336,6 @@ pub fn new_repo(
             ),
         )
     }
-    // Make ingredients dir
-    // If book:
-    // - Read and customize template
-    // - If ve
     // Add and commit metadata
     status::Custom(
         Status::Ok,
@@ -337,7 +467,7 @@ pub async fn fetch_repo(
             ),
             Err(e) => {
                 println!("Error:{}", e);
-                return status::Custom(
+                status::Custom(
                     Status::BadRequest,
                     (
                         ContentType::JSON,
@@ -345,7 +475,7 @@ pub async fn fetch_repo(
                             format!("could not clone repo: {}", e).to_string(),
                         ),
                     ),
-                );
+                )
             }
         }
     } else {
