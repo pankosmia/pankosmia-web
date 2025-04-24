@@ -148,6 +148,10 @@ pub fn new_repo(
             ),
         )
     };
+    // Set up local user info
+    let mut config = new_repo.config().unwrap();
+    config.set_str("user.name", whoami::username().as_str()).unwrap();
+    config.set_str("user.email", format!("{}@localhost", whoami::username().as_str()).as_str()).unwrap();
     // Make ingredients dir
     let path_to_ingredients = format!(
         "{}{}ingredients",
@@ -355,7 +359,19 @@ pub fn new_repo(
             ),
         )
     }
-    // Add and commit metadata
+    // Add and commit
+    new_repo.index()
+        .unwrap()
+        .add_all(&["."], git2::IndexAddOption::DEFAULT, None)
+        .unwrap();
+    new_repo.index().unwrap().write().unwrap();
+    let sig = new_repo.signature().unwrap();
+    let tree_id = {
+        let mut index = new_repo.index().unwrap();
+        index.write_tree().unwrap()
+    };
+    let tree = new_repo.find_tree(tree_id).unwrap();
+    new_repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[]).unwrap();
     status::Custom(
         Status::Ok,
         (

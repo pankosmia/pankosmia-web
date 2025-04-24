@@ -37,3 +37,4 @@ tokio = "1.43.0"
 ureq = { version = "2.11.0", features = ["json"] }
 url = "2.5.4"
 uuid = {  version = "1.14.0", features = ["v4"] }
+whoami = "1.6.0"
