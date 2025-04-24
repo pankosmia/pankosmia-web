@@ -1,5 +1,6 @@
 // REPO OPERATIONS
 
+use md5;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use git2::{Repository, StatusOptions};
@@ -8,7 +9,7 @@ use rocket::serde::json::Json;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use chrono::prelude::Utc;
-use serde_json::{ Value};
+use serde_json::{json, Value};
 use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::{AppSettings, GitStatusRecord, NewContentForm};
 use crate::utils::files::load_json;
@@ -100,7 +101,7 @@ pub fn new_repo(
                 ContentType::JSON,
                 make_bad_json_data_response(format!("Metadata template {} not found", json_form.content_type)),
             ),
-        )
+        );
     }
     // Build path for new repo and parent
     let path_to_new_repo_parent = format!(
@@ -114,7 +115,6 @@ pub fn new_repo(
         path_to_new_repo_parent.clone(),
         os_slash_str(),
         json_form.content_abbr.clone()
-
     );
     // Check path doesn't already exist
     if std::path::Path::new(&path_to_new_repo).exists() {
@@ -124,7 +124,7 @@ pub fn new_repo(
                 ContentType::JSON,
                 make_bad_json_data_response(format!("Local content called '{}' already exists", json_form.content_abbr)),
             ),
-        )
+        );
     }
     // Make parents?
     match std::fs::create_dir_all(path_to_new_repo_parent) {
@@ -219,7 +219,7 @@ pub fn new_repo(
                 os_slash_str(),
                 json_form.versification.clone().unwrap(),
             );
-             let versification_schema = match load_json(&path_to_versification) {
+            let versification_schema = match load_json(&path_to_versification) {
                 Ok(j) => j,
                 Err(e) => return status::Custom(
                     Status::InternalServerError,
@@ -297,10 +297,29 @@ pub fn new_repo(
             usfm_string = usfm_string
                 .replace(
                     "%%STUBCONTENT%%",
-                    "\\c 1\n\\p\n\\v 1\nFirst verse..."
+                    "\\c 1\n\\p\n\\v 1\nFirst verse...",
                 );
         }
         // - add ingredient to metadata
+        let ingredient_json = json!(
+            {
+                format!("ingredients/{}.usfm", json_form.book_code.clone().unwrap()): {
+                    "checksum": {
+                        "md5": format!("{:?}", md5::compute(&usfm_string))
+                    },
+                    "mimeType": "text/plain",
+                    "size": usfm_string.len(),
+                    "scope": {
+                        format!("ingredients/{}.usfm", json_form.book_code.clone().unwrap()): []
+                    }
+                }
+            }
+        );
+        metadata_string = metadata_string
+            .replace(
+                "\"ingredients\": {}",
+                format!("\"ingredients\": {}", ingredient_json.to_string().as_str()).as_str()
+            );
         // - Write USFM
         let path_to_usfm_destination = format!(
             "{}{}ingredients{}{}.usfm",
