@@ -60,6 +60,8 @@ pub async fn raw_metadata(
 /// {
 ///   "name": "Pain Sur Les Eaux",
 ///   "description": "Une traduction littéralement plus simple",
+///   "abbreviation": "PSLE",
+///   "generated_date": "2024-11-15T11:02:02.473Z",
 ///   "flavor_type": "scripture",
 ///   "flavor": "textTranslation",
 ///   "language_code": "fr",
@@ -114,6 +116,16 @@ pub async fn summary_metadata(
                 .unwrap()
                 .to_string(),
             description: match raw_metadata_struct["identification"]["description"]["en"].clone() {
+                Value::String(v) => v.as_str().to_string(),
+                Value::Null => "".to_string(),
+                _ => "?".to_string(),
+            },
+            abbreviation: match raw_metadata_struct["identification"]["abbreviation"]["en"].clone() {
+                Value::String(v) => v.as_str().to_string(),
+                Value::Null => "".to_string(),
+                _ => "?".to_string(),
+            },
+            generated_date: match raw_metadata_struct["meta"]["dateCreated"].clone() {
                 Value::String(v) => v.as_str().to_string(),
                 Value::Null => "".to_string(),
                 _ => "?".to_string(),

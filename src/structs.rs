@@ -144,6 +144,8 @@ pub struct GitStatusRecord {
 pub struct MetadataSummary {
     pub name: String,
     pub description: String,
+    pub abbreviation: String,
+    pub generated_date: String,
     pub flavor_type: String,
     pub flavor: String,
     pub language_code: String,
