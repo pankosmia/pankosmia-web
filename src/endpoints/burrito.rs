@@ -1,13 +1,11 @@
-use std::env;
-use std::fs::{copy};
 use std::path::{Components, PathBuf};
 use hallomai::transform;
 use rocket::{get, post, State};
 use rocket::form::Form;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
+use rocket::serde::json::Json;
 use serde_json::Value;
-use uuid::Uuid;
 use crate::structs::{AppSettings, MetadataSummary, Upload};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::mime::mime_types;
@@ -279,14 +277,14 @@ pub async fn get_ingredient_as_usj(
 
 #[post(
     "/ingredient/as-usj/<repo_path..>?<ipath>",
-    format = "multipart/form-data",
-    data = "<form>"
+    format = "json",
+    data = "<json_form>"
 )]
 pub async fn post_ingredient_as_usj(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
-    mut form: Form<Upload<'_>>,
+    json_form: Json<Value>,
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     let destination = state.repo_dir.lock().unwrap().clone()
@@ -295,15 +293,11 @@ pub async fn post_ingredient_as_usj(
         + "/ingredients/"
         + ipath.clone().as_str();
     if check_path_components(&mut path_components.clone())
-        && check_path_string_components(ipath)
+        && check_path_string_components(ipath.clone())
         && std::fs::metadata(destination.clone()).is_ok()
     {
-        let temp_path = format!("{}{}{}", env::temp_dir().display(), os_slash_str(), Uuid::new_v4());
-        let _ = form
-            .file
-            .persist_to(temp_path.clone())
-            .await;
-        match copy(&temp_path, &destination) {
+        let usfm = transform(json_form.to_string(), "usj".to_string(), "usfm".to_string());
+        match std::fs::write(destination, usfm) {
             Ok(_) => status::Custom(
                 Status::Ok,
                 (
@@ -315,11 +309,10 @@ pub async fn post_ingredient_as_usj(
                 Status::InternalServerError,
                 (
                     ContentType::JSON,
-                    make_bad_json_data_response(format!("Could not write to {}", e)),
+                    make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
                 ),
             )
         }
-
     } else {
         status::Custom(
             Status::BadRequest,
