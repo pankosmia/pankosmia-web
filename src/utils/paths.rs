@@ -47,7 +47,7 @@ pub(crate) fn forbidden_path_strings() -> Vec<String> {
 
 pub(crate) fn check_path_components(path_components: &mut Components<'_>) -> bool {
     let mut ret = true;
-    if path_components.clone().collect::<Vec<_>>().len() < 3 {
+    if path_components.clone().collect::<Vec<_>>().len() < 1 {
         return false;
     }
     for path_component in path_components {
@@ -76,7 +76,7 @@ pub(crate) fn check_path_string_components(path_string: String) -> bool {
     }
     let path_string_parts = path_string.split("/");
     for path_string_part in path_string_parts {
-        if path_string_part.len() < 2 {
+        if path_string_part.len() < 1 {
             return false;
         }
         if path_string_part.starts_with(".") {
