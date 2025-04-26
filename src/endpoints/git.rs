@@ -183,9 +183,12 @@ pub fn new_repo(
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
+        .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
     // If book:
     if json_form.add_book {
+        let scope_string = format!("\"{}\": []", json_form.book_code.clone().unwrap().as_str());
+        metadata_string = metadata_string.replace("%%SCOPE%%", scope_string.as_str());
         // - Read and customize USFM template
         let path_to_usfm_template = format!(
             "{}{}templates{}content_templates{}{}{}book.usfm",
@@ -314,15 +317,15 @@ pub fn new_repo(
                     "mimeType": "text/plain",
                     "size": usfm_string.len(),
                     "scope": {
-                        format!("ingredients/{}.usfm", json_form.book_code.clone().unwrap()): []
+                        format!("{}", json_form.book_code.clone().unwrap()): []
                     }
                 }
-            }
+                }
         );
         metadata_string = metadata_string
             .replace(
                 "\"ingredients\": {}",
-                format!("\"ingredients\": {}", ingredient_json.to_string().as_str()).as_str()
+                format!("\"ingredients\": {}", ingredient_json.to_string().as_str()).as_str(),
             );
         // - Write USFM
         let path_to_usfm_destination = format!(
@@ -342,6 +345,8 @@ pub fn new_repo(
                 ),
             )
         }
+    } else { // No ingredients
+        metadata_string = metadata_string.replace("%%SCOPE%%", "");
     }
     // Write metadata
     let path_to_repo_metadata = format!(

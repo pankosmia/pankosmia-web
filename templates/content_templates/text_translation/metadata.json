@@ -58,7 +58,7 @@
         "audience": "common",
         "projectType": "standard"
       },
-      "currentScope": {}
+      "currentScope": {%%SCOPE%%}
     }
   },
   "confidential": false,
