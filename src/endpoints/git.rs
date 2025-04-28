@@ -529,12 +529,12 @@ pub async fn fetch_repo(
     }
 }
 
-/// *`GET /delete-repo/<repo_path>`*
+/// *`POST /delete/<repo_path>`*
 ///
-/// Typically mounted as **`/git/delete-repo/<repo_path>`**
+/// Typically mounted as **`/git/delete/<repo_path>`**
 ///
 /// Deletes a local repo from the given repo path.
-#[get("/delete-repo/<repo_path..>")]
+#[post("/delete/<repo_path..>")]
 pub async fn delete_repo(
     state: &State<AppSettings>,
     repo_path: PathBuf,
