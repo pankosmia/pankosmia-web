@@ -120,3 +120,7 @@ pub(crate) fn webfonts_path (working_dir: &String) -> String {
 pub(crate) fn source_webfonts_path(app_resources_dir: &String) -> String {
     format!("{}/webfonts", app_resources_dir)
 }
+
+pub(crate) fn source_app_resources_path(app_resources_dir: &String) -> String {
+    format!("{}/app_resources/", app_resources_dir)
+}

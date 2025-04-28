@@ -82,7 +82,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Routes
     my_rocket = add_routes(my_rocket);
     let client_vec = clients.lock().unwrap().clone();
-    my_rocket = add_static_routes(my_rocket, client_vec, &webfonts_dir_path);
+    my_rocket = add_static_routes(my_rocket, client_vec, &app_resources_dir_path, &webfonts_dir_path);
 
     // State
     my_rocket = add_app_settings(my_rocket, &repo_dir_path, &app_resources_dir_path, &working_dir_path, &user_settings_json, &app_state_json);

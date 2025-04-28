@@ -5,7 +5,7 @@ use rocket::fs::FileServer;
 use serde_json::{json, Value};
 use crate::endpoints;
 use crate::structs::{AppSettings, Client, ProjectIdentifier};
-use crate::utils::paths::{os_slash_str};
+use crate::utils::paths::{os_slash_str, source_app_resources_path};
 
 pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
     rocket_instance
@@ -178,8 +178,10 @@ pub(crate) fn add_app_settings(rocket_instance: Rocket<Build>, repo_dir_path: &S
     })
 }
 
-pub(crate) fn add_static_routes(rocket_instance: Rocket<Build>, client_vec: Vec<Client>, webfonts_dir_path: &String) -> Rocket<Build> {
+pub(crate) fn add_static_routes(rocket_instance: Rocket<Build>, client_vec: Vec<Client>, app_resources_path: &String, webfonts_dir_path: &String) -> Rocket<Build> {
     let mut my_rocket = rocket_instance.mount("/webfonts", FileServer::from(webfonts_dir_path.clone()));
+    let app_resources_path = source_app_resources_path(&app_resources_path);
+    my_rocket = my_rocket.mount("/app-resources", FileServer::from(app_resources_path));
     for client_record in client_vec {
         my_rocket = my_rocket.mount(
             client_record.url.clone(),
