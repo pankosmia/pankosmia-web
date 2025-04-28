@@ -11,7 +11,8 @@
   font-display: swap;
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
-  -webkit-font-feature-settings: %%FONTFEATURES%%;}
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
+}
 
 /* italic */
 @font-face {
@@ -23,7 +24,8 @@
   font-display: swap;
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
-  -webkit-font-feature-settings: %%FONTFEATURES%%;}
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
+}
 
 /* bold */
 @font-face {
@@ -35,7 +37,8 @@
   font-display: swap;
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
-  -webkit-font-feature-settings: %%FONTFEATURES%%;}
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
+}
 
 /* bold italic */
 @font-face {
@@ -47,4 +50,5 @@
   font-display: swap;
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
-  -webkit-font-feature-settings: %%FONTFEATURES%%;}
+  -webkit-font-feature-settings: %%FONTFEATURES%%;
+}
