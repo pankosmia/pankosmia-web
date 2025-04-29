@@ -1,5 +1,5 @@
 use std::sync::atomic::Ordering;
-use rocket::{get, State};
+use rocket::{get, post, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use crate::{MsgQueue, NET_IS_ENABLED};
@@ -23,14 +23,14 @@ pub fn net_status() -> status::Custom<(ContentType, String)> {
     )
 }
 
-/// *`GET /enable`*
+/// *`POST /enable`*
 ///
 /// Typically mounted as **`/net/enable`**
 ///
 /// Enables net state, returns a JSON OK response and generates an SSE notification.
 ///
 /// `{"is_good":true,"reason":"ok"}`
-#[get("/enable")]
+#[post("/enable")]
 pub fn net_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()
@@ -45,14 +45,14 @@ pub fn net_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String
     )
 }
 
-/// *`GET /disable`*
+/// *`POST /disable`*
 ///
 /// Typically mounted as **`/net/disable`**
 ///
 /// Disables net state, returns a JSON OK response and generates an SSE notification.
 ///
 /// `{"is_good":true,"reason":"ok"}`
-#[get("/disable")]
+#[post("/disable")]
 pub fn net_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()

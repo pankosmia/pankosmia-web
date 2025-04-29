@@ -154,11 +154,38 @@
         "fr": "Nouvelle référence",
         "id": "Referensi Baru"
       },
-      "goto_local_projects_menu_item": {
-        "ar": "المشاريع على هذا الحاسوب",
-        "en": "Projects on this machine",
-        "fr": "Projets sur cette machine",
-        "id": "Proyek-proyek di mesin ini"
+      "internet": {
+        "en": "Internet",
+        "fr": "Internet",
+        "es": "Internet"
+      },
+      "internet_question_label": {
+        "en": "Use Internet",
+        "fr": "Utiliser l'Internet",
+        "es": "Conectarse a la Internet"
+      },
+      "internet_question": {
+        "en": "Are you sure you want to use the internet?",
+        "fr": "Etes-vous certain de vouloir utiliser l'Internet ?",
+        "es": "¿Estás seguro que quieres conectarte a la internet?"
+      },
+      "connected": {
+        "en": "Connected",
+        "fr": "Connecté",
+        "es": "Conectado"
+      },
+      "disconnected": {
+        "en": "Disconnected",
+        "fr": "Déconnecté",
+        "es": "Desconectado"
+      },
+      "cancel": {
+        "en": "Cancel",
+        "es": "Cancelar"
+      },
+      "accept": {
+        "en": "Accept",
+        "es": "Aceptar"
       }
     }
   },
