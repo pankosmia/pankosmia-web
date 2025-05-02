@@ -71,12 +71,12 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
 /// - content_abbr (string)
 /// - content_type (string)
 /// - content_language_code
+/// - versification (string)
 /// - add_book (boolean)
 /// - book_code (null or string)
 /// - book_title (null or string)
 /// - book_abbr (null or string)
 /// - add_cv (null or boolean)
-/// - versification (null or string)
 #[post("/new",
     format = "json",
     data = "<json_form>")]
@@ -185,7 +185,44 @@ pub fn new_repo(
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
-    // If book:
+    // Get versification file as JSON
+    let path_to_versification = format!(
+        "{}{}templates{}content_templates{}bcv{}{}.json",
+        &state.app_resources_dir,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        json_form.versification.clone().unwrap(),
+    );
+    let versification_schema = match load_json(&path_to_versification) {
+        Ok(j) => j,
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not load versification JSON: {}", e)),
+            ),
+        )
+    };
+    // Write it out to new repo
+    let path_to_repo_versification = format!(
+        "{}{}ingredients/vrs.json",
+        path_to_new_repo,
+        os_slash_str(),
+    );
+    let versification_string = serde_json::to_string(&versification_schema).unwrap();
+    match std::fs::write(path_to_repo_versification, &versification_string) {
+        Ok(_) => (),
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not write versification to repo: {}", e)),
+            ),
+        )
+    }
+    // Make new book if necessary:
     if json_form.add_book {
         let scope_string = format!("\"{}\": []", json_form.book_code.clone().unwrap().as_str());
         metadata_string = metadata_string.replace("%%SCOPE%%", scope_string.as_str());
@@ -216,26 +253,6 @@ pub fn new_repo(
             .replace("%%BOOKABBR%%", json_form.book_abbr.clone().unwrap().as_str());
         // - If ve
         if json_form.add_cv.unwrap() {
-            // Get versification file as JSON
-            let path_to_versification = format!(
-                "{}{}templates{}content_templates{}bcv{}{}.json",
-                &state.app_resources_dir,
-                os_slash_str(),
-                os_slash_str(),
-                os_slash_str(),
-                os_slash_str(),
-                json_form.versification.clone().unwrap(),
-            );
-            let versification_schema = match load_json(&path_to_versification) {
-                Ok(j) => j,
-                Err(e) => return status::Custom(
-                    Status::InternalServerError,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(format!("Could not load versification JSON: {}", e)),
-                    ),
-                )
-            };
             // Generate cv USFM
             let mut cv_bits = Vec::new();
             let versification_ob = match &versification_schema {
