@@ -285,7 +285,9 @@ pub async fn get_ingredient_as_usj(
 ///
 /// Typically mounted as **`/burrito/ingredient/as-usj/<repo_path>?ipath=my_burrito_path`**
 ///
-/// Writes a USJ documents a USFM ingredient, where the document is provided as an HTTP form file. Currently slow and buggy but works for typical CCBT USFM.
+/// Writes a USJ documents as a USFM ingredient, where the document is provided as an HTTP form file.
+/// The USFM file must exist, ie this is not the way to add new ingredients to a Burrito
+/// Currently slow and buggy but works for typical CCBT USFM.
 
 #[post(
     "/ingredient/as-usj/<repo_path..>?<ipath>",
@@ -341,6 +343,8 @@ pub async fn post_ingredient_as_usj(
 /// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Writes a document, where the document is provided as an HTTP form file.
+///
+/// /// The target file must exist, ie this is not the way to add new ingredients to a Burrito
 #[post(
     "/ingredient/raw/<repo_path..>?<ipath>",
     format = "multipart/form-data",
