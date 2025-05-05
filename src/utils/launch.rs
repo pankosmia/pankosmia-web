@@ -78,6 +78,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::git::delete_repo,
                 endpoints::git::add_and_commit,
                 endpoints::git::git_status,
+                endpoints::git::new_scripture_book
             ],
         )
         .mount(

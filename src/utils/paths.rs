@@ -47,7 +47,7 @@ pub(crate) fn forbidden_path_strings() -> Vec<String> {
 
 pub(crate) fn check_path_components(path_components: &mut Components<'_>) -> bool {
     let mut ret = true;
-    if path_components.clone().collect::<Vec<_>>().len() < 1 {
+    if path_components.clone().collect::<Vec<_>>().len() < 3 {
         return false;
     }
     for path_component in path_components {
@@ -66,6 +66,35 @@ pub(crate) fn check_path_components(path_components: &mut Components<'_>) -> boo
                 break;
             }
         }
+    }
+    ret
+}
+pub(crate) fn check_local_path_components(path_components: &mut Components<'_>) -> bool {
+    let mut ret = true;
+    if path_components.clone().collect::<Vec<_>>().len() < 3 {
+        return false;
+    }
+    let mut path_n = 0;
+    for path_component in path_components {
+        let path_string = path_component
+            .clone()
+            .as_os_str()
+            .to_str()
+            .unwrap()
+            .to_string();
+        if (path_n < 2) && (path_string != "_local_".to_string()) {
+            return false;
+        }
+        if path_string.starts_with(".") {
+            return false;
+        }
+        for forbidden_string in forbidden_path_strings() {
+            if path_string.contains(&forbidden_string) {
+                ret = false;
+                break;
+            }
+        }
+        path_n += 1;
     }
     ret
 }

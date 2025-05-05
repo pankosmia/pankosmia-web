@@ -11,10 +11,10 @@ use rocket::response::status;
 use chrono::prelude::Utc;
 use serde_json::{json, Value};
 use crate::static_vars::NET_IS_ENABLED;
-use crate::structs::{AppSettings, GitStatusRecord, NewContentForm};
+use crate::structs::{AppSettings, GitStatusRecord, NewContentForm, NewScriptureBookForm};
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
-use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::paths::{check_path_components, check_local_path_components, os_slash_str};
 
 /// *`GET /list-local-repos`*
 ///
@@ -541,6 +541,48 @@ pub async fn fetch_repo(
             (
                 ContentType::JSON,
                 make_bad_json_data_response("bad repo path".to_string()),
+            ),
+        )
+    }
+}
+
+/// *`POST /new-scripture-book/<repo_path>`*
+///
+/// Typically mounted as **`/git/new-scripture-path/<repo_path>`**
+///
+/// Adds a Scripture book to a local repo at the given repo path.
+///
+///  It requires the following fields as a JSON body:
+/// - book_code (string)
+/// - book_title (string)
+/// - book_abbr (string)
+/// - add_cv (boolean)
+#[post("/new-scripture-book/<repo_path..>",
+format = "json",
+data = "<json_form>")]
+pub async fn new_scripture_book(
+    state: &State<AppSettings>,
+    repo_path: PathBuf,
+    json_form: Json<NewScriptureBookForm>,
+) -> status::Custom<(ContentType, String)> {
+    let path_components: Components<'_> = repo_path.components();
+    if check_local_path_components(&mut path_components.clone()) {
+        println!("{:?}", &json_form);
+        status::Custom(
+            Status::Ok,
+            (
+                ContentType::JSON,
+                make_good_json_data_response("ok".to_string()),
+            ),
+        )
+    } else {
+        status::Custom(
+            Status::Unauthorized,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(
+                    "Could not add book to repo: bad path".to_string(),
+                ),
             ),
         )
     }

@@ -176,3 +176,11 @@ pub struct NewContentForm {
     pub add_cv: Option<bool>,
     pub versification: Option<String>
 }
+
+#[derive(FromForm, Deserialize, Serialize, Debug)]
+pub struct NewScriptureBookForm {
+    pub book_code: String,
+    pub book_title: String,
+    pub book_abbr: String,
+    pub add_cv: bool,
+}
