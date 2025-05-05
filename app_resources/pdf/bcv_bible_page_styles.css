@@ -1,0 +1,102 @@
+@page {
+    size: 595pt 842pt;
+    margin-bottom: 50pt;
+    margin-top: 60pt;
+    @footnote {
+        float: bottom;
+        margin-top: 10pt;
+    }
+}
+@page :first {
+    margin-top: 40pt;
+}
+@page :left {
+    margin-left: 44pt;
+    margin-right: 72pt;
+}
+@page :right {
+    margin-left: 72pt;
+    margin-right: 44pt;
+}
+
+
+body {
+    font-family: "Gentium Plus", serif;
+    font-size: 12pt;
+    line-height: 15pt;
+}
+
+
+p {
+    margin: 0;
+    padding: 0;
+}
+
+
+h1 {
+    font-size: 24pt;
+    line-height: 30pt;
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: 0pt;
+    border-bottom: 0pt solid black;
+    padding-bottom: 0pt;
+    width: 479pt;
+    font-family: "Gentium Plus", serif;
+    break-after: avoid;
+}
+
+
+.cvCol {
+    font-weight: bold;
+    width: 50pt;
+    font-size: 10pt;
+    line-height: 15pt;
+}
+.verseContent {
+    display: inline-block;
+    width: 429pt;
+    vertical-align: top;
+}
+
+.verseRecord {
+    page-break-inside: avoid;
+    vertical-align: top;
+    display: flex;
+}
+
+::footnote-call {
+    content: none;
+}
+
+::footnote-marker {
+    content: none;
+}
+
+.note {
+    font-family: "Open Sans SemiCondensed", sans-serif;
+    font-size: 12pt;
+    line-height: 15pt;
+    text-align: left;
+    float: footnote;
+    margin-bottom: 0pt;
+    padding-left: 6pt;
+    text-indent: -6pt;
+    font-family: "Open Sans SemiCondensed", serif;
+}
+
+.note_n {
+    font-weight: bold;
+    font-size: 6pt;
+    vertical-align: top;
+}
+
+.note .b {
+    font-weight: bold;
+}
+
+.cv {
+    font-weight: bold;
+    font-size: 10pt;
+    line-height: 15pt;
+}
