@@ -336,8 +336,15 @@ pub fn new_repo(
                     "scope": {
                         format!("{}", json_form.book_code.clone().unwrap()): []
                     }
+                },
+                "ingredients/vrs.json": {
+                    "checksum": {
+                        "md5": format!("{:?}", md5::compute(&versification_string))
+                    },
+                    "mimeType": "application/json",
+                    "size": versification_string.len()
                 }
-                }
+            }
         );
         metadata_string = metadata_string
             .replace(
