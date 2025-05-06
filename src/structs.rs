@@ -6,6 +6,7 @@ use rocket::fs::{TempFile};
 use rocket::{Responder, FromForm};
 use rocket::http::{ContentType};
 use rocket::response::{status, Redirect};
+use serde_json::Value;
 
 #[derive(Debug)]
 pub struct PankosmiaError(pub String);
@@ -183,4 +184,28 @@ pub struct NewScriptureBookForm {
     pub book_title: String,
     pub book_abbr: String,
     pub add_cv: bool,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BurritoMetadataIngredient {
+    pub checksum: Value,
+    pub mimeType: String,
+    pub scope: Option<Value>,
+    pub size: u32
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BurritoMetadata {
+    pub format : String,
+    pub meta: Value,
+    pub idAuthorities: Value,
+    pub identification: Value,
+    pub languages: Vec<Value>,
+    pub r#type: Value,
+    pub confidential: bool,
+    pub localizedNames: Value,
+    pub ingredients: BTreeMap<String, BurritoMetadataIngredient>,
+    pub copyright: Value,
 }

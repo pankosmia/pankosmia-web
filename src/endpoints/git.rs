@@ -12,6 +12,7 @@ use chrono::prelude::Utc;
 use serde_json::{json, Value};
 use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::{AppSettings, GitStatusRecord, NewContentForm, NewScriptureBookForm};
+use crate::structs::BurritoMetadata;
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::paths::{check_path_components, check_local_path_components, os_slash_str};
@@ -565,8 +566,8 @@ pub async fn fetch_repo(
 /// - book_abbr (string)
 /// - add_cv (boolean)
 #[post("/new-scripture-book/<repo_path..>",
-format = "json",
-data = "<json_form>")]
+    format = "json",
+    data = "<json_form>")]
 pub async fn new_scripture_book(
     state: &State<AppSettings>,
     repo_path: PathBuf,
@@ -574,7 +575,176 @@ pub async fn new_scripture_book(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_local_path_components(&mut path_components.clone()) {
-        println!("{:?}", &json_form);
+        // Read metadata
+        let repo_dir_path = state.repo_dir.lock().unwrap().clone();
+        let repo_name = path_components.skip(2).next().unwrap().as_os_str().to_str().unwrap();
+        let path_to_repo_metadata = format!(
+            "{}{}_local_{}_local_{}{}{}metadata.json",
+            repo_dir_path,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+            &repo_name,
+            os_slash_str(),
+        );
+        let mut metadata_string = match std::fs::read_to_string(&path_to_repo_metadata) {
+            Ok(v) => v,
+            Err(e) => return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not load metadata as string: {}", e)),
+                ),
+            )
+        };
+        // Make structs2 from metadata
+        let metadata_struct: BurritoMetadata = match serde_json::from_str(&metadata_string) {
+            Ok(v) => v,
+            Err(e) => {
+                return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(format!("Could not parse metadata: {}", e)),
+                    ),
+                );
+            }
+        };
+        // Check new book isn't already there
+        let ingredients = &metadata_struct.ingredients;
+        if ingredients.contains_key(&json_form.book_code) {
+            return status::Custom(
+                Status::BadRequest,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Book '{}' already exists in metadata", &json_form.book_code)),
+                ),
+            );
+        }
+        // Make USFM with optional cv
+        let path_to_usfm_template = format!(
+            "{}{}templates{}content_templates{}text_translation{}book.usfm",
+            &state.app_resources_dir,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+        );
+        let mut usfm_string = match std::fs::read_to_string(&path_to_usfm_template) {
+            Ok(v) => v,
+            Err(e) => return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not load USFM template as string: {}", e)),
+                ),
+            )
+        };
+        usfm_string = usfm_string
+            .replace("%%BOOKCODE%%", json_form.book_code.clone().as_str())
+            .replace("%%BOOKNAME%%", json_form.book_title.clone().as_str())
+            .replace("%%CONTENTNAME%%", &repo_name)
+            .replace("%%BOOKABBR%%", json_form.book_abbr.clone().as_str());
+        // - If ve
+        if json_form.add_cv {
+            // Load vrs file from repo
+            let path_to_repo_vrs = format!(
+                "{}{}_local_{}_local_{}{}{}ingredients{}vrs.json",
+                repo_dir_path,
+                os_slash_str(),
+                os_slash_str(),
+                os_slash_str(),
+                &repo_name,
+                os_slash_str(),
+                os_slash_str(),
+            );
+            let versification_ob = match load_json(&path_to_repo_vrs) {
+                Ok(j) => j,
+                Err(e) => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(format!("Could not load repo versification JSON: {}", e)),
+                    ),
+                )
+            };
+            // Generate cv USFM
+            let mut cv_bits = Vec::new();
+            let max_verses_ob = match &versification_ob["maxVerses"] {
+                Value::Object(o) => o,
+                _ => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(
+                            "Could not find maxVerses in versification JSON for this repo".to_string()
+                            )
+                        ),
+                )
+            };
+            let book_max_verses_arr = match &max_verses_ob[&json_form.book_code.clone()] {
+                Value::Array(a) => a,
+                _ => return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(
+                            format!(
+                                "Could not find maxVerses for {} in versification JSON for this repo",
+                                json_form.book_code.clone(),
+                            )
+                        ),
+                    ),
+                )
+            };
+            let mut chapter_number = 0;
+            for max_verse in book_max_verses_arr {
+                chapter_number += 1;
+                cv_bits.push(format!("\\c {}", chapter_number));
+                cv_bits.push("\\p".to_string());
+                let max_verse_number = max_verse.as_str().unwrap().parse::<i32>().unwrap();
+                for verse_number in 1..=max_verse_number {
+                    cv_bits.push(format!("\\v {}", verse_number));
+                }
+            }
+            // Insert
+            usfm_string = usfm_string
+                .replace(
+                    "%%STUBCONTENT%%",
+                    cv_bits.join("\n").as_str(),
+                );
+        } else {
+            usfm_string = usfm_string
+                .replace(
+                    "%%STUBCONTENT%%",
+                    "\\c 1\n\\p\n\\v 1\nFirst verse...",
+                );
+        }
+        // Save USFM
+        let path_to_new_book = format!(
+            "{}{}_local_{}_local_{}{}{}ingredients{}{}.usfm",
+            repo_dir_path,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+            &repo_name,
+            os_slash_str(),
+            os_slash_str(),
+            &json_form.book_code
+        );
+        match std::fs::write(path_to_new_book, usfm_string) {
+            Ok(_) => (),
+            Err(e) => return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not write usfm to repo: {}", e)),
+                ),
+            )
+        }
+        // Add ingredient record for USFM
+        // Write metadata
+        // Add and commit
         status::Custom(
             Status::Ok,
             (
