@@ -192,11 +192,11 @@ pub struct BurritoMetadataIngredient {
     pub checksum: Value,
     pub mimeType: String,
     pub scope: Option<Value>,
-    pub size: u32
+    pub size: usize
 }
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BurritoMetadata {
     pub format : String,
     pub meta: Value,
@@ -206,6 +206,6 @@ pub struct BurritoMetadata {
     pub r#type: Value,
     pub confidential: bool,
     pub localizedNames: Value,
-    pub ingredients: BTreeMap<String, BurritoMetadataIngredient>,
+    pub ingredients: Mutex<BTreeMap<String, BurritoMetadataIngredient>>,
     pub copyright: Value,
 }

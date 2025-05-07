@@ -1,8 +1,10 @@
 // REPO OPERATIONS
 
 use md5;
+use std::collections::{BTreeMap};
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
+use std::sync::Mutex;
 use git2::{Repository, StatusOptions};
 use rocket::{get, post, State};
 use rocket::serde::json::Json;
@@ -11,7 +13,7 @@ use rocket::response::status;
 use chrono::prelude::Utc;
 use serde_json::{json, Value};
 use crate::static_vars::NET_IS_ENABLED;
-use crate::structs::{AppSettings, GitStatusRecord, NewContentForm, NewScriptureBookForm};
+use crate::structs::{AppSettings, BurritoMetadataIngredient, GitStatusRecord, NewContentForm, NewScriptureBookForm};
 use crate::structs::BurritoMetadata;
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
@@ -611,7 +613,7 @@ pub async fn new_scripture_book(
             }
         };
         // Check new book isn't already there
-        let ingredients = &metadata_struct.ingredients;
+        let mut ingredients = metadata_struct.ingredients.lock().unwrap();
         if ingredients.contains_key(&json_form.book_code) {
             return status::Custom(
                 Status::BadRequest,
@@ -732,7 +734,7 @@ pub async fn new_scripture_book(
             os_slash_str(),
             &json_form.book_code
         );
-        match std::fs::write(path_to_new_book, usfm_string) {
+        match std::fs::write(path_to_new_book, &usfm_string) {
             Ok(_) => (),
             Err(e) => return status::Custom(
                 Status::InternalServerError,
@@ -743,6 +745,22 @@ pub async fn new_scripture_book(
             )
         }
         // Add ingredient record for USFM
+        let mut new_ingredients = BTreeMap::new();
+        for (k, v) in ingredients.iter() {
+            new_ingredients.insert(k.clone(), v.clone());
+        }
+        let ingredient_key = format!("ingredients/{}.usfm", &json_form.book_code);
+        let ingredient_struct = BurritoMetadataIngredient {
+            checksum: json!({"md5": format!("{:?}", md5::compute(&usfm_string))}),
+            mimeType: "text/plain".to_string(),
+            scope: Some(json!([json_form.book_code.to_string()])),
+            size: usfm_string.len()
+        };
+        new_ingredients.insert(
+            ingredient_key,
+            ingredient_struct,
+        );
+        *ingredients = new_ingredients;
         // Write metadata
         // Add and commit
         status::Custom(
