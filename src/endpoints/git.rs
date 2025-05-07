@@ -4,7 +4,6 @@ use md5;
 use std::collections::{BTreeMap};
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
-use std::sync::Mutex;
 use git2::{Repository, StatusOptions};
 use rocket::{get, post, State};
 use rocket::serde::json::Json;
@@ -567,6 +566,7 @@ pub async fn fetch_repo(
 /// - book_title (string)
 /// - book_abbr (string)
 /// - add_cv (boolean)
+#[allow(irrefutable_let_patterns)]
 #[post("/new-scripture-book/<repo_path..>",
     format = "json",
     data = "<json_form>")]
@@ -589,7 +589,7 @@ pub async fn new_scripture_book(
             &repo_name,
             os_slash_str(),
         );
-        let mut metadata_string = match std::fs::read_to_string(&path_to_repo_metadata) {
+        let metadata_string = match std::fs::read_to_string(&path_to_repo_metadata) {
             Ok(v) => v,
             Err(e) => return status::Custom(
                 Status::InternalServerError,
@@ -599,7 +599,7 @@ pub async fn new_scripture_book(
                 ),
             )
         };
-        // Make structs2 from metadata
+        // Make struct from metadata
         let metadata_struct: BurritoMetadata = match serde_json::from_str(&metadata_string) {
             Ok(v) => v,
             Err(e) => {
@@ -613,15 +613,17 @@ pub async fn new_scripture_book(
             }
         };
         // Check new book isn't already there
-        let mut ingredients = metadata_struct.ingredients.lock().unwrap();
-        if ingredients.contains_key(&json_form.book_code) {
-            return status::Custom(
-                Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!("Book '{}' already exists in metadata", &json_form.book_code)),
-                ),
-            );
+        let new_ingredients_path = format!("ingredients/{}.usfm", &json_form.book_code);
+        if let ingredients = metadata_struct.ingredients.lock().unwrap() {
+            if ingredients.contains_key(&new_ingredients_path) {
+                return status::Custom(
+                    Status::BadRequest,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(format!("Book '{}' already exists in metadata", &json_form.book_code)),
+                    ),
+                );
+            }
         }
         // Make USFM with optional cv
         let path_to_usfm_template = format!(
@@ -680,8 +682,8 @@ pub async fn new_scripture_book(
                         ContentType::JSON,
                         make_bad_json_data_response(
                             "Could not find maxVerses in versification JSON for this repo".to_string()
-                            )
-                        ),
+                        )
+                    ),
                 )
             };
             let book_max_verses_arr = match &max_verses_ob[&json_form.book_code.clone()] {
@@ -745,23 +747,47 @@ pub async fn new_scripture_book(
             )
         }
         // Add ingredient record for USFM
-        let mut new_ingredients = BTreeMap::new();
-        for (k, v) in ingredients.iter() {
-            new_ingredients.insert(k.clone(), v.clone());
+        if let mut ingredients = metadata_struct.ingredients.lock().unwrap() {
+            let mut new_ingredients = BTreeMap::new();
+            for (k, v) in ingredients.iter() {
+                new_ingredients.insert(k.clone(), v.clone());
+            }
+            let ingredient_key = format!("ingredients/{}.usfm", &json_form.book_code);
+            let ingredient_struct = BurritoMetadataIngredient {
+                checksum: json!({"md5": format!("{:?}", md5::compute(&usfm_string))}),
+                mimeType: "text/plain".to_string(),
+                scope: Some(json!({json_form.book_code.to_string(): []})),
+                size: usfm_string.len(),
+            };
+            new_ingredients.insert(
+                ingredient_key,
+                ingredient_struct,
+            );
+            *ingredients = new_ingredients;
         }
-        let ingredient_key = format!("ingredients/{}.usfm", &json_form.book_code);
-        let ingredient_struct = BurritoMetadataIngredient {
-            checksum: json!({"md5": format!("{:?}", md5::compute(&usfm_string))}),
-            mimeType: "text/plain".to_string(),
-            scope: Some(json!([json_form.book_code.to_string()])),
-            size: usfm_string.len()
-        };
-        new_ingredients.insert(
-            ingredient_key,
-            ingredient_struct,
-        );
-        *ingredients = new_ingredients;
         // Write metadata
+        let metadata_output_string = match serde_json::to_string(&metadata_struct) {
+            Ok(s) => s,
+            Err(e) => {
+                return status::Custom(
+                    Status::InternalServerError,
+                    (
+                        ContentType::JSON,
+                        make_bad_json_data_response(format!("Could not make metadata as JSON: {}", e)),
+                    ),
+                )
+            }
+        };
+        match std::fs::write(path_to_repo_metadata, &metadata_output_string) {
+            Ok(_) => (),
+            Err(e) => return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not write metadata to repo: {}", e)),
+                ),
+            )
+        }
         // Add and commit
         status::Custom(
             Status::Ok,
