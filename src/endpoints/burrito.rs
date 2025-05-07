@@ -288,6 +288,7 @@ pub async fn get_ingredient_as_usj(
 /// Writes a USJ documents as a USFM ingredient, where the document is provided as an HTTP form file.
 /// The USFM file must exist, ie this is not the way to add new ingredients to a Burrito
 /// Currently slow and buggy but works for typical CCBT USFM.
+/// Adding a hack to avoid usfm tag weirdness
 
 #[post(
     "/ingredient/as-usj/<repo_path..>?<ipath>",
@@ -310,7 +311,8 @@ pub async fn post_ingredient_as_usj(
         && check_path_string_components(ipath.clone())
         && std::fs::metadata(destination.clone()).is_ok()
     {
-        let usfm = transform(json_form.to_string(), "usj".to_string(), "usfm".to_string());
+        let usfm = transform(json_form.to_string(), "usj".to_string(), "usfm".to_string())
+            .replace("\\usfm 0.2.1\n", "");
         match std::fs::write(destination, usfm) {
             Ok(_) => status::Custom(
                 Status::Ok,
