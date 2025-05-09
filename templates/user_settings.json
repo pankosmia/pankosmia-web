@@ -1055,7 +1055,11 @@
       ]
     }
   },
-  "my_clients": [],
+  "my_clients": [
+    {
+      "path": "%%PANKOSMIADIR%%/pankosmia-web/stub_client"
+    }
+  ],
   "gitea_endpoints": {
     "xenizo_syllogos": "http://xenizo.fr:8089"
   }

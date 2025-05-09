@@ -12,10 +12,11 @@ use std::sync::{Arc, Mutex};
 
 mod structs;
 mod utils;
-use crate::utils::paths::{os_slash_str, home_dir_string, webfonts_path};
+use crate::utils::paths::{os_slash_str, home_dir_string, webfonts_path, source_local_setup_path};
 use crate::utils::bootstrap::{copy_and_customize_webfonts, initialize_working_dir, load_configs, maybe_make_repo_dir, merged_clients, build_client_record, build_clients_and_i18n};
 use crate::utils::json::get_string_value_by_key;
 use crate::utils::launch::{add_catchers, add_routes, add_app_settings, add_static_routes};
+use crate::utils::files::load_json;
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
 pub mod endpoints;
@@ -38,7 +39,12 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Make new working dir if necessary
     if !Path::new(&working_dir_path).is_dir() {
         let app_resources_dir = get_string_value_by_key(&launch_config, "app_resources_path");
-        initialize_working_dir(&app_resources_dir, &working_dir_path);
+        let local_setup_json = load_json(source_local_setup_path(app_resources_dir).as_str()).unwrap();
+        initialize_working_dir(
+            &local_setup_json["local_pankosmia_path"].as_str().unwrap().to_string(),
+            &app_resources_dir,
+            &working_dir_path
+        );
     }
 
     // Load the config JSONs

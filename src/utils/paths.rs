@@ -134,6 +134,10 @@ pub(crate) fn app_setup_path (working_dir: &String) -> String {
     format!("{}/app_setup.json", working_dir)
 }
 
+pub(crate) fn source_local_setup_path (app_resources_dir: &String) -> String {
+    format!("{}/setup/local_setup.json", app_resources_dir)
+}
+
 pub(crate) fn app_state_path (working_dir: &String) -> String {
     format!("{}/app_state.json", working_dir)
 }

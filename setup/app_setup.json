@@ -1,7 +1,3 @@
 {
-  "clients": [
-    {
-      "path": "%%PANKOSMIADIR%%/pankosmia-web/stub_client"
-    }
-  ]
+  "clients": []
 }
