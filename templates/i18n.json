@@ -148,11 +148,9 @@
       }
     },
     "header": {
-      "new_reference": {
-        "ar": "مرجع كتابي",
-        "en": "New Reference",
-        "fr": "Nouvelle référence",
-        "id": "Referensi Baru"
+      "more": {
+        "en": "See all",
+        "fr": "Tout voir"
       },
       "internet": {
         "en": "Internet",
@@ -186,6 +184,12 @@
       "accept": {
         "en": "Accept",
         "es": "Aceptar"
+      }
+    },
+    "require_resources": {
+      "missing_resources": {
+        "en": "You need to install the following resource(s):",
+        "fr": "Vous devez installer une ou des ressources :"
       }
     }
   },
@@ -290,7 +294,7 @@
   "branding": {
     "software": {
       "name": {
-        "en": "Liminal"
+        "en": "A Pankosmia App"
       }
     }
   }
