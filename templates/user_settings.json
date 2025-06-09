@@ -6,7 +6,7 @@
   "app_resources_dir": "%%APPRESOURCESDIR%%",
   "typography": {
     "direction": "ltr",
-    "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
+    "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-Gentium",
     "size": "medium",
     "features": {
       "Andika": [
@@ -51,11 +51,19 @@
           "value": 0
         },
         {
+          "key": "cv30",
+          "value": 0
+        },
+        {
           "key": "cv31",
           "value": 0
         },
         {
           "key": "cv35",
+          "value": 0
+        },
+        {
+          "key": "cv34",
           "value": 0
         },
         {
@@ -220,6 +228,10 @@
         },
         {
           "key": "cv07",
+          "value": 0
+        },
+        {
+          "key": "cv09",
           "value": 0
         }
       ],
@@ -391,7 +403,7 @@
           "value": 2
         }
       ],
-      "Charis_SIL": [
+      "Charis": [
         {
           "key": "smcp",
           "value": 0
@@ -545,6 +557,10 @@
           "value": 0
         },
         {
+          "key": "onum",
+          "value": 0
+        },
+        {
           "key": "subs",
           "value": 0
         },
@@ -557,7 +573,7 @@
           "value": 0
         }
       ],
-      "Gentium_Book_Plus": [
+      "Gentium_Book": [
         {
           "key": "smcp",
           "value": 0
@@ -727,6 +743,10 @@
           "value": 0
         },
         {
+          "key": "onum",
+          "value": 0
+        },
+        {
           "key": "subs",
           "value": 0
         },
@@ -739,7 +759,7 @@
           "value": 0
         }
       ],
-      "Gentium_Plus": [
+      "Gentium": [
         {
           "key": "smcp",
           "value": 0
@@ -906,6 +926,10 @@
         },
         {
           "key": "cv92",
+          "value": 0
+        },
+        {
+          "key": "onum",
           "value": 0
         },
         {
