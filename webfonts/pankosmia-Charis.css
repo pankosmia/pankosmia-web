@@ -3,10 +3,10 @@
 
 /* normal */
 @font-face {
-  font-family: 'Pankosmia-Charis SIL';
+  font-family: 'Pankosmia-Charis';
   font-style: normal;
   font-weight: normal; /* 400 Normal (Regular) */
-  src: url(./charis/CharisSIL-Regular.woff2);
+  src: url(./charis/Charis-Regular.woff2);
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
   -webkit-font-feature-settings: %%FONTFEATURES%%;
@@ -14,10 +14,10 @@
 
 /* italic */
 @font-face {
-  font-family: 'Pankosmia-Charis SIL';
+  font-family: 'Pankosmia-Charis';
   font-style: italic;
   font-weight: normal; /* 400 Normal (Regular) */
-  src: url(./charis/CharisSIL-Italic.woff2);
+  src: url(./charis/Charis-Italic.woff2);
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
   -webkit-font-feature-settings: %%FONTFEATURES%%;
@@ -25,10 +25,10 @@
 
 /* bold */
 @font-face {
-  font-family: 'Pankosmia-Charis SIL';
+  font-family: 'Pankosmia-Charis';
   font-style: normal;
   font-weight: bold; /* 700 */
-  src: url(./charis/CharisSIL-Bold.woff2);
+  src: url(./charis/Charis-Bold.woff2);
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
   -webkit-font-feature-settings: %%FONTFEATURES%%;
@@ -36,10 +36,10 @@
 
 /* bold italic */
 @font-face {
-  font-family: 'Pankosmia-Charis SIL';
+  font-family: 'Pankosmia-Charis';
   font-style: italic;
   font-weight: bold; /* 700 */
-  src: url(./charis/CharisSIL-BoldItalic.woff2);
+  src: url(./charis/Charis-BoldItalic.woff2);
   font-feature-settings: %%FONTFEATURES%%;
   -moz-font-feature-settings: %%FONTFEATURES%%;
   -webkit-font-feature-settings: %%FONTFEATURES%%;
