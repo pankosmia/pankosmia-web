@@ -1,12 +1,11 @@
 use std::path::{Components, PathBuf};
 use hallomai::transform;
 use rocket::{get, post, State};
-use rocket::form::Form;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
 use serde_json::Value;
-use crate::structs::{AppSettings, MetadataSummary, Upload};
+use crate::structs::{AppSettings, MetadataSummary};
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::mime::mime_types;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
@@ -344,19 +343,19 @@ pub async fn post_ingredient_as_usj(
 ///
 /// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
 ///
-/// Writes a document, where the document is provided as an HTTP form file.
+/// Writes a document, where the document is provided as JSON with a 'payload' key.
 ///
 /// /// The target file must exist, ie this is not the way to add new ingredients to a Burrito
 #[post(
     "/ingredient/raw/<repo_path..>?<ipath>",
-    format = "multipart/form-data",
-    data = "<form>"
+    format = "json",
+    data = "<json_form>"
 )]
 pub async fn post_raw_ingredient(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
-    mut form: Form<Upload<'_>>,
+    json_form: Json<Value>,
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     let destination = state.repo_dir.lock().unwrap().clone()
@@ -365,13 +364,25 @@ pub async fn post_raw_ingredient(
         + "/ingredients/"
         + ipath.clone().as_str();
     if check_path_components(&mut path_components.clone())
-        && check_path_string_components(ipath)
+        && check_path_string_components(ipath.clone())
         && std::fs::metadata(destination.clone()).is_ok()
     {
-        let _ = form
-            .file
-            .persist_to(destination)
-            .await;
+        match std::fs::write(destination, json_form["payload"].as_str().unwrap()) {
+            Ok(_) => status::Custom(
+                Status::Ok,
+                (
+                    ContentType::JSON,
+                    make_good_json_data_response("ok".to_string()),
+                ),
+            ),
+            Err(e) => status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
+                ),
+            )
+        };
         status::Custom(
             Status::Ok,
             (
