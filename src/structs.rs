@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Mutex};
 use std::collections::{BTreeMap};
 use std::fmt;
-use rocket::fs::{TempFile};
 use rocket::{Responder, FromForm};
 use rocket::http::{ContentType};
 use rocket::response::{status, Redirect};
@@ -151,11 +150,6 @@ pub struct MetadataSummary {
     pub flavor: String,
     pub language_code: String,
     pub script_direction: String,
-}
-
-#[derive(FromForm)]
-pub struct Upload<'f> {
-    pub file: TempFile<'f>,
 }
 
 #[derive(Responder)]
