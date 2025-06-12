@@ -113,7 +113,7 @@ pub fn post_languages(
 ///
 /// ```text
 /// {
-///   "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-GentiumPlus",
+///   "font_set": "fonts-Pankosmia-CardoPankosmia-EzraSILPankosmia-PadaukPankosmia-AwamiNastaliqPankosmia-NotoNastaliqUrduPankosmia-Gentium",
 ///   "size": "medium",
 ///   "direction": "ltr"
 /// }
