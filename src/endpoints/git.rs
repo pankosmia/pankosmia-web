@@ -189,7 +189,7 @@ pub fn new_repo(
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
     // Get versification file as JSON
     let path_to_versification = format!(
-        "{}{}templates{}content_templates{}bcv{}{}.json",
+        "{}{}templates{}content_templates{}vrs{}{}.json",
         &state.app_resources_dir,
         os_slash_str(),
         os_slash_str(),

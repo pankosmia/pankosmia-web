@@ -189,7 +189,7 @@ pub fn list_versifications(state: &State<AppSettings>) -> status::Custom<(Conten
         os_slash_str(),
         "content_templates",
         os_slash_str(),
-        "bcv"
+        "vrs"
     );
     let versification_paths = std::fs::read_dir(versification_dir).unwrap();
     let mut versifications: Vec<String> = Vec::new();
@@ -226,7 +226,7 @@ pub async fn versification(
         os_slash_str(),
         "content_templates",
         os_slash_str(),
-        "bcv",
+        "vrs",
         os_slash_str(),
         versification_name.clone() + ".json"
     );
