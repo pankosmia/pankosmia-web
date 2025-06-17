@@ -11,3 +11,4 @@ pub mod clients;
 pub(crate) mod error;
 pub mod app_state;
 pub mod content_utils;
+pub mod git2;

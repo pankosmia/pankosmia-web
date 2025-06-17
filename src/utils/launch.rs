@@ -72,7 +72,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         .mount(
             "/git",
             routes![
-                endpoints::git::new_repo,
+                endpoints::git2::new_text_translation::new_text_translation_repo,
+                endpoints::git2::new_bcv_resource::new_bcv_resource_repo,
                 endpoints::git::fetch_repo,
                 endpoints::git::list_local_repos,
                 endpoints::git::delete_repo,
