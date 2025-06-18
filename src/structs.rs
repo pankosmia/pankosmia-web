@@ -176,7 +176,7 @@ pub struct NewTextTranslationContentForm {
 pub struct NewBcvResourceContentForm {
     pub content_name: String,
     pub content_abbr: String,
-    pub content_type: String,
+    pub tsv_type: String,
     pub content_language_code: String,
     pub add_book: bool,
     pub book_code: Option<String>,

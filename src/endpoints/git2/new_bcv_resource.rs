@@ -4,7 +4,7 @@ use rocket::{post, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
-use serde_json::{json};
+use serde_json::{json, Value};
 use crate::structs::{AppSettings, NewBcvResourceContentForm};
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
@@ -17,7 +17,7 @@ use crate::utils::paths::os_slash_str;
 /// Creates a new, local x-bcv* repo. It requires the following fields as a JSON body:
 /// - content_name (string)
 /// - content_abbr (string)
-/// - content_type (string)
+/// - tsv_type (string)
 /// - content_language_code
 /// - versification (string)
 /// - add_book (boolean)
@@ -31,6 +31,52 @@ pub fn new_bcv_resource_repo(
     state: &State<AppSettings>,
     json_form: Json<NewBcvResourceContentForm>,
 ) -> status::Custom<(ContentType, String)> {
+    // Read tsv catalog
+    let path_to_tsv_catalog = format!(
+        "{}{}app_resources{}tsv{}templates.json",
+        &state.app_resources_dir,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+    );
+    println!("{}", &path_to_tsv_catalog);
+    // Load tsv catalog
+    let tsv_catalog = match load_json(&path_to_tsv_catalog) {
+        Ok(j) => j,
+        Err(e) => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(format!("Could not load tsv template JSON: {}", e)),
+            ),
+        )
+    };
+    // Get flavor from tsv type
+    let tsv_type_record = match tsv_catalog[json_form.tsv_type.clone()].as_object() {
+        Some(o) => o,
+        None => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(
+                    format!("Could not find record for {} in tsv catalog JSON", json_form.tsv_type)
+                ),
+            ),
+        )
+    };
+    let tsv_type_flavor = match tsv_type_record["flavor"].as_str() {
+        Some(v) => v,
+        None => return status::Custom(
+            Status::InternalServerError,
+            (
+                ContentType::JSON,
+                make_bad_json_data_response(
+                    format!("Could not find flavor in record for {} in tsv catalog JSON", json_form.tsv_type)
+                ),
+            ),
+        )
+    };
+    println!("{}", tsv_type_flavor);
     // Check template type exists
     let path_to_template = format!(
         "{}{}templates{}content_templates{}{}{}metadata.json",
@@ -38,7 +84,7 @@ pub fn new_bcv_resource_repo(
         os_slash_str(),
         os_slash_str(),
         os_slash_str(),
-        json_form.content_type.clone(),
+        tsv_type_flavor,
         os_slash_str(),
     );
     if !std::path::Path::new(&path_to_template).is_file() {
@@ -46,7 +92,7 @@ pub fn new_bcv_resource_repo(
             Status::BadRequest,
             (
                 ContentType::JSON,
-                make_bad_json_data_response(format!("Metadata template {} not found", json_form.content_type)),
+                make_bad_json_data_response(format!("Metadata template {} not found", path_to_template)),
             ),
         );
     }
@@ -173,47 +219,34 @@ pub fn new_bcv_resource_repo(
     if json_form.add_book {
         let scope_string = format!("\"{}\": []", json_form.book_code.clone().unwrap().as_str());
         metadata_string = metadata_string.replace("%%SCOPE%%", scope_string.as_str());
-        // - Read and customize USFM template
-        let path_to_usfm_template = format!(
-            "{}{}templates{}content_templates{}{}{}book.usfm",
+        // - Read TSV template
+        let path_to_tsv_template = format!(
+            "{}{}app_resources{}tsv{}{}.tsv",
             &state.app_resources_dir,
             os_slash_str(),
             os_slash_str(),
             os_slash_str(),
-            json_form.content_type.clone(),
-            os_slash_str(),
+            json_form.tsv_type
         );
-        let mut usfm_string = match std::fs::read_to_string(&path_to_usfm_template) {
+        let mut tsv_string = match std::fs::read_to_string(&path_to_tsv_template) {
             Ok(v) => v,
             Err(e) => return status::Custom(
                 Status::InternalServerError,
                 (
                     ContentType::JSON,
-                    make_bad_json_data_response(format!("Could not load USFM template as string: {}", e)),
+                    make_bad_json_data_response(format!("Could not load TSV template {} as string: {}", json_form.tsv_type, e)),
                 ),
             )
         };
-        usfm_string = usfm_string
-            .replace("%%BOOKCODE%%", json_form.book_code.clone().unwrap().as_str())
-            .replace("%%BOOKNAME%%", json_form.book_title.clone().unwrap().as_str())
-            .replace("%%CONTENTNAME%%", json_form.content_name.clone().as_str())
-            .replace("%%BOOKABBR%%", json_form.book_abbr.clone().unwrap().as_str());
-        // - If ve
-            usfm_string = usfm_string
-                .replace(
-                    "%%STUBCONTENT%%",
-                    "\\c 1\n\\p\n\\v 1\nFirst verse...",
-                );
-        
         // - add ingredient to metadata
         let ingredient_json = json!(
             {
-                format!("ingredients/{}.usfm", json_form.book_code.clone().unwrap()): {
+                format!("ingredients/{}.tsv", json_form.book_code.clone().unwrap()): {
                     "checksum": {
-                        "md5": format!("{:?}", md5::compute(&usfm_string))
+                        "md5": format!("{:?}", md5::compute(&tsv_string))
                     },
-                    "mimeType": "text/plain",
-                    "size": usfm_string.len(),
+                    "mimeType": "text/tab-separated-values",
+                    "size": tsv_string.len(),
                     "scope": {
                         format!("{}", json_form.book_code.clone().unwrap()): []
                     }
@@ -232,21 +265,21 @@ pub fn new_bcv_resource_repo(
                 "\"ingredients\": {}",
                 format!("\"ingredients\": {}", ingredient_json.to_string().as_str()).as_str(),
             );
-        // - Write USFM
-        let path_to_usfm_destination = format!(
-            "{}{}ingredients{}{}.usfm",
+        // - Write TSV
+        let path_to_tsv_destination = format!(
+            "{}{}ingredients{}{}.tsv",
             &path_to_new_repo,
             os_slash_str(),
             os_slash_str(),
             json_form.book_code.clone().unwrap(),
         );
-        match std::fs::write(path_to_usfm_destination, usfm_string) {
+        match std::fs::write(path_to_tsv_destination, tsv_string) {
             Ok(_) => (),
             Err(e) => return status::Custom(
                 Status::InternalServerError,
                 (
                     ContentType::JSON,
-                    make_bad_json_data_response(format!("Could not write usfm to repo: {}", e)),
+                    make_bad_json_data_response(format!("Could not write tsv to repo: {}", e)),
                 ),
             )
         }
