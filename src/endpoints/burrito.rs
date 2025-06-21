@@ -79,7 +79,6 @@ pub async fn summary_metadata(
             + &repo_path.display().to_string()
             + os_slash_str()
             + "metadata.json";
-        println!("{}", path_to_serve);
         let file_string = match std::fs::read_to_string(path_to_serve) {
             Ok(v) => v,
             Err(e) => {
