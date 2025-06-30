@@ -96,13 +96,13 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         .mount(
             "/burrito",
             routes![
-                endpoints::burrito::raw_ingredient,
-                endpoints::burrito::get_ingredient_prettified,
-                endpoints::burrito::get_ingredient_as_usj,
-                endpoints::burrito::post_ingredient_as_usj,
-                endpoints::burrito::post_raw_ingredient,
-                endpoints::burrito::raw_metadata,
-                endpoints::burrito::summary_metadata
+                endpoints::burrito2::raw_ingredient::raw_ingredient,
+                endpoints::burrito2::get_ingredient_prettified::get_ingredient_prettified,
+                endpoints::burrito2::get_ingredient_as_usj::get_ingredient_as_usj,
+                endpoints::burrito2::post_ingredient_as_usj::post_ingredient_as_usj,
+                endpoints::burrito2::post_raw_ingredient::post_raw_ingredient,
+                endpoints::burrito2::raw_metadata::raw_metadata,
+                endpoints::burrito2::summary_metadata::summary_metadata
             ],
         )
 }
