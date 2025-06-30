@@ -23,13 +23,12 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         .mount(
             "/settings",
             routes![
-                endpoints::settings::get_languages,
-                endpoints::settings::post_languages,
-                endpoints::settings::get_auth_token,
-                endpoints::settings::get_new_auth_token,
-                endpoints::settings::get_typography,
-                endpoints::settings::post_typography,
-                endpoints::settings::post_typography_feature,
+                endpoints::settings2::get_languages::get_languages,
+                endpoints::settings2::post_languages::post_languages,
+                endpoints::settings2::get_new_auth_token::get_new_auth_token,
+                endpoints::settings2::get_typography::get_typography,
+                endpoints::settings2::post_typography::post_typography,
+                endpoints::settings2::post_typography_feature::post_typography_feature,
             ],
         )
         .mount("/net", routes![

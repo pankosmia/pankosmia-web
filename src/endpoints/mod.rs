@@ -1,4 +1,3 @@
-pub mod settings;
 pub mod net;
 pub mod debug;
 pub mod i18n;
@@ -11,3 +10,4 @@ pub mod content_utils;
 pub mod git2;
 pub mod burrito2;
 pub mod gitea2;
+pub mod settings2;
