@@ -32,14 +32,14 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             ],
         )
         .mount("/net", routes![
-            endpoints::net::net_status,
-            endpoints::net::net_enable,
-            endpoints::net::net_disable
+            endpoints::atomics::net::net_status,
+            endpoints::atomics::net::net_enable,
+            endpoints::atomics::net::net_disable
         ])
         .mount("/debug", routes![
-            endpoints::debug::debug_status,
-            endpoints::debug::debug_enable,
-            endpoints::debug::debug_disable
+            endpoints::atomics::debug::debug_status,
+            endpoints::atomics::debug::debug_enable,
+            endpoints::atomics::debug::debug_disable
         ])
         .mount(
             "/i18n",
