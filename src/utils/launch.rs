@@ -44,12 +44,12 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         .mount(
             "/i18n",
             routes![
-                endpoints::i18n::post_i18n,
-                endpoints::i18n::raw_i18n,
-                endpoints::i18n::negotiated_i18n,
-                endpoints::i18n::flat_i18n,
-                endpoints::i18n::untranslated_i18n,
-                endpoints::i18n::used_languages
+                endpoints::i18n2::post_i18n::post_i18n,
+                endpoints::i18n2::raw_i18n::raw_i18n,
+                endpoints::i18n2::negotiated_i18n::negotiated_i18n,
+                endpoints::i18n2::flat_i18n::flat_i18n,
+                endpoints::i18n2::untranslated_i18n::untranslated_i18n,
+                endpoints::i18n2::used_languages::used_languages
             ],
         )
         .mount("/navigation", routes![

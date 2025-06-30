@@ -1,6 +1,5 @@
 pub mod net;
 pub mod debug;
-pub mod i18n;
 pub mod sse;
 pub mod navigation;
 pub mod clients;
@@ -11,3 +10,4 @@ pub mod git2;
 pub mod burrito2;
 pub mod gitea2;
 pub mod settings2;
+pub mod i18n2;
