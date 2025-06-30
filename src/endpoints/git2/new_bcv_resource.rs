@@ -4,7 +4,7 @@ use rocket::{post, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
-use serde_json::{json, Value};
+use serde_json::{json};
 use crate::structs::{AppSettings, NewBcvResourceContentForm};
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
@@ -228,7 +228,7 @@ pub fn new_bcv_resource_repo(
             os_slash_str(),
             json_form.tsv_type
         );
-        let mut tsv_string = match std::fs::read_to_string(&path_to_tsv_template) {
+        let tsv_string = match std::fs::read_to_string(&path_to_tsv_template) {
             Ok(v) => v,
             Err(e) => return status::Custom(
                 Status::InternalServerError,

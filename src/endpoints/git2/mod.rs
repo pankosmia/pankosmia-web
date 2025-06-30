@@ -1,2 +1,8 @@
 pub mod new_text_translation;
 pub mod new_bcv_resource;
+pub mod list_local_repos;
+pub mod add_and_commit;
+pub mod fetch_repo;
+pub mod delete_repo;
+pub mod status;
+pub mod new_scripture_book;

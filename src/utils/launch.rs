@@ -74,12 +74,12 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             routes![
                 endpoints::git2::new_text_translation::new_text_translation_repo,
                 endpoints::git2::new_bcv_resource::new_bcv_resource_repo,
-                endpoints::git::fetch_repo,
-                endpoints::git::list_local_repos,
-                endpoints::git::delete_repo,
-                endpoints::git::add_and_commit,
-                endpoints::git::git_status,
-                endpoints::git::new_scripture_book
+                endpoints::git2::fetch_repo::fetch_repo,
+                endpoints::git2::list_local_repos::list_local_repos,
+                endpoints::git2::delete_repo::delete_repo,
+                endpoints::git2::add_and_commit::add_and_commit,
+                endpoints::git2::status::git_status,
+                endpoints::git2::new_scripture_book::new_scripture_book
             ],
         )
         .mount(

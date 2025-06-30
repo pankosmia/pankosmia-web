@@ -5,7 +5,6 @@ pub mod i18n;
 pub mod sse;
 pub mod navigation;
 pub mod gitea;
-pub mod git;
 pub mod burrito;
 pub mod clients;
 pub(crate) mod error;
