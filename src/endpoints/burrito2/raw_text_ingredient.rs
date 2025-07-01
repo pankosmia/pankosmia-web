@@ -11,9 +11,9 @@ use crate::utils::paths::{check_path_components, check_path_string_components, o
 ///
 /// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
 ///
-/// Returns a raw resource. We try to guess the mimetype.
+/// Returns a raw text resource. We try to guess the mimetype.
 #[get("/ingredient/raw/<repo_path..>?<ipath>")]
-pub async fn raw_ingredient(
+pub async fn raw_text_ingredient(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
@@ -41,7 +41,7 @@ pub async fn raw_ingredient(
                     (
                         match mime_types().get(suffix) {
                             Some(t) => t.clone(),
-                            None => ContentType::new("application", "octet-stream"),
+                            None => ContentType::new("application", "text/plain"),
                         },
                         v,
                     ),
