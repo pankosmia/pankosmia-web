@@ -20,6 +20,7 @@ pub(crate) fn mime_types() -> BTreeMap<String, ContentType> {
         ("js".to_string(), ContentType::JavaScript),
         ("md".to_string(), ContentType::Markdown),
         ("mov".to_string(), ContentType::MOV),
+        ("mp3".to_string(), ContentType::MP3),
         ("mp4".to_string(), ContentType::MP4),
         ("mpeg".to_string(), ContentType::MPEG),
         ("mpeg4".to_string(), ContentType::MP4),

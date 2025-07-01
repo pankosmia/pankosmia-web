@@ -2,7 +2,8 @@ use std::sync::atomic::Ordering;
 use rocket::{get, post, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use crate::{MsgQueue, NET_IS_ENABLED};
+use crate::MsgQueue;
+use crate::static_vars::NET_IS_ENABLED;
 use crate::utils::json_responses::{make_good_json_data_response, make_net_status_response};
 
 /// *`GET /status`*

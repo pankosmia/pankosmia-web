@@ -17,9 +17,9 @@ use crate::utils::bootstrap::{copy_and_customize_webfonts, initialize_working_di
 use crate::utils::json::get_string_value_by_key;
 use crate::utils::launch::{add_catchers, add_routes, add_app_settings, add_static_routes};
 use crate::utils::files::load_json;
+pub mod endpoints;
 mod static_vars;
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
-pub mod endpoints;
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
 

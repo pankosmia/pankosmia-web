@@ -23,34 +23,33 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         .mount(
             "/settings",
             routes![
-                endpoints::settings::get_languages,
-                endpoints::settings::post_languages,
-                endpoints::settings::get_auth_token,
-                endpoints::settings::get_new_auth_token,
-                endpoints::settings::get_typography,
-                endpoints::settings::post_typography,
-                endpoints::settings::post_typography_feature,
+                endpoints::settings2::get_languages::get_languages,
+                endpoints::settings2::post_languages::post_languages,
+                endpoints::settings2::get_new_auth_token::get_new_auth_token,
+                endpoints::settings2::get_typography::get_typography,
+                endpoints::settings2::post_typography::post_typography,
+                endpoints::settings2::post_typography_feature::post_typography_feature,
             ],
         )
         .mount("/net", routes![
-            endpoints::net::net_status,
-            endpoints::net::net_enable,
-            endpoints::net::net_disable
+            endpoints::atomics::net::net_status,
+            endpoints::atomics::net::net_enable,
+            endpoints::atomics::net::net_disable
         ])
         .mount("/debug", routes![
-            endpoints::debug::debug_status,
-            endpoints::debug::debug_enable,
-            endpoints::debug::debug_disable
+            endpoints::atomics::debug::debug_status,
+            endpoints::atomics::debug::debug_enable,
+            endpoints::atomics::debug::debug_disable
         ])
         .mount(
             "/i18n",
             routes![
-                endpoints::i18n::post_i18n,
-                endpoints::i18n::raw_i18n,
-                endpoints::i18n::negotiated_i18n,
-                endpoints::i18n::flat_i18n,
-                endpoints::i18n::untranslated_i18n,
-                endpoints::i18n::used_languages
+                endpoints::i18n2::post_i18n::post_i18n,
+                endpoints::i18n2::raw_i18n::raw_i18n,
+                endpoints::i18n2::negotiated_i18n::negotiated_i18n,
+                endpoints::i18n2::flat_i18n::flat_i18n,
+                endpoints::i18n2::untranslated_i18n::untranslated_i18n,
+                endpoints::i18n2::used_languages::used_languages
             ],
         )
         .mount("/navigation", routes![
@@ -63,45 +62,47 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::app_state::post_empty_current_project,
         ])
         .mount("/gitea", routes![
-            endpoints::gitea::gitea_remote_repos,
-            endpoints::gitea::get_gitea_endpoints,
-            endpoints::gitea::gitea_proxy_login,
-            endpoints::gitea::gitea_proxy_logout,
-            endpoints::gitea::get_my_collaborators,
+            endpoints::gitea2::gitea_remote_repos::gitea_remote_repos,
+            endpoints::gitea2::get_gitea_endpoints::get_gitea_endpoints,
+            endpoints::gitea2::gitea_proxy_login::gitea_proxy_login,
+            endpoints::gitea2::gitea_proxy_logout::gitea_proxy_logout,
+            endpoints::gitea2::get_my_collaborators::get_my_collaborators,
         ])
         .mount(
             "/git",
             routes![
-                endpoints::git::new_repo,
-                endpoints::git::fetch_repo,
-                endpoints::git::list_local_repos,
-                endpoints::git::delete_repo,
-                endpoints::git::add_and_commit,
-                endpoints::git::git_status,
-                endpoints::git::new_scripture_book
+                endpoints::git2::new_text_translation::new_text_translation_repo,
+                endpoints::git2::new_bcv_resource::new_bcv_resource_repo,
+                endpoints::git2::fetch_repo::fetch_repo,
+                endpoints::git2::list_local_repos::list_local_repos,
+                endpoints::git2::delete_repo::delete_repo,
+                endpoints::git2::add_and_commit::add_and_commit,
+                endpoints::git2::status::git_status,
+                endpoints::git2::new_scripture_book::new_scripture_book
             ],
         )
         .mount(
             "/content-utils",
             routes![
-                endpoints::content_utils::list_content_templates,
-                endpoints::content_utils::content_metadata_template,
-                endpoints::content_utils::list_content_template_filenames,
-                endpoints::content_utils::content_template,
-                endpoints::content_utils::list_versifications,
-                endpoints::content_utils::versification
+                endpoints::content_utils2::list_content_templates::list_content_templates,
+                endpoints::content_utils2::content_metadata_template::content_metadata_template,
+                endpoints::content_utils2::list_content_template_filenames::list_content_template_filenames,
+                endpoints::content_utils2::content_template::content_template,
+                endpoints::content_utils2::list_versifications::list_versifications,
+                endpoints::content_utils2::versification::versification
             ]
         )
         .mount(
             "/burrito",
             routes![
-                endpoints::burrito::raw_ingredient,
-                endpoints::burrito::get_ingredient_prettified,
-                endpoints::burrito::get_ingredient_as_usj,
-                endpoints::burrito::post_ingredient_as_usj,
-                endpoints::burrito::post_raw_ingredient,
-                endpoints::burrito::raw_metadata,
-                endpoints::burrito::summary_metadata
+                endpoints::burrito2::raw_text_ingredient::raw_text_ingredient,
+                endpoints::burrito2::raw_bytes_ingredient::raw_bytes_ingredient,
+                endpoints::burrito2::get_ingredient_prettified::get_ingredient_prettified,
+                endpoints::burrito2::get_ingredient_as_usj::get_ingredient_as_usj,
+                endpoints::burrito2::post_ingredient_as_usj::post_ingredient_as_usj,
+                endpoints::burrito2::post_raw_ingredient::post_raw_ingredient,
+                endpoints::burrito2::raw_metadata::raw_metadata,
+                endpoints::burrito2::summary_metadata::summary_metadata
             ],
         )
 }

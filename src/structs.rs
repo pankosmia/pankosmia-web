@@ -159,7 +159,7 @@ pub enum ContentOrRedirect {
 }
 
 #[derive(FromForm, Deserialize)]
-pub struct NewContentForm {
+pub struct NewTextTranslationContentForm {
     pub content_name: String,
     pub content_abbr: String,
     pub content_type: String,
@@ -169,6 +169,19 @@ pub struct NewContentForm {
     pub book_title: Option<String>,
     pub book_abbr: Option<String>,
     pub add_cv: Option<bool>,
+    pub versification: Option<String>
+}
+
+#[derive(FromForm, Deserialize)]
+pub struct NewBcvResourceContentForm {
+    pub content_name: String,
+    pub content_abbr: String,
+    pub tsv_type: String,
+    pub content_language_code: String,
+    pub add_book: bool,
+    pub book_code: Option<String>,
+    pub book_title: Option<String>,
+    pub book_abbr: Option<String>,
     pub versification: Option<String>
 }
 
