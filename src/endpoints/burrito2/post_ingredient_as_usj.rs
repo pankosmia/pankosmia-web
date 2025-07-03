@@ -1,13 +1,14 @@
-use std::path::{Components, PathBuf};
-use hallomai::transform;
-use rocket::{post, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use rocket::serde::json::Json;
-use serde_json::Value;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use hallomai::transform;
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::serde::json::Json;
+use rocket::{post, State};
+use serde_json::Value;
+use std::path::{Components, PathBuf};
 
 /// *`POST /ingredient/as-usj/<repo_path>?ipath=my_burrito_path`*
 ///
@@ -42,28 +43,16 @@ pub async fn post_ingredient_as_usj(
         let usfm = transform(json_form.to_string(), "usj".to_string(), "usfm".to_string())
             .replace("\\usfm 0.2.1\n", "");
         match std::fs::write(destination, usfm) {
-            Ok(_) => status::Custom(
-                Status::Ok,
-                (
-                    ContentType::JSON,
-                    make_good_json_data_response("ok".to_string()),
-                ),
-            ),
-            Err(e) => status::Custom(
+            Ok(_) => ok_json_response(make_good_json_data_response("ok".to_string())),
+            Err(e) => not_ok_json_response(
                 Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
-                ),
-            )
+                make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
+            ),
         }
     } else {
-        status::Custom(
+        not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path".to_string()),
-            ),
+            make_bad_json_data_response("bad repo path".to_string()),
         )
     }
 }

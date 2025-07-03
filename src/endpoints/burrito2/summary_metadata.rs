@@ -1,11 +1,12 @@
-use std::path::{Components, PathBuf};
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use serde_json::Value;
 use crate::structs::{AppSettings, MetadataSummary};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use serde_json::Value;
+use std::path::{Components, PathBuf};
 
 /// *`GET /metadata/summary/<repo_path>`*
 ///
@@ -40,32 +41,25 @@ pub async fn summary_metadata(
         let file_string = match std::fs::read_to_string(path_to_serve) {
             Ok(v) => v,
             Err(e) => {
-                return status::Custom(
+                return not_ok_json_response(
                     Status::BadRequest,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!("could not read metadata: {}", e).to_string(),
-                        ),
+                    make_bad_json_data_response(
+                        format!("could not read metadata: {}", e).to_string(),
                     ),
                 )
             }
         };
-        let raw_metadata_struct: Value =
-            match serde_json::from_str(file_string.as_str()) {
-                Ok(v) => v,
-                Err(e) => {
-                    return status::Custom(
-                        Status::BadRequest,
-                        (
-                            ContentType::JSON,
-                            make_bad_json_data_response(
-                                format!("could not parse metadata: {}", e).to_string(),
-                            ),
-                        ),
-                    )
-                }
-            };
+        let raw_metadata_struct: Value = match serde_json::from_str(file_string.as_str()) {
+            Ok(v) => v,
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(
+                        format!("could not parse metadata: {}", e).to_string(),
+                    ),
+                );
+            }
+        };
         let summary = MetadataSummary {
             name: raw_metadata_struct["identification"]["name"]["en"]
                 .as_str()
@@ -76,7 +70,8 @@ pub async fn summary_metadata(
                 Value::Null => "".to_string(),
                 _ => "?".to_string(),
             },
-            abbreviation: match raw_metadata_struct["identification"]["abbreviation"]["en"].clone() {
+            abbreviation: match raw_metadata_struct["identification"]["abbreviation"]["en"].clone()
+            {
                 Value::String(v) => v.as_str().to_string(),
                 Value::Null => "".to_string(),
                 _ => "?".to_string(),
@@ -104,24 +99,18 @@ pub async fn summary_metadata(
             },
         };
         match serde_json::to_string(&summary) {
-            Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-            Err(e) => status::Custom(
+            Ok(v) => ok_json_response(v),
+            Err(e) => not_ok_json_response(
                 Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(
-                        format!("could not serialize metadata: {}", e).to_string(),
-                    ),
+                make_bad_json_data_response(
+                    format!("could not serialize metadata: {}", e).to_string(),
                 ),
             ),
         }
     } else {
-        status::Custom(
+        not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path!".to_string()),
-            ),
+            make_bad_json_data_response("bad repo path!".to_string()),
         )
     }
 }

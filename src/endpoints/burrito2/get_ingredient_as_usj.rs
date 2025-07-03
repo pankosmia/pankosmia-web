@@ -1,11 +1,12 @@
-use std::path::{Components, PathBuf};
-use hallomai::transform;
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use hallomai::transform;
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use std::path::{Components, PathBuf};
 
 /// *`GET /ingredient/as-usj/<repo_path>?ipath=my_burrito_path`*
 ///
@@ -28,30 +29,18 @@ pub async fn get_ingredient_as_usj(
             + "/ingredients/"
             + ipath.as_str();
         match std::fs::read_to_string(path_to_serve) {
-            Ok(v) => status::Custom(
-                Status::Ok,
-                (
-                    ContentType::JSON,
-                    transform(v, "usfm".to_string(), "usj".to_string()),
-                ),
-            ),
-            Err(e) => status::Custom(
+            Ok(v) => ok_json_response(transform(v, "usfm".to_string(), "usj".to_string())),
+            Err(e) => not_ok_json_response(
                 Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(
-                        format!("could not read ingredient content: {}", e).to_string(),
-                    ),
+                make_bad_json_data_response(
+                    format!("could not read ingredient content: {}", e).to_string(),
                 ),
             ),
         }
     } else {
-        status::Custom(
+        not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path".to_string()),
-            ),
+            make_bad_json_data_response("bad repo path".to_string()),
         )
     }
 }

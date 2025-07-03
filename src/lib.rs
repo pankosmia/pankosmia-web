@@ -19,7 +19,9 @@ use crate::utils::launch::{add_catchers, add_routes, add_app_settings, add_stati
 use crate::utils::files::load_json;
 pub mod endpoints;
 mod static_vars;
+#[allow(unused_imports)]
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
+#[warn(unused_imports)]
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
 
