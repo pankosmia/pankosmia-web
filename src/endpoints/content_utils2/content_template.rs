@@ -1,9 +1,10 @@
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
 
 /// *`GET /template/<template_name>/<filename>`*
 ///
@@ -14,7 +15,7 @@ use crate::utils::paths::os_slash_str;
 pub async fn content_template(
     state: &State<AppSettings>,
     template_name: String,
-    filename: String
+    filename: String,
 ) -> status::Custom<(ContentType, String)> {
     let path_to_serve = format!(
         "{}{}{}{}{}{}{}{}{}",
@@ -30,27 +31,15 @@ pub async fn content_template(
     );
 
     match std::fs::read_to_string(path_to_serve) {
-        Ok(v) => {
-            status::Custom(
-                Status::Ok,
-                (
-                    ContentType::Plain,
-                    v,
-                ),
-            )
-        }
-        Err(e) => status::Custom(
+        Ok(v) => ok_json_response(v),
+        Err(e) => not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(
-                    format!(
-                        "could not read file {} for content template '{}': {}",
-                        filename,
-                        template_name,
-                        e
-                    ).to_string(),
-                ),
+            make_bad_json_data_response(
+                format!(
+                    "could not read file {} for content template '{}': {}",
+                    filename, template_name, e
+                )
+                .to_string(),
             ),
         ),
     }

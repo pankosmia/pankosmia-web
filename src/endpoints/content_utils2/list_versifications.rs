@@ -1,8 +1,10 @@
-use rocket::{get, State};
+use crate::structs::AppSettings;
+use crate::utils::json_responses::make_bad_json_data_response;
+use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use crate::structs::AppSettings;
-use crate::utils::paths::os_slash_str;
+use rocket::{get, State};
 
 /// *`GET /versifications`*
 ///
@@ -24,19 +26,44 @@ pub fn list_versifications(state: &State<AppSettings>) -> status::Custom<(Conten
         os_slash_str(),
         "vrs"
     );
-    let versification_paths = std::fs::read_dir(versification_dir).unwrap();
+    let versification_paths = match std::fs::read_dir(&versification_dir) {
+        Ok(paths) => paths,
+        Err(err) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not read directory {} : {}",
+                    versification_dir, err
+                )),
+            )
+        }
+    };
     let mut versifications: Vec<String> = Vec::new();
     for versification_path in versification_paths {
         let versification_path_ob = versification_path.unwrap().path();
         let versification_filename = versification_path_ob.file_name().unwrap();
-        versifications.push(versification_filename.to_str().unwrap().to_string().split(".").next().unwrap().to_string());
+        versifications.push(
+            versification_filename
+                .to_str()
+                .unwrap()
+                .to_string()
+                .split(".")
+                .next()
+                .unwrap()
+                .to_string(),
+        );
     }
-    let content_json_string = serde_json::to_string_pretty(&versifications).unwrap();
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            content_json_string,
-        ),
-    )
+    let content_json_string = match serde_json::to_string_pretty(&versifications) {
+        Ok(json_string) => json_string,
+        Err(err) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not turn versifications array into JSON string: {}",
+                    err
+                )),
+            )
+        }
+    };
+    ok_json_response(content_json_string)
 }
