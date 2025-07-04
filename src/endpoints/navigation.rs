@@ -1,8 +1,9 @@
-use rocket::{get, post, State};
+use crate::structs::{AppSettings, Bcv};
+use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::utils::response::{not_ok_json_response, ok_json_response, ok_ok_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use crate::structs::{AppSettings, Bcv};
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
+use rocket::{get, post, State};
 
 /// *`GET /bcv`*
 ///
@@ -15,16 +16,10 @@ use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_d
 pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let bcv = state.bcv.lock().unwrap().clone();
     match serde_json::to_string(&bcv) {
-        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-        Err(e) => status::Custom(
+        Ok(v) => ok_json_response(v),
+        Err(e) => not_ok_json_response(
             Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!(
-                    "Could not parse bcv state as JSON object: {}",
-                    e
-                )),
-            ),
+            make_bad_json_data_response(format!("Could not parse bcv state as JSON object: {}", e)),
         ),
     }
 }
@@ -46,12 +41,5 @@ pub fn post_bcv(
         chapter,
         verse,
     };
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    ok_ok_json_response()
 }
-

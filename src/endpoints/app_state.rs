@@ -1,8 +1,8 @@
-use rocket::http::{ContentType, Status};
+use crate::structs::{AppSettings, ProjectIdentifier};
+use crate::utils::response::{ok_json_response, ok_ok_json_response};
+use rocket::http::ContentType;
 use rocket::response::status;
 use rocket::{get, post, State};
-use crate::structs::{AppSettings, ProjectIdentifier};
-use crate::utils::json_responses::make_good_json_data_response;
 
 /// *`GET /current-project`*
 ///
@@ -21,20 +21,8 @@ use crate::utils::json_responses::make_good_json_data_response;
 pub fn get_current_project(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let current_project_inner = state.current_project.lock().unwrap().clone();
     match current_project_inner {
-        Some(p) => status::Custom(
-            Status::Ok,
-            (
-                ContentType::JSON,
-                serde_json::to_string_pretty(&p).unwrap(),
-            )
-        ),
-        None => status::Custom(
-            Status::Ok,
-            (
-                ContentType::JSON,
-                "null".to_string()
-            )
-        ),
+        Some(p) => ok_json_response(serde_json::to_string_pretty(&p).unwrap()),
+        None => ok_json_response("null".to_string()),
     }
 }
 
@@ -44,16 +32,19 @@ pub fn get_current_project(state: &State<AppSettings>) -> status::Custom<(Conten
 ///
 /// Sets current project.
 #[post("/current-project/<source>/<organization>/<project>")]
-pub fn post_current_project(state: &State<AppSettings>, source: &str, organization: &str, project: &str) -> status::Custom<(ContentType, String)> {
+pub fn post_current_project(
+    state: &State<AppSettings>,
+    source: &str,
+    organization: &str,
+    project: &str,
+) -> status::Custom<(ContentType, String)> {
     let mut current_project_inner = state.current_project.lock().unwrap();
-    *current_project_inner = Some(ProjectIdentifier{source: source.to_string(), organization: organization.to_string(), project: project.to_string()});
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("Ok".to_string()),
-        )
-    )
+    *current_project_inner = Some(ProjectIdentifier {
+        source: source.to_string(),
+        organization: organization.to_string(),
+        project: project.to_string(),
+    });
+    ok_ok_json_response()
 }
 
 /// *`POST /empty-current-project`*
@@ -62,14 +53,10 @@ pub fn post_current_project(state: &State<AppSettings>, source: &str, organizati
 ///
 /// Unsets current project.
 #[post("/current-project")]
-pub fn post_empty_current_project(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+pub fn post_empty_current_project(
+    state: &State<AppSettings>,
+) -> status::Custom<(ContentType, String)> {
     let mut current_project_inner = state.current_project.lock().unwrap();
     *current_project_inner = None;
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("Ok".to_string()),
-        )
-    )
+    ok_ok_json_response()
 }
