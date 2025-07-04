@@ -1,8 +1,9 @@
-use rocket::{get, State};
-use rocket::http::{ContentType, CookieJar, Status};
-use rocket::response::{status, Redirect};
 use crate::structs::{AppSettings, ContentOrRedirect};
 use crate::utils::json_responses::make_bad_json_data_response;
+use crate::utils::response::not_ok_json_response;
+use rocket::http::{CookieJar, Status};
+use rocket::response::Redirect;
+use rocket::{get, State};
 
 /// *`GET /auth-token/<token_key>/<code>/<client_code>`*
 ///
@@ -26,58 +27,28 @@ pub fn get_new_auth_token<'a>(
     cj: &CookieJar<'_>,
 ) -> ContentOrRedirect {
     if !state.gitea_endpoints.contains_key(&token_key) {
-        return ContentOrRedirect::Content(
-            status::Custom(
-                Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Unknown GITEA endpoint name: {}",
-                        token_key
-                    )),
-                ),
-            )
-        );
+        return ContentOrRedirect::Content(not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("Unknown GITEA endpoint name: {}", token_key)),
+        ));
     }
-    let mut auth_requests = state
-        .auth_requests
-        .lock()
-        .unwrap();
+    let mut auth_requests = state.auth_requests.lock().unwrap();
     if !auth_requests.contains_key(&token_key) {
-        return ContentOrRedirect::Content(
-            status::Custom(
-                Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "No record auth request found for {}",
-                        token_key
-                    )),
-                ),
-            )
-        );
+        return ContentOrRedirect::Content(not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("No record auth request found for {}", token_key)),
+        ));
     };
     let auth_request_record = auth_requests.get(&token_key).unwrap();
     if auth_request_record.code != client_code {
-        return ContentOrRedirect::Content(
-            status::Custom(
-                Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Invalid client code for {}",
-                        token_key
-                    )),
-                ),
-            )
-        );
+        return ContentOrRedirect::Content(not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("Invalid client code for {}", token_key)),
+        ));
     }
     let redirect_uri = format!("/{}", auth_request_record.redirect_uri.clone());
     auth_requests.remove(&token_key);
-    let mut tokens_inner = state
-        .auth_tokens
-        .lock()
-        .unwrap();
+    let mut tokens_inner = state.auth_tokens.lock().unwrap();
     if code == "" {
         cj.remove(format!("{}_code", token_key.clone()));
         tokens_inner.remove(&token_key);
