@@ -1,11 +1,12 @@
-use std::path::PathBuf;
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use serde_json::{Map, Value};
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use serde_json::{Map, Value};
+use std::path::PathBuf;
 
 /// *`GET /negotiated/<filter>`*
 ///
@@ -54,13 +55,10 @@ pub async fn negotiated_i18n(
         .map(String::from)
         .collect();
     if filter_items.len() > 2 {
-        return status::Custom(
+        return not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(
-                    format!("expected 0 - 2 filter terms, not {}", filter_items.len()).to_string(),
-                ),
+            make_bad_json_data_response(
+                format!("expected 0 - 2 filter terms, not {}", filter_items.len()).to_string(),
             ),
         );
     }
@@ -131,32 +129,20 @@ pub async fn negotiated_i18n(
                         }
                         negotiated.insert(i18n_type.clone(), Value::Object(negotiated_types));
                     }
-                    status::Custom(
-                        Status::Ok,
-                        (
-                            ContentType::JSON,
-                            serde_json::to_string(&negotiated).unwrap(),
-                        ),
-                    )
+                    ok_json_response(serde_json::to_string(&negotiated).unwrap())
                 }
-                Err(e) => status::Custom(
+                Err(e) => not_ok_json_response(
                     Status::BadRequest,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!("could not parse for negotiated i18n: {}", e).to_string(),
-                        ),
+                    make_bad_json_data_response(
+                        format!("could not parse for negotiated i18n: {}", e).to_string(),
                     ),
                 ),
             }
         }
-        Err(e) => status::Custom(
+        Err(e) => not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(
-                    format!("could not read for negotiated i18n: {}", e).to_string(),
-                ),
+            make_bad_json_data_response(
+                format!("could not read for negotiated i18n: {}", e).to_string(),
             ),
         ),
     }
