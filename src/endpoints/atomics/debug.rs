@@ -1,6 +1,6 @@
 use crate::static_vars::DEBUG_IS_ENABLED;
-use crate::utils::json_responses::{make_good_json_data_response, make_net_status_response};
-use crate::utils::response::ok_json_response;
+use crate::utils::json_responses::{make_net_status_response};
+use crate::utils::response::{ok_ok_json_response, ok_json_response};
 use crate::MsgQueue;
 use rocket::http::{ContentType};
 use rocket::response::status;
@@ -34,7 +34,7 @@ pub fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Stri
         .unwrap()
         .push_back("info--5--debug--enable".to_string());
     DEBUG_IS_ENABLED.store(true, Ordering::Relaxed);
-    ok_json_response(make_good_json_data_response("ok".to_string()))
+    ok_ok_json_response()
 }
 
 /// *`GET /disable`*
@@ -50,5 +50,5 @@ pub fn debug_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Str
         .unwrap()
         .push_back("info--5--debug--disable".to_string());
     DEBUG_IS_ENABLED.store(false, Ordering::Relaxed);
-    ok_json_response(make_good_json_data_response("ok".to_string()))
+    ok_ok_json_response()
 }

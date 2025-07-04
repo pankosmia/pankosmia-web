@@ -2,7 +2,7 @@ use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::mime::mime_types;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
-use crate::utils::response::{not_ok_json_response};
+use crate::utils::response::{not_ok_json_response, not_ok_bad_repo_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, State};
@@ -56,9 +56,6 @@ pub async fn raw_text_ingredient(
             ),
         }
     } else {
-        not_ok_json_response(
-            Status::BadRequest,
-            make_bad_json_data_response("bad repo path".to_string()),
-        )
+        not_ok_bad_repo_json_response()
     }
 }

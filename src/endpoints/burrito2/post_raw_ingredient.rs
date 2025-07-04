@@ -1,7 +1,7 @@
 use crate::structs::AppSettings;
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
+use crate::utils::json_responses::{make_bad_json_data_response};
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
-use crate::utils::response::{not_ok_json_response, ok_json_response};
+use crate::utils::response::{not_ok_json_response, ok_ok_json_response, not_ok_bad_repo_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
@@ -38,17 +38,14 @@ pub async fn post_raw_ingredient(
         && std::fs::metadata(destination.clone()).is_ok()
     {
         match std::fs::write(destination, json_form["payload"].as_str().unwrap()) {
-            Ok(_) => ok_json_response(make_good_json_data_response("ok".to_string())),
-            Err(e) => not_ok_json_response(
+            Ok(_) => {},
+            Err(e) => return not_ok_json_response(
                 Status::InternalServerError,
                 make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
             ),
         };
-        ok_json_response(make_good_json_data_response("ok".to_string()))
+        ok_ok_json_response()
     } else {
-        not_ok_json_response(
-            Status::BadRequest,
-            make_bad_json_data_response("bad repo path".to_string()),
-        )
+        not_ok_bad_repo_json_response()
     }
 }

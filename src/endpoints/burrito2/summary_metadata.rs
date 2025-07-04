@@ -1,7 +1,7 @@
 use crate::structs::{AppSettings, MetadataSummary};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
-use crate::utils::response::{not_ok_json_response, ok_json_response};
+use crate::utils::response::{not_ok_json_response, ok_json_response, not_ok_bad_repo_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, State};
@@ -108,9 +108,6 @@ pub async fn summary_metadata(
             ),
         }
     } else {
-        not_ok_json_response(
-            Status::BadRequest,
-            make_bad_json_data_response("bad repo path!".to_string()),
-        )
+        not_ok_bad_repo_json_response()
     }
 }
