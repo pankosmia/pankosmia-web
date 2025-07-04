@@ -1,7 +1,8 @@
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::AppSettings;
+use crate::utils::response::ok_json_response;
+use rocket::http::{ContentType};
+use rocket::response::status;
+use rocket::{get, State};
 
 /// *`GET /list-local-repos`*
 ///
@@ -40,11 +41,5 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
         .into_iter()
         .map(|str: String| format!("{}", str))
         .collect();
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            serde_json::to_string(&quoted_repos).unwrap(),
-        ),
-    )
+    ok_json_response(serde_json::to_string(&quoted_repos).unwrap())
 }

@@ -1,14 +1,15 @@
+use crate::structs::{AppSettings, NewTextTranslationContentForm};
+use crate::utils::files::load_json;
+use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
 use chrono::Utc;
 use git2::Repository;
-use rocket::{post, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
+use rocket::{post, State};
 use serde_json::{json, Value};
-use crate::structs::{AppSettings, NewTextTranslationContentForm};
-use crate::utils::files::load_json;
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
-use crate::utils::paths::os_slash_str;
 
 /// *`POST /new-text-translation`*
 ///
@@ -25,9 +26,7 @@ use crate::utils::paths::os_slash_str;
 /// - book_title (null or string)
 /// - book_abbr (null or string)
 /// - add_cv (null or boolean)
-#[post("/new-text-translation",
-    format = "json",
-    data = "<json_form>")]
+#[post("/new-text-translation", format = "json", data = "<json_form>")]
 pub fn new_text_translation_repo(
     state: &State<AppSettings>,
     json_form: Json<NewTextTranslationContentForm>,
@@ -43,12 +42,12 @@ pub fn new_text_translation_repo(
         os_slash_str(),
     );
     if !std::path::Path::new(&path_to_template).is_file() {
-        return status::Custom(
+        return not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Metadata template {} not found", json_form.content_type)),
-            ),
+            make_bad_json_data_response(format!(
+                "Metadata template {} not found",
+                json_form.content_type
+            )),
         );
     }
     // Build path for new repo and parent
@@ -66,66 +65,77 @@ pub fn new_text_translation_repo(
     );
     // Check path doesn't already exist
     if std::path::Path::new(&path_to_new_repo).exists() {
-        return status::Custom(
+        return not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Local content called '{}' already exists", json_form.content_abbr)),
-            ),
+            make_bad_json_data_response(format!(
+                "Local content called '{}' already exists",
+                json_form.content_abbr
+            )),
         );
     }
     // Make parents?
     match std::fs::create_dir_all(path_to_new_repo_parent) {
         Ok(_) => (),
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Could not create local content directories: {}", e)),
-            ),
-        )
+        Err(e) => {
+            return status::Custom(
+                Status::InternalServerError,
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "Could not create local content directories: {}",
+                        e
+                    )),
+                ),
+            )
+        }
     }
     // Init repo
     let new_repo = match Repository::init(&path_to_new_repo) {
         Ok(repo) => repo,
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
                 make_bad_json_data_response(format!("Could not create repo: {}", e)),
-            ),
-        )
+            )
+        }
     };
     // Set up local user info
     let mut config = new_repo.config().unwrap();
-    config.set_str("user.name", whoami::username().as_str()).unwrap();
-    config.set_str("user.email", format!("{}@localhost", whoami::username().as_str()).as_str()).unwrap();
+    config
+        .set_str("user.name", whoami::username().as_str())
+        .unwrap();
+    config
+        .set_str(
+            "user.email",
+            format!("{}@localhost", whoami::username().as_str()).as_str(),
+        )
+        .unwrap();
     // Make ingredients dir
-    let path_to_ingredients = format!(
-        "{}{}ingredients",
-        path_to_new_repo,
-        os_slash_str(),
-    );
+    let path_to_ingredients = format!("{}{}ingredients", path_to_new_repo, os_slash_str(),);
     match std::fs::create_dir(&path_to_ingredients) {
         Ok(_) => (),
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Could not create ingredients directory for repo: {}", e)),
-            ),
-        )
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not create ingredients directory for repo: {}",
+                    e
+                )),
+            )
+        }
     }
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Could not load metadata template as string: {}", e)),
-            ),
-        )
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not load metadata template as string: {}",
+                    e
+                )),
+            )
+        }
     };
     let now_time = Utc::now();
     metadata_string = metadata_string
@@ -145,30 +155,28 @@ pub fn new_text_translation_repo(
     );
     let versification_schema = match load_json(&path_to_versification) {
         Ok(j) => j,
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
                 make_bad_json_data_response(format!("Could not load versification JSON: {}", e)),
-            ),
-        )
+            )
+        }
     };
     // Write it out to new repo
-    let path_to_repo_versification = format!(
-        "{}{}ingredients/vrs.json",
-        path_to_new_repo,
-        os_slash_str(),
-    );
+    let path_to_repo_versification =
+        format!("{}{}ingredients/vrs.json", path_to_new_repo, os_slash_str(),);
     let versification_string = serde_json::to_string(&versification_schema).unwrap();
     match std::fs::write(path_to_repo_versification, &versification_string) {
         Ok(_) => (),
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Could not write versification to repo: {}", e)),
-            ),
-        )
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not write versification to repo: {}",
+                    e
+                )),
+            )
+        }
     }
     // Make new book if necessary:
     if json_form.add_book {
@@ -186,68 +194,70 @@ pub fn new_text_translation_repo(
         );
         let mut usfm_string = match std::fs::read_to_string(&path_to_usfm_template) {
             Ok(v) => v,
-            Err(e) => return status::Custom(
-                Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!("Could not load USFM template as string: {}", e)),
-                ),
-            )
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(format!(
+                        "Could not load USFM template as string: {}",
+                        e
+                    )),
+                )
+            }
         };
         usfm_string = usfm_string
-            .replace("%%BOOKCODE%%", json_form.book_code.clone().unwrap().as_str())
-            .replace("%%BOOKNAME%%", json_form.book_title.clone().unwrap().as_str())
+            .replace(
+                "%%BOOKCODE%%",
+                json_form.book_code.clone().unwrap().as_str(),
+            )
+            .replace(
+                "%%BOOKNAME%%",
+                json_form.book_title.clone().unwrap().as_str(),
+            )
             .replace("%%CONTENTNAME%%", json_form.content_name.clone().as_str())
-            .replace("%%BOOKABBR%%", json_form.book_abbr.clone().unwrap().as_str());
+            .replace(
+                "%%BOOKABBR%%",
+                json_form.book_abbr.clone().unwrap().as_str(),
+            );
         // - If ve
         if json_form.add_cv.unwrap() {
             // Generate cv USFM
             let mut cv_bits = Vec::new();
             let versification_ob = match &versification_schema {
                 Value::Object(o) => o,
-                _ => return status::Custom(
-                    Status::InternalServerError,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!(
-                                "Could not find versification JSON object for {}",
-                                json_form.versification.clone().unwrap()
-                            )
-                        ),
-                    ),
-                )
+                _ => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not find versification JSON object for {}",
+                            json_form.versification.clone().unwrap()
+                        )),
+                    )
+                }
             };
             let max_verses_ob = match &versification_ob["maxVerses"] {
                 Value::Object(o) => o,
-                _ => return status::Custom(
-                    Status::InternalServerError,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!(
-                                "Could not find maxVerses in versification JSON for {}",
-                                json_form.versification.clone().unwrap()
-                            )
-                        ),
-                    ),
-                )
+                _ => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not find maxVerses in versification JSON for {}",
+                            json_form.versification.clone().unwrap()
+                        )),
+                    )
+                }
             };
             let book_max_verses_arr = match &max_verses_ob[&json_form.book_code.clone().unwrap()] {
                 Value::Array(a) => a,
-                _ => return status::Custom(
-                    Status::InternalServerError,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!(
-                                "Could not find maxVerses for {} in versification JSON for {}",
-                                json_form.book_code.clone().unwrap(),
-                                json_form.versification.clone().unwrap()
-                            )
-                        ),
-                    ),
-                )
+                _ => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not find maxVerses for {} in versification JSON for {}",
+                            json_form.book_code.clone().unwrap(),
+                            json_form.versification.clone().unwrap()
+                        )),
+                    )
+                }
             };
             let mut chapter_number = 0;
             for max_verse in book_max_verses_arr {
@@ -260,17 +270,10 @@ pub fn new_text_translation_repo(
                 }
             }
             // Insert
-            usfm_string = usfm_string
-                .replace(
-                    "%%STUBCONTENT%%",
-                    cv_bits.join("\n").as_str(),
-                );
+            usfm_string = usfm_string.replace("%%STUBCONTENT%%", cv_bits.join("\n").as_str());
         } else {
-            usfm_string = usfm_string
-                .replace(
-                    "%%STUBCONTENT%%",
-                    "\\c 1\n\\p\n\\v 1\nFirst verse...",
-                );
+            usfm_string =
+                usfm_string.replace("%%STUBCONTENT%%", "\\c 1\n\\p\n\\v 1\nFirst verse...");
         }
         // - add ingredient to metadata
         let ingredient_json = json!(
@@ -294,11 +297,10 @@ pub fn new_text_translation_repo(
                 }
             }
         );
-        metadata_string = metadata_string
-            .replace(
-                "\"ingredients\": {}",
-                format!("\"ingredients\": {}", ingredient_json.to_string().as_str()).as_str(),
-            );
+        metadata_string = metadata_string.replace(
+            "\"ingredients\": {}",
+            format!("\"ingredients\": {}", ingredient_json.to_string().as_str()).as_str(),
+        );
         // - Write USFM
         let path_to_usfm_destination = format!(
             "{}{}ingredients{}{}.usfm",
@@ -309,35 +311,34 @@ pub fn new_text_translation_repo(
         );
         match std::fs::write(path_to_usfm_destination, usfm_string) {
             Ok(_) => (),
-            Err(e) => return status::Custom(
-                Status::InternalServerError,
-                (
-                    ContentType::JSON,
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
                     make_bad_json_data_response(format!("Could not write usfm to repo: {}", e)),
-                ),
-            )
+                )
+            }
         }
-    } else { // No ingredients
+    } else {
+        // No ingredients
         metadata_string = metadata_string.replace("%%SCOPE%%", "");
     }
     // Write metadata
-    let path_to_repo_metadata = format!(
-        "{}{}metadata.json",
-        &path_to_new_repo,
-        os_slash_str()
-    );
+    let path_to_repo_metadata = format!("{}{}metadata.json", &path_to_new_repo, os_slash_str());
     match std::fs::write(path_to_repo_metadata, metadata_string) {
         Ok(_) => (),
-        Err(e) => return status::Custom(
-            Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("Could not write metadata template to repo: {}", e)),
-            ),
-        )
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not write metadata template to repo: {}",
+                    e
+                )),
+            )
+        }
     }
     // Add and commit
-    new_repo.index()
+    new_repo
+        .index()
         .unwrap()
         .add_all(&["."], git2::IndexAddOption::DEFAULT, None)
         .unwrap();
@@ -348,12 +349,8 @@ pub fn new_text_translation_repo(
         index.write_tree().unwrap()
     };
     let tree = new_repo.find_tree(tree_id).unwrap();
-    new_repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[]).unwrap();
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    new_repo
+        .commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])
+        .unwrap();
+    ok_ok_json_response()
 }

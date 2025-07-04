@@ -1,11 +1,12 @@
-use std::path::PathBuf;
-use git2::{Repository, StatusOptions};
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::{AppSettings, GitStatusRecord};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use git2::{Repository, StatusOptions};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use std::path::PathBuf;
 
 /// *`GET /status/<repo_path>`*
 ///
@@ -32,12 +33,9 @@ pub async fn git_status(
     match Repository::open(repo_path_string) {
         Ok(repo) => {
             if repo.is_bare() {
-                return status::Custom(
+                return not_ok_json_response(
                     Status::BadRequest,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response("cannot get status of bare repo".to_string()),
-                    ),
+                    make_bad_json_data_response("cannot get status of bare repo".to_string()),
                 );
             };
             let mut opts = StatusOptions::new();
@@ -52,29 +50,29 @@ pub async fn git_status(
                         let i_status = match entry.status() {
                             s if s.contains(git2::Status::INDEX_NEW)
                                 || s.contains(git2::Status::WT_NEW) =>
-                                {
-                                    "new"
-                                }
+                            {
+                                "new"
+                            }
                             s if s.contains(git2::Status::INDEX_MODIFIED)
                                 || s.contains(git2::Status::WT_MODIFIED) =>
-                                {
-                                    "modified"
-                                }
+                            {
+                                "modified"
+                            }
                             s if s.contains(git2::Status::INDEX_DELETED)
                                 || s.contains(git2::Status::WT_DELETED) =>
-                                {
-                                    "deleted"
-                                }
+                            {
+                                "deleted"
+                            }
                             s if s.contains(git2::Status::INDEX_RENAMED)
                                 || s.contains(git2::Status::WT_RENAMED) =>
-                                {
-                                    "renamed"
-                                }
+                            {
+                                "renamed"
+                            }
                             s if s.contains(git2::Status::INDEX_TYPECHANGE)
                                 || s.contains(git2::Status::WT_TYPECHANGE) =>
-                                {
-                                    "type_change"
-                                }
+                            {
+                                "type_change"
+                            }
                             _ => "",
                         };
 
@@ -85,33 +83,20 @@ pub async fn git_status(
                             path: entry.path().unwrap().to_string(),
                             change_type: i_status.to_string(),
                         });
-                        // println!("{} ({})", entry.path().unwrap(), istatus);
                     }
-                    status::Custom(
-                        Status::Ok,
-                        (
-                            ContentType::JSON,
-                            serde_json::to_string_pretty(&status_changes).unwrap(),
-                        ),
-                    )
+                    ok_json_response(serde_json::to_string_pretty(&status_changes).unwrap())
                 }
-                Err(e) => status::Custom(
+                Err(e) => not_ok_json_response(
                     Status::InternalServerError,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!("could not get repo status: {}", e).to_string(),
-                        ),
+                    make_bad_json_data_response(
+                        format!("could not get repo status: {}", e).to_string(),
                     ),
                 ),
             }
         }
-        Err(e) => status::Custom(
+        Err(e) => not_ok_json_response(
             Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("could not open repo: {}", e).to_string()),
-            ),
+            make_bad_json_data_response(format!("could not open repo: {}", e).to_string()),
         ),
     }
 }

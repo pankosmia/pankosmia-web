@@ -35,3 +35,10 @@ pub(crate) fn not_ok_bad_repo_json_response() -> status::Custom<(ContentType, St
         make_bad_json_data_response("bad repo path".to_string()),
     )
 }
+
+pub(crate) fn not_ok_offline_json_response() -> status::Custom<(ContentType, String)> {
+    not_ok_json_response(
+        Status::Unauthorized,
+        make_bad_json_data_response("offline mode".to_string()),
+    )
+}
