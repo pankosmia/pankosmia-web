@@ -1,11 +1,14 @@
-use std::sync::atomic::Ordering;
+use crate::static_vars::NET_IS_ENABLED;
+use crate::structs::RemoteRepoRecord;
+use crate::utils::json_responses::make_bad_json_data_response;
+use crate::utils::response::{
+    not_ok_json_response, not_ok_offline_json_response, ok_json_response,
+};
 use rocket::get;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use serde_json::Value;
-use crate::static_vars::NET_IS_ENABLED;
-use crate::structs::RemoteRepoRecord;
-use crate::utils::json_responses::make_bad_json_data_response;
+use std::sync::atomic::Ordering;
 
 /// *`GET /remote-repos/<gitea_server>/<gitea_org>`*
 ///
@@ -36,13 +39,7 @@ pub fn gitea_remote_repos(
     gitea_org: &str,
 ) -> status::Custom<(ContentType, String)> {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
-        return status::Custom(
-            Status::Unauthorized,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("offline mode".to_string()),
-            ),
-        );
+        return not_ok_offline_json_response();
     }
     let gitea_path = format!("https://{}/api/v1/orgs/{}/repos", gitea_server, gitea_org);
     match ureq::get(gitea_path.as_str()).call() {
@@ -73,31 +70,20 @@ pub fn gitea_remote_repos(
                         },
                     });
                 }
-                status::Custom(
-                    Status::Ok,
-                    (ContentType::JSON, serde_json::to_string(&records).unwrap()),
-                )
+                ok_json_response(serde_json::to_string(&records).unwrap())
             }
-            Err(e) => {
-                return status::Custom(
-                    Status::InternalServerError,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(format!(
-                            "could not serve GITEA server response as JSON string: {}",
-                            e
-                        )),
-                    ),
-                )
-            }
+            Err(e) => not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "could not serve GITEA server response as JSON string: {}",
+                    e
+                )),
+            ),
         },
-        Err(e) => status::Custom(
+        Err(e) => not_ok_json_response(
             Status::BadGateway,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(
-                    format!("could not read from GITEA server: {}", e).to_string(),
-                ),
+            make_bad_json_data_response(
+                format!("could not read from GITEA server: {}", e).to_string(),
             ),
         ),
     }
