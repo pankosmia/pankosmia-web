@@ -185,6 +185,13 @@ pub struct NewBcvResourceContentForm {
     pub versification: Option<String>
 }
 
+#[derive(FromForm, Deserialize)]
+pub struct NewObsContentForm {
+    pub content_name: String,
+    pub content_abbr: String,
+    pub content_language_code: String
+}
+
 #[derive(FromForm, Deserialize, Serialize, Debug)]
 pub struct NewScriptureBookForm {
     pub book_code: String,
