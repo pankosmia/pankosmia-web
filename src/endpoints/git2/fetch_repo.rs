@@ -6,8 +6,9 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::AppSettings;
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
+use crate::utils::json_responses::{make_bad_json_data_response};
 use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, not_ok_bad_repo_json_response, not_ok_offline_json_response, ok_ok_json_response};
 
 /// *`GET /fetch-repo/<repo_path>`*
 ///
@@ -20,13 +21,7 @@ pub async fn fetch_repo(
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
-        return status::Custom(
-            Status::Unauthorized,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("offline mode".to_string()),
-            ),
-        );
+        return not_ok_offline_json_response();
     }
     let mut path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
@@ -66,33 +61,17 @@ pub async fn fetch_repo(
                 + os_slash_str()
                 + repo.as_str(),
         ) {
-            Ok(_repo) => status::Custom(
-                Status::Ok,
-                (
-                    ContentType::JSON,
-                    make_good_json_data_response("ok".to_string()),
-                ),
-            ),
+            Ok(_repo) => ok_ok_json_response(),
             Err(e) => {
-                println!("Error:{}", e);
-                status::Custom(
+                not_ok_json_response(
                     Status::BadRequest,
-                    (
-                        ContentType::JSON,
                         make_bad_json_data_response(
                             format!("could not clone repo: {}", e).to_string(),
                         ),
-                    ),
-                )
+                    )
             }
         }
     } else {
-        status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path".to_string()),
-            ),
-        )
+        not_ok_bad_repo_json_response()
     }
 }

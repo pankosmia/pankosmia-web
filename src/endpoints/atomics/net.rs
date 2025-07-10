@@ -1,10 +1,11 @@
-use std::sync::atomic::Ordering;
-use rocket::{get, post, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use crate::MsgQueue;
 use crate::static_vars::NET_IS_ENABLED;
-use crate::utils::json_responses::{make_good_json_data_response, make_net_status_response};
+use crate::utils::json_responses::{make_net_status_response};
+use crate::utils::response::{ok_json_response, ok_ok_json_response};
+use crate::MsgQueue;
+use rocket::http::{ContentType};
+use rocket::response::status;
+use rocket::{get, post, State};
+use std::sync::atomic::Ordering;
 
 /// *`GET /status`*
 ///
@@ -15,13 +16,9 @@ use crate::utils::json_responses::{make_good_json_data_response, make_net_status
 /// `{"is_enabled":true}`
 #[get("/status")]
 pub fn net_status() -> status::Custom<(ContentType, String)> {
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_net_status_response(NET_IS_ENABLED.load(Ordering::Relaxed)),
-        ),
-    )
+    ok_json_response(make_net_status_response(
+        NET_IS_ENABLED.load(Ordering::Relaxed),
+    ))
 }
 
 /// *`POST /enable`*
@@ -37,13 +34,7 @@ pub fn net_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String
         .unwrap()
         .push_back("info--5--net--enable".to_string());
     NET_IS_ENABLED.store(true, Ordering::Relaxed);
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    ok_ok_json_response()
 }
 
 /// *`POST /disable`*
@@ -59,11 +50,5 @@ pub fn net_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Strin
         .unwrap()
         .push_back("info--5--net--disable".to_string());
     NET_IS_ENABLED.store(false, Ordering::Relaxed);
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    ok_ok_json_response()
 }

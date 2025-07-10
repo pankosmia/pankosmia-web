@@ -1,10 +1,11 @@
-use std::fs;
-use rocket::{get, State};
-use rocket::response::{status};
-use rocket::http::{ContentType, Status};
+use crate::structs::AppSettings;
+use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
-use crate::structs::{AppSettings};
-use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use std::fs;
 
 /// *```GET /raw```*
 ///
@@ -43,13 +44,10 @@ use crate::utils::json_responses::{make_bad_json_data_response};
 pub async fn raw_i18n(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let path_to_serve = state.working_dir.clone() + os_slash_str() + "i18n.json";
     match fs::read_to_string(path_to_serve) {
-        Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-        Err(e) => status::Custom(
+        Ok(v) => ok_json_response(v),
+        Err(e) => not_ok_json_response(
             Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(format!("could not read raw i18n: {}", e).to_string()),
-            ),
+            make_bad_json_data_response(format!("could not read raw i18n: {}", e).to_string()),
         ),
     }
 }

@@ -1,10 +1,11 @@
-use std::path::{Components, PathBuf};
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, not_ok_bad_repo_json_response, ok_json_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use std::path::{Components, PathBuf};
 
 /// *`GET /metadata/raw/<repo_path>`*
 ///
@@ -23,24 +24,13 @@ pub async fn raw_metadata(
             + &repo_path.display().to_string()
             + "/metadata.json";
         match std::fs::read_to_string(path_to_serve) {
-            Ok(v) => status::Custom(Status::Ok, (ContentType::JSON, v)),
-            Err(e) => status::Custom(
+            Ok(v) => ok_json_response(v),
+            Err(e) => not_ok_json_response(
                 Status::BadRequest,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(
-                        format!("could not read metadata: {}", e).to_string(),
-                    ),
-                ),
+                make_bad_json_data_response(format!("could not read metadata: {}", e).to_string()),
             ),
         }
     } else {
-        status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path".to_string()),
-            ),
-        )
+        not_ok_bad_repo_json_response()
     }
 }

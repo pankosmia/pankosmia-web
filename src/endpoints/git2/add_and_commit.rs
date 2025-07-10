@@ -1,11 +1,12 @@
-use std::path::PathBuf;
+use crate::structs::AppSettings;
+use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
 use git2::Repository;
-use rocket::{get, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use crate::structs::AppSettings;
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
-use crate::utils::paths::os_slash_str;
+use rocket::{get, State};
+use std::path::PathBuf;
 
 /// *`GET /add-and-commit/<repo_path>`*
 ///
@@ -40,23 +41,12 @@ pub async fn add_and_commit(
                 &tree,
                 &[&parent_commit],
             )
-                .unwrap();
-            status::Custom(
-                Status::Ok,
-                (
-                    ContentType::JSON,
-                    make_good_json_data_response("ok".to_string()),
-                ),
-            )
+            .unwrap();
+            ok_ok_json_response()
         }
-        Err(e) => status::Custom(
+        Err(e) => not_ok_json_response(
             Status::InternalServerError,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(
-                    format!("could not add/commit repo: {}", e).to_string(),
-                ),
-            ),
+            make_bad_json_data_response(format!("could not add/commit repo: {}", e).to_string()),
         ),
     };
     result

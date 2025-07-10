@@ -1,7 +1,8 @@
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::AppSettings;
+use crate::utils::response::ok_json_response;
+use rocket::http::{ContentType};
+use rocket::response::status;
+use rocket::{get, State};
 
 /// *```GET /endpoints```*
 ///
@@ -14,8 +15,5 @@ use crate::structs::AppSettings;
 /// ```
 #[get("/endpoints")]
 pub fn get_gitea_endpoints(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
-    status::Custom(
-        Status::Ok,
-        (ContentType::JSON, serde_json::to_string(&state.gitea_endpoints).unwrap()),
-    )
+    ok_json_response(serde_json::to_string(&state.gitea_endpoints).unwrap())
 }

@@ -1,10 +1,11 @@
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use serde_json::Value;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
+use crate::utils::response::{not_ok_json_response, ok_json_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use serde_json::Value;
 
 /// *`GET /untranslated/<lang>`*
 ///
@@ -52,32 +53,20 @@ pub async fn untranslated_i18n(
                             }
                         }
                     }
-                    status::Custom(
-                        Status::Ok,
-                        (
-                            ContentType::JSON,
-                            serde_json::to_string(&untranslated).unwrap(),
-                        ),
-                    )
+                    ok_json_response(serde_json::to_string(&untranslated).unwrap())
                 }
-                Err(e) => status::Custom(
-                    Status::BadRequest,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!("could not parse for untranslated i18n: {}", e).to_string(),
-                        ),
+                Err(e) => not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(
+                        format!("could not parse for untranslated i18n: {}", e).to_string(),
                     ),
                 ),
             }
         }
-        Err(e) => status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response(
-                    format!("could not read for untranslated i18n: {}", e).to_string(),
-                ),
+        Err(e) => not_ok_json_response(
+            Status::InternalServerError,
+            make_bad_json_data_response(
+                format!("could not read for untranslated i18n: {}", e).to_string(),
             ),
         ),
     }

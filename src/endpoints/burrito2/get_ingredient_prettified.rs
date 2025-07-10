@@ -1,10 +1,11 @@
-use std::path::{Components, PathBuf};
-use rocket::{get, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, not_ok_bad_repo_json_response, ok_html_response};
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{get, State};
+use std::path::{Components, PathBuf};
 
 /// *`GET /ingredient/prettified/<repo_path>?ipath=my_burrito_path`*
 ///
@@ -29,23 +30,16 @@ pub async fn get_ingredient_prettified(
         let file_string = match std::fs::read_to_string(path_to_serve) {
             Ok(v) => v,
             Err(e) => {
-                return status::Custom(
+                return not_ok_json_response(
                     Status::BadRequest,
-                    (
-                        ContentType::JSON,
-                        make_bad_json_data_response(
-                            format!("could not read ingredient content: {}", e).to_string(),
-                        ),
+                    make_bad_json_data_response(
+                        format!("could not read ingredient content: {}", e).to_string(),
                     ),
                 )
             }
         };
-        status::Custom(
-            Status::Ok,
-            (
-                ContentType::HTML,
-                format!(
-                    r#"
+        ok_html_response(format!(
+            r#"
                 <html>
                 <head>
                 <title>Prettified</title>
@@ -58,17 +52,9 @@ pub async fn get_ingredient_prettified(
                 </body>
                 </html>
                 "#,
-                    file_string
-                ),
-            ),
-        )
+            file_string
+        ))
     } else {
-        status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path".to_string()),
-            ),
-        )
+        not_ok_bad_repo_json_response()
     }
 }

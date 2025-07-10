@@ -1,12 +1,13 @@
-use std::path::{Components, PathBuf};
-use rocket::{post, State};
+use crate::structs::AppSettings;
+use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
+use crate::utils::response::{not_ok_json_response, ok_ok_json_response, not_ok_bad_repo_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
+use rocket::{post, State};
 use serde_json::Value;
-use crate::structs::AppSettings;
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
-use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
+use std::path::{Components, PathBuf};
 
 /// *`POST /ingredient/raw/<repo_path>?ipath=my_burrito_path`*
 ///
@@ -37,35 +38,14 @@ pub async fn post_raw_ingredient(
         && std::fs::metadata(destination.clone()).is_ok()
     {
         match std::fs::write(destination, json_form["payload"].as_str().unwrap()) {
-            Ok(_) => status::Custom(
-                Status::Ok,
-                (
-                    ContentType::JSON,
-                    make_good_json_data_response("ok".to_string()),
-                ),
-            ),
-            Err(e) => status::Custom(
+            Ok(_) => {},
+            Err(e) => return not_ok_json_response(
                 Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
-                ),
-            )
+                make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
+            ),
         };
-        status::Custom(
-            Status::Ok,
-            (
-                ContentType::JSON,
-                make_good_json_data_response("ok".to_string()),
-            ),
-        )
+        ok_ok_json_response()
     } else {
-        status::Custom(
-            Status::BadRequest,
-            (
-                ContentType::JSON,
-                make_bad_json_data_response("bad repo path".to_string()),
-            ),
-        )
+        not_ok_bad_repo_json_response()
     }
 }

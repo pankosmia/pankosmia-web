@@ -1,13 +1,14 @@
-use std::collections::BTreeMap;
-use rocket::{post, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use crate::MsgQueue;
 use crate::structs::{AppSettings, Typography, TypographyFeature};
 use crate::utils::client::Clients;
 use crate::utils::files::{copy_and_customize_webfont_css2, write_user_settings};
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
+use crate::utils::json_responses::{make_bad_json_data_response};
 use crate::utils::paths::{source_webfonts_path, webfonts_path};
+use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
+use crate::MsgQueue;
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{post, State};
+use std::collections::BTreeMap;
 
 /// *`POST /typography-feature/<font_name>/<feature>/<value>`*
 ///
@@ -32,28 +33,33 @@ pub fn post_typography_feature(
                 let font_inner = &mut *font_value;
                 for field_kv in font_inner.clone() {
                     if field_kv.key == feature {
-                        new_fields.push(TypographyFeature { key: field_kv.key.to_string(), value: new_value });
+                        new_fields.push(TypographyFeature {
+                            key: field_kv.key.to_string(),
+                            value: new_value,
+                        });
                     } else {
-                        new_fields.push(TypographyFeature { key: field_kv.key.to_string(), value: field_kv.value });
+                        new_fields.push(TypographyFeature {
+                            key: field_kv.key.to_string(),
+                            value: field_kv.value,
+                        });
                     }
                 }
                 let working_dir = state.working_dir.clone();
                 let app_resources_dir = state.app_resources_dir.clone();
                 let src_webfonts_dir = source_webfonts_path(&app_resources_dir);
                 let target_webfonts_dir = webfonts_path(&working_dir);
-                match copy_and_customize_webfont_css2(&src_webfonts_dir, &target_webfonts_dir, &new_fields, &font_name.to_string()) {
+                match copy_and_customize_webfont_css2(
+                    &src_webfonts_dir,
+                    &target_webfonts_dir,
+                    &new_fields,
+                    &font_name.to_string(),
+                ) {
                     Ok(_) => {}
                     Err(e) => {
-                        return status::Custom(
-                            Status::InternalServerError,
-                            (
-                                ContentType::JSON,
-                                make_bad_json_data_response(format!(
-                                    "Could not rewrite CSS: {}",
-                                    e
-                                )),
-                            ),
-                        )
+                        return not_ok_json_response(
+                            Status::BadRequest,
+                            make_bad_json_data_response(format!("Could not rewrite CSS: {}", e)),
+                        );
                     }
                 }
                 new_font_fields.insert(font_key.to_string(), new_fields);
@@ -74,23 +80,11 @@ pub fn post_typography_feature(
     match write_user_settings(&state, &clients) {
         Ok(_) => {}
         Err(e) => {
-            return status::Custom(
+            return not_ok_json_response(
                 Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Could not write out user settings: {}",
-                        e
-                    )),
-                ),
+                make_bad_json_data_response(format!("Could not write out user settings: {}", e)),
             )
         }
     }
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    ok_ok_json_response()
 }

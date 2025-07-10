@@ -1,5 +1,6 @@
 pub mod new_text_translation;
 pub mod new_bcv_resource;
+pub mod new_obs_resource;
 pub mod list_local_repos;
 pub mod add_and_commit;
 pub mod fetch_repo;

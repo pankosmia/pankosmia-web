@@ -1,12 +1,13 @@
-use std::collections::BTreeMap;
-use rocket::{post, State};
-use rocket::http::{ContentType, Status};
-use rocket::response::status;
-use crate::MsgQueue;
 use crate::structs::{AppSettings, Typography};
 use crate::utils::client::Clients;
 use crate::utils::files::write_user_settings;
-use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
+use crate::utils::json_responses::{make_bad_json_data_response};
+use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
+use crate::MsgQueue;
+use rocket::http::{ContentType, Status};
+use rocket::response::status;
+use rocket::{post, State};
+use std::collections::BTreeMap;
 
 /// *`POST /typography/<font_set>/<size>/<direction>`*
 ///
@@ -41,23 +42,11 @@ pub fn post_typography(
     match write_user_settings(&state, &clients) {
         Ok(_) => {}
         Err(e) => {
-            return status::Custom(
-                Status::InternalServerError,
-                (
-                    ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "Could not write out user settings: {}",
-                        e
-                    )),
-                ),
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!("Could not write out user settings: {}", e)),
             )
         }
     }
-    status::Custom(
-        Status::Ok,
-        (
-            ContentType::JSON,
-            make_good_json_data_response("ok".to_string()),
-        ),
-    )
+    ok_ok_json_response()
 }

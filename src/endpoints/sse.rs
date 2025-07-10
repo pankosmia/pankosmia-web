@@ -1,11 +1,11 @@
-use std::sync::atomic::Ordering;
-use std::time::Duration;
+use crate::static_vars::{DEBUG_IS_ENABLED, I18N_UPDATE_COUNT, NET_IS_ENABLED};
+use crate::structs::AppSettings;
+use crate::MsgQueue;
+use rocket::response::stream;
 use rocket::tokio::time;
 use rocket::{get, State};
-use rocket::response::stream;
-use crate::MsgQueue;
-use crate::structs::AppSettings;
-use crate::static_vars::{NET_IS_ENABLED, DEBUG_IS_ENABLED, I18N_UPDATE_COUNT};
+use std::sync::atomic::Ordering;
+use std::time::Duration;
 
 /// *`GET /`*
 ///
