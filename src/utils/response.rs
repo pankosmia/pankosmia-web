@@ -32,7 +32,7 @@ pub(crate) fn not_ok_json_response(
 pub(crate) fn not_ok_bad_repo_json_response() -> status::Custom<(ContentType, String)> {
     not_ok_json_response(
         Status::BadRequest,
-        make_bad_json_data_response("bad repo path".to_string()),
+        make_bad_json_data_response("bad repo path or ingredient path".to_string()),
     )
 }
 

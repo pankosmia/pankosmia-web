@@ -9,13 +9,13 @@ use rocket::response::status;
 use rocket::{post, State};
 use std::path::{Components, PathBuf};
 
-/// *`POST /ingredient/delete/<repo_path>?ipath=my_burrito_path`*
+/// *`POST /ingredient/revert/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/delete/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/burrito/ingredient/revert/<repo_path>?ipath=my_burrito_path`**
 ///
-/// Deletes a file from a repo.
-#[post("/ingredient/delete/<repo_path..>?<ipath>")]
-pub async fn post_delete_ingredient(
+/// Reverts a file from a backup file, if available.
+#[post("/ingredient/revert/<repo_path..>?<ipath>")]
+pub async fn post_revert_ingredient(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     ipath: String,
@@ -28,19 +28,19 @@ pub async fn post_delete_ingredient(
         && std::fs::metadata(&full_repo_path).is_ok()
     {
         let destination = full_repo_path + "/ingredients/" + ipath.clone().as_str();
-        if !std::path::Path::new(&destination).exists() {
+        let destination_backup_path = format!("{}.bak", &destination);
+        if !std::path::Path::new(&destination_backup_path).exists() {
             return not_ok_json_response(
                 Status::BadRequest,
-                make_bad_json_data_response(format!("No such file: {}", destination)),
+                make_bad_json_data_response(format!("No backup file for {}", destination_backup_path)),
             );
         }
-        let destination_backup_path = format!("{}.bak", &destination);
-        match std::fs::rename(&destination, &destination_backup_path) {
+        match std::fs::rename(&destination_backup_path, &destination) {
             Ok(_) => ok_ok_json_response(),
             Err(e) => {
                 not_ok_json_response(
                     Status::InternalServerError,
-                    make_bad_json_data_response(format!("Could not delete file: {}", e)),
+                    make_bad_json_data_response(format!("Could not revert file: {}", e)),
                 )
             }
         }
