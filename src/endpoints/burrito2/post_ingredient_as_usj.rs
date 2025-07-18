@@ -31,16 +31,13 @@ pub async fn post_ingredient_as_usj(
     json_form: Json<Value>,
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
-    let full_repo_path = state.repo_dir.lock().unwrap().clone()
-        + os_slash_str()
-        + &repo_path.display().to_string();
+    let full_repo_path =
+        format!("{}{}{}", state.repo_dir.lock().unwrap(), os_slash_str(), &repo_path.display().to_string());
     if check_path_components(&mut path_components.clone())
         && check_path_string_components(ipath.clone())
         && std::fs::metadata(&full_repo_path).is_ok()
     {
-        let destination = full_repo_path
-            + "/ingredients/"
-            + ipath.clone().as_str();
+        let destination = format!("{}{}ingredients{}{}", &full_repo_path, os_slash_str(), os_slash_str(), &ipath);
         let usfm = transform(json_form.to_string(), "usj".to_string(), "usfm".to_string())
             .replace("\\usfm 0.2.1\n", "");
         match std::fs::write(destination, usfm) {
