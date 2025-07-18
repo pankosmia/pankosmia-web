@@ -56,7 +56,7 @@ pub async fn post_bytes_ingredient(state: &State<AppSettings>,
                 }
             }
         }
-        match form.file.persist_to(destination).await {
+        match form.file.move_copy_to(destination).await {
             Ok(_) => ok_ok_json_response(),
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,
