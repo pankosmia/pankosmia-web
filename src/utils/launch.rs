@@ -108,6 +108,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::burrito2::post_revert_ingredient::post_revert_ingredient,
                 endpoints::burrito2::raw_metadata::raw_metadata,
                 endpoints::burrito2::summary_metadata::summary_metadata,
+                endpoints::burrito2::summary_metadatas::summary_metadatas,
                 endpoints::burrito2::get_repo_file_paths::get_repo_file_paths
             ],
         )

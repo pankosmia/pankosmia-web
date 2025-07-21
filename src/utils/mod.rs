@@ -7,3 +7,4 @@ pub(crate) mod bootstrap;
 pub(crate) mod json;
 pub(crate) mod launch;
 pub(crate) mod response;
+pub(crate) mod burrito;
