@@ -19,7 +19,7 @@ pub async fn notifications_stream<'a>(
 ) -> stream::EventStream![stream::Event + 'a] {
     stream::EventStream! {
         let mut count = 0;
-        let mut interval = time::interval(Duration::from_millis(1000));
+        let mut interval = time::interval(Duration::from_millis(500));
         yield stream::Event::retry(Duration::from_secs(1));
         let mut languages = state.languages.lock().unwrap().clone().join("/");
         let mut i18n_update_count = I18N_UPDATE_COUNT.load(Ordering::Relaxed);

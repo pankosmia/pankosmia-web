@@ -14,7 +14,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             routes![
                 endpoints::clients::redirect_root,
                 endpoints::clients::serve_root_favicon,
-                endpoints::clients::list_clients
+                endpoints::clients::list_clients,
+                endpoints::version::get_version,
             ],
         )
         .mount("/notifications", routes![
