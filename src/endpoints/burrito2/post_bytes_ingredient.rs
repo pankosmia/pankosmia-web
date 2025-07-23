@@ -4,6 +4,7 @@ use crate::utils::paths::{check_path_components, check_path_string_components, o
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, ok_ok_json_response,
 };
+use crate::utils::burrito::{destination_parent};
 use rocket::form::{Form, FromForm};
 use rocket::fs::TempFile;
 use rocket::http::{ContentType, Status};
@@ -39,15 +40,8 @@ pub async fn post_bytes_ingredient(
         && check_path_string_components(ipath.clone())
         && std::fs::metadata(&full_repo_path).is_ok()
     {
-        // Get parent dir
         let destination = format!("{}{}ingredients{}{}", &full_repo_path, os_slash_str(), os_slash_str(), &ipath);
-        let mut destination_steps: Vec<_> = destination.split("/").collect();
-        destination_steps.pop().unwrap();
-        let destination_steps_array = destination_steps
-            .iter()
-            .map(|e| format!("{:?}", e).replace("\"", ""))
-            .collect::<Vec<String>>();
-        let destination_parent = destination_steps_array.join("/");
+        let destination_parent = destination_parent(destination.clone());
         // Make subdirs if necessary
         if !std::path::Path::new(&destination_parent).exists() {
             match std::fs::create_dir_all(destination_parent) {

@@ -51,3 +51,13 @@ pub(crate) fn summary_metadata_from_file(repo_metadata_path: String) -> Result<M
         },
     })
 }
+
+pub(crate) fn destination_parent(destination: String) -> String {
+    let mut destination_steps: Vec<_> = destination.split("/").collect();
+    destination_steps.pop().unwrap();
+    let destination_steps_array = destination_steps
+        .iter()
+        .map(|e| format!("{:?}", e).replace("\"", ""))
+        .collect::<Vec<String>>();
+    destination_steps_array.join("/")
+}
