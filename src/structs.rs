@@ -150,6 +150,7 @@ pub struct MetadataSummary {
     pub flavor: String,
     pub language_code: String,
     pub script_direction: String,
+    pub book_codes: Vec<String>,
 }
 
 #[derive(Responder)]

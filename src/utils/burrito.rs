@@ -1,5 +1,5 @@
 use std::io;
-use serde_json::Value;
+use serde_json::{Value, Map};
 use crate::structs::MetadataSummary;
 
 pub(crate) fn summary_metadata_from_file(repo_metadata_path: String) -> Result<MetadataSummary, io::Error> {
@@ -13,6 +13,14 @@ pub(crate) fn summary_metadata_from_file(repo_metadata_path: String) -> Result<M
             return Err(io::Error::from(e));
         }
     };
+    let current_scope_values = match raw_metadata_struct["type"]["flavorType"]["currentScope"].as_object() {
+        Some(v) => v,
+        None => {&Map::new()}
+    };
+    let mut book_codes = Vec::new();
+    for (map_key, _) in current_scope_values.clone().iter() {
+        book_codes.push(format!("{}", map_key));
+    }
     Ok(MetadataSummary {
         name: raw_metadata_struct["identification"]["name"]["en"]
             .as_str()
@@ -49,6 +57,7 @@ pub(crate) fn summary_metadata_from_file(repo_metadata_path: String) -> Result<M
             Value::String(v) => v.as_str().to_string(),
             _ => "?".to_string(),
         },
+        book_codes: book_codes
     })
 }
 
