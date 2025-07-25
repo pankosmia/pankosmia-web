@@ -7,3 +7,4 @@ pub mod fetch_repo;
 pub mod delete_repo;
 pub mod status;
 pub mod new_scripture_book;
+pub mod copy_repo;
