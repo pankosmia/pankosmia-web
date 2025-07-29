@@ -10,14 +10,14 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, State};
 
-/// *`GET /metadata/summaries`*
+/// *`GET /metadata/summaries?<org>`*
 ///
-/// Typically mounted as **`/burrito/metadata/summaries`**
+/// Typically mounted as **`/burrito/metadata/summaries?<org>`**
 ///
-/// Returns a JSON array of local repo metadata objects.
+/// Returns a JSON array of local repo metadata objects, optionally only for a given org.
 
-#[get("/metadata/summaries")]
-pub fn summary_metadatas(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+#[get("/metadata/summaries?<org>")]
+pub fn summary_metadatas(state: &State<AppSettings>, org: Option<String>) -> status::Custom<(ContentType, String)> {
     let root_path = state.repo_dir.lock().unwrap().clone();
     let server_paths = std::fs::read_dir(root_path).unwrap();
     let mut repos: std::collections::BTreeMap<String, MetadataSummary> = std::collections::BTreeMap::new();
@@ -29,6 +29,15 @@ pub fn summary_metadatas(state: &State<AppSettings>) -> status::Custom<(ContentT
             let uw_org_path_ob = org_path.unwrap().path();
             let uw_org_path_ob2 = uw_org_path_ob.clone();
             let org_leaf = uw_org_path_ob2.file_name().unwrap();
+            let server_org = format!("{}/{}", server_leaf.to_str().unwrap(), org_leaf.to_str().unwrap());
+            match org.clone() {
+                Some(o) => {
+                    if o != server_org {
+                        continue;
+                    }
+                },
+                _ => {}
+            }
             for repo_path in std::fs::read_dir(uw_org_path_ob).unwrap() {
                 let uw_repo_path_ob = repo_path.unwrap().path();
                 let repo_leaf = uw_repo_path_ob.file_name().unwrap();
