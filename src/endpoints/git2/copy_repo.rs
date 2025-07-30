@@ -47,7 +47,7 @@ pub async fn copy_repo(
             &target_path
         );
         // Target repo dir must not exist
-        if !std::path::Path::new(&full_target_path).is_dir() {
+        if std::path::Path::new(&full_target_path).is_dir() {
             return not_ok_json_response(
                 Status::BadRequest,
                 make_bad_json_data_response("Target repo already exists".to_string()),
