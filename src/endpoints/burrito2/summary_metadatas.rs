@@ -46,7 +46,11 @@ pub fn summary_metadatas(
                         continue;
                     }
                 }
-                _ => if server_org == "_local_/_quarantine_" {continue},
+                _ => {
+                    if server_org == "_local_/_quarantine_" {
+                        continue;
+                    }
+                }
             }
             if !std::path::Path::new(&uw_org_path_ob).is_dir() {
                 println!("Skipping org non-dir {}", &server_org);
@@ -70,18 +74,17 @@ pub fn summary_metadatas(
                 );
                 let summary = match summary_metadata_from_file(metadata_path) {
                     Ok(v) => v,
-                    Err(e) => {
-                        return not_ok_json_response(
-                            Status::InternalServerError,
-                            make_bad_json_data_response(
-                                format!(
-                                    "could not extract metadata summary for {}: {}",
-                                    repo_url_string, e
-                                )
-                                .to_string(),
-                            ),
-                        )
-                    }
+                    Err(e) => MetadataSummary {
+                        name: "? Bad Metadata JSON ?".to_string(),
+                        description: "?".to_string(),
+                        abbreviation: "?".to_string(),
+                        generated_date: "?".to_string(),
+                        flavor_type: "?".to_string(),
+                        flavor: "?".to_string(),
+                        language_code: "?".to_string(),
+                        script_direction: "?".to_string(),
+                        book_codes: vec![],
+                    },
                 };
 
                 repos.insert(repo_url_string, summary);
