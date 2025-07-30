@@ -20,10 +20,24 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
         let uw_server_path_ob = server_path.unwrap().path();
         let uw_server_path_ob2 = uw_server_path_ob.clone();
         let server_leaf = uw_server_path_ob2.file_name().unwrap();
+        if !std::path::Path::new(&uw_server_path_ob).is_dir() {
+            println!("Skipping server non-dir {}", server_leaf.to_string_lossy());
+            continue;
+        }
         for org_path in std::fs::read_dir(uw_server_path_ob).unwrap() {
             let uw_org_path_ob = org_path.unwrap().path();
             let uw_org_path_ob2 = uw_org_path_ob.clone();
             let org_leaf = uw_org_path_ob2.file_name().unwrap();
+            let server_org = format!(
+                "{}/{}",
+                server_leaf.to_str().unwrap(),
+                org_leaf.to_str().unwrap()
+            );
+            if !std::path::Path::new(&uw_org_path_ob).is_dir() {
+                println!("Skipping org non-dir {}", &server_org);
+                continue;
+            }
+            if server_org == "_local_/_quarantine_" {continue};
             for repo_path in std::fs::read_dir(uw_org_path_ob).unwrap() {
                 let uw_repo_path_ob = repo_path.unwrap().path();
                 let repo_leaf = uw_repo_path_ob.file_name().unwrap();
