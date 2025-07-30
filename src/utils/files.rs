@@ -3,7 +3,7 @@ use std::io::{Write};
 use std::fs;
 use std::path::Path;
 use rocket::State;
-use crate::utils::paths::{maybe_os_quoted_path_str, os_slash_str, user_settings_path};
+use crate::utils::paths::{home_dir_string, maybe_os_quoted_path_str, os_slash_str, user_settings_path};
 use crate::structs::{PankosmiaError, AppSettings, UserSettings, TypographyFeature};
 use crate::utils::client::Clients;
 
@@ -13,6 +13,7 @@ pub(crate) fn customize_and_copy_template_file(from_path: &str, to_path: &String
         .replace("%%WORKINGDIR%%", &working_dir)
         .replace("%%APPRESOURCESDIR%%", &app_resources_dir)
         .replace("%%PANKOSMIADIR%%", &pankosmia_dir)
+        .replace("%%HOMEDIR%%", home_dir_string().as_str())
     );
     let mut file_handle = fs::File::create(&to_path)?;
     file_handle.write_all(&quoted_json_string.as_bytes())?;
