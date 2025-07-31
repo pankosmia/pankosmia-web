@@ -1,10 +1,9 @@
 use crate::structs::AppSettings;
 use crate::structs::MetadataSummary;
 use crate::utils::burrito::summary_metadata_from_file;
-use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
-use crate::utils::response::{not_ok_json_response, ok_json_response};
-use rocket::http::{ContentType, Status};
+use crate::utils::response::ok_json_response;
+use rocket::http::ContentType;
 use rocket::response::status;
 use rocket::{get, State};
 
@@ -72,9 +71,8 @@ pub fn summary_metadatas(
                     &repo_url_string,
                     os_slash_str()
                 );
-                let summary = match summary_metadata_from_file(metadata_path) {
-                    Ok(v) => v,
-                    Err(e) => MetadataSummary {
+                let summary =
+                    summary_metadata_from_file(metadata_path).unwrap_or_else(|_| MetadataSummary {
                         name: "? Bad Metadata JSON ?".to_string(),
                         description: "?".to_string(),
                         abbreviation: "?".to_string(),
@@ -84,9 +82,7 @@ pub fn summary_metadatas(
                         language_code: "?".to_string(),
                         script_direction: "?".to_string(),
                         book_codes: vec![],
-                    },
-                };
-
+                    });
                 repos.insert(repo_url_string, summary);
             }
         }

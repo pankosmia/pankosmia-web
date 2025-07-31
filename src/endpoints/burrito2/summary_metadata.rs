@@ -2,7 +2,7 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, State};
 use std::path::{Components, PathBuf};
-use crate::structs::AppSettings;
+use crate::structs::{AppSettings, MetadataSummary};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
 use crate::utils::response::{
@@ -42,15 +42,17 @@ pub async fn summary_metadata(
             &repo_path.display().to_string(),
             os_slash_str()
         );
-        let summary = match summary_metadata_from_file(path_to_serve) {
-            Ok(v) => v,
-            Err(e) => return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(
-                    format!("could not extract metadata summary: {}", e).to_string(),
-                ),
-            )
-        };
+        let summary = summary_metadata_from_file(path_to_serve).unwrap_or_else(|_| MetadataSummary {
+            name: "? Bad Metadata JSON ?".to_string(),
+            description: "?".to_string(),
+            abbreviation: "?".to_string(),
+            generated_date: "?".to_string(),
+            flavor_type: "?".to_string(),
+            flavor: "?".to_string(),
+            language_code: "?".to_string(),
+            script_direction: "?".to_string(),
+            book_codes: vec![],
+        });
         match serde_json::to_string(&summary) {
             Ok(v) => ok_json_response(v),
             Err(e) => not_ok_json_response(
