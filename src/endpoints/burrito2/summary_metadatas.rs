@@ -49,6 +49,7 @@ pub fn summary_metadatas(
                     if server_org == "_local_/_quarantine_" {
                         continue;
                     }
+                    if server_org == "_local_/_archive_" {continue};
                 }
             }
             if !std::path::Path::new(&uw_org_path_ob).is_dir() {
