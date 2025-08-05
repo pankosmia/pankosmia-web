@@ -32,7 +32,7 @@ pub async fn get_repo_file_paths(
             if Path::new(&entry_string).is_file() {
                 let truncated_entry_string = entry_string.replace(&full_repo_dir, "");
                 if !truncated_entry_string.starts_with(".") && !truncated_entry_string.contains(format!("{}.", os_slash_str()).as_str()) {
-                    paths.push(truncated_entry_string.replace("\\", ""));
+                    paths.push(truncated_entry_string.replace("\\", "/"));
                 }
             }
         }
