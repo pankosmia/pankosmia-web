@@ -53,6 +53,13 @@ pub async fn copy_ingredient(
             os_slash_str(),
             &target_path
         );
+        // src and target must not be identical
+        if full_src_path == full_target_path {
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response("src and target must be different".to_string()),
+            )
+        }
         // Make subdirs if necessary
         let target_parent = destination_parent(full_target_path.clone());
         if !std::path::Path::new(&target_parent).exists() {
@@ -82,7 +89,7 @@ pub async fn copy_ingredient(
                 }
             }
         }
-        // copy repo
+        // copy ingredient
         match std::fs::copy(full_src_path.clone(), full_target_path) {
             Ok(_) => {}
             Err(e) => {
