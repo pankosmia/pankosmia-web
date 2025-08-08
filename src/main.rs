@@ -1,22 +1,9 @@
 use std::env;
 use serde_json::json;
-use serde_json::Value;
 use rocket::fs::relative;
-use tokio::runtime::Runtime;
 
-use pankosmia_web;
-
-fn do_rocket(conf: Value) {
-    let rt = Runtime::new().unwrap();
-    let builder = pankosmia_web::rocket(conf);
-    rt.block_on(
-        async move {
-            let _ = builder.launch().await;
-        }
-    );
-}
-
-pub fn main() {
+#[rocket::main]
+pub async fn main() -> Result<(), rocket::Error> {
     let args: Vec<String> = env::args().collect();
     let mut working_dir = "".to_string();
     if args.len() == 2 {
@@ -36,5 +23,6 @@ pub fn main() {
         "local_setup_path": local_setup_path,
         "app_resources_path": app_resources_path,
     });
-    let _ = do_rocket(conf);
+    pankosmia_web::rocket(conf).launch().await?;
+    Ok(())
 }

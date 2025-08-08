@@ -1,24 +1,5 @@
 use serde_json::Value;
-use serde::Serialize;
-
-#[derive(Serialize)]
-pub(crate) struct CheckReport {
-    name: String,
-    path: String,
-    success: bool,
-    comment: Option<String>,
-    data: Option<Vec<String>>,
-}
-
-fn ok_check_report(name: String, path: String) -> CheckReport {
-    CheckReport {
-        name: name,
-        path: path,
-        success: true,
-        comment: None,
-        data: None,
-    }
-}
+use crate::utils::burrito_api::checks::report_helpers::{CheckReport, ok_check_report};
 
 pub(crate) fn check_basic_shape(burrito_path: String) -> Vec<CheckReport> {
     // Top-level directory

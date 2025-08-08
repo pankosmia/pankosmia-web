@@ -9,3 +9,4 @@ pub(crate) mod launch;
 pub(crate) mod response;
 pub(crate) mod burrito;
 pub(crate) mod burrito_api;
+mod validate_json;
