@@ -30,11 +30,11 @@ pub async fn delete_remote_from_repo(
             os_slash_str(),
             &repo_path.display().to_string()
         );
-        let remote_name_re = Regex::new(r"^[A-Za-z0-9_-]").unwrap();
+        let remote_name_re = Regex::new(r"^[A-Za-z0-9_-]$").unwrap();
         if !remote_name_re.is_match(&remote_name) {
             return not_ok_json_response(
                 Status::BadRequest,
-                make_bad_json_data_response("Repo name contains invalid characters".to_string()),
+                make_bad_json_data_response("Remote name contains invalid characters".to_string()),
             )
         }
         match Repository::open(repo_path_string) {
