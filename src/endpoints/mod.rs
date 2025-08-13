@@ -11,3 +11,4 @@ pub mod i18n2;
 pub mod atomics;
 pub mod content_utils2;
 pub mod version;
+pub mod audio;
