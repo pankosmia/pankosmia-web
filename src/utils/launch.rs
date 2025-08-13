@@ -123,7 +123,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         "/audio",
         routes![
             endpoints::audio::download_ffmpeg::download_ffmpeg,
-            endpoints::audio::test_ffmpeg::test_ffmpeg
+            endpoints::audio::test_ffmpeg::test_ffmpeg,
+            endpoints::audio::obs_para::obs_para_video
         ]
     )
 }

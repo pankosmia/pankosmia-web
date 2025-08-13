@@ -4,10 +4,8 @@ use crate::utils::response::{not_ok_json_response, not_ok_offline_json_response,
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::get;
-use ffmpeg_sidecar::download::auto_download;
 use ffmpeg_sidecar::version::ffmpeg_version;
 use ffmpeg_sidecar::command::FfmpegCommand;
-use serde_json::json;
 use crate::static_vars::NET_IS_ENABLED;
 
 /// *`POST /ffmpeg/test`*
