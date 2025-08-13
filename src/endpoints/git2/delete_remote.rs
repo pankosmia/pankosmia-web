@@ -11,9 +11,9 @@ use rocket::{post, State};
 use std::path::{Components, PathBuf};
 use regex::Regex;
 
-/// *`POST /remote/delete/<repo_path>?remote=<remote_name>`*
+/// *`POST /remote/delete/<repo_path>?remote_name=<remote_name>`*
 ///
-/// Typically mounted as **`/git/remote/delete/<repo_path>?remote=<remote_name>`**
+/// Typically mounted as **`/git/remote/delete/<repo_path>?remote_name=<remote_name>`**
 ///
 /// Deletes a remote from the given repo path.
 #[post("/remote/delete/<repo_path..>?<remote_name>")]

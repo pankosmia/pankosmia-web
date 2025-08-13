@@ -11,9 +11,9 @@ use rocket::{post, State};
 use std::path::{Components, PathBuf};
 use regex::Regex;
 
-/// *`POST /remote/add/<repo_path>?remote=<remote_name>&url=<remote_url>`*
+/// *`POST /remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`*
 ///
-/// Typically mounted as **`/git/remote/add/<repo_path>?remote=<remote_name>&url=<remote_url>`**
+/// Typically mounted as **`/git/remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`**
 ///
 /// Adds a remote to the given repo path.
 #[post("/remote/add/<repo_path..>?<remote_name>&<remote_url>")]
