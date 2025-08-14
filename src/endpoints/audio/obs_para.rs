@@ -43,7 +43,7 @@ pub fn obs_para_video(
         if !Path::new(&repo_path).exists() {
             return not_ok_json_response(
                 Status::NotFound,
-                make_bad_json_data_response(format!("Repo not found: {}", repo_path))
+                make_bad_json_data_response(format!("Repo not found: {}", &repo_path))
             );
         }
 
@@ -65,20 +65,22 @@ pub fn obs_para_video(
         if !Path::new(&audio_path).exists() {
             return not_ok_json_response(
                 Status::NotFound,
-                make_bad_json_data_response(format!("Audio file not found: {}", audio_path))
+                make_bad_json_data_response(format!("Audio file not found: {}", &audio_path))
             );
         }
         
+        // Chemin de l'image
         let images_path = format!("{}/git.door43.org/uW/obs_images_360/ingredients/360px/obs-en-{}-{}.jpg", repo_dir, story_string, para_string);
         // Vérifier si le fichier image existe
         if !Path::new(&images_path).exists() {
-            println!("Image file not found: {}", images_path);
+            println!("Image file not found: {}", &images_path);
             return not_ok_json_response(
                 Status::NotFound,
-                make_bad_json_data_response(format!("Image file not found: {}", images_path))
+                make_bad_json_data_response(format!("Image file not found: {}", &images_path))
             );
         }
 
+        // Création de la vidéo
         match ffmpeg_version() {
             Ok(_) => {
                 
@@ -88,12 +90,21 @@ pub fn obs_para_video(
                 }
                 let video_path = format!("{}/obs-en-{}-{}.mp4", video_content_path, story_string, para_string);
 
-                println!("Video path: {}", video_path);
+                // println!("Video path: {}", video_path);
                 // Créer la vidéo et attendre la fin du traitement
                 let iter = FfmpegCommand::new()
-                    .input(audio_path)
-                    .input(images_path)
-                    .output(video_path.clone())
+                    .overwrite()
+                    .args(&["-loop", "1"])
+                    .args(&["-framerate", "25"])
+                    .input(&images_path)
+                    .input(&audio_path)
+                    .args(&["-shortest"])
+                    .codec_video("libx264")
+                    .pix_fmt("yuv420p")
+                    .args(&["-movflags", "+faststart"])
+                    .codec_audio("aac")
+                    .output(&video_path)
+                    // .print_command()
                     .spawn().unwrap()
                     .iter().unwrap();
 
