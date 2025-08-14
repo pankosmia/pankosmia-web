@@ -103,7 +103,7 @@ pub fn obs_para_video(
             std::fs::create_dir_all(&video_content_path).unwrap();
         }
         let video_path = format!(
-            "{}/obs-en-{}-{}.mp4",
+            "{}/obs-para-{}-{}.mp4",
             video_content_path, story_string, para_string
         );
 
