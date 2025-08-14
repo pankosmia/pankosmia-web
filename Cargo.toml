@@ -26,10 +26,10 @@ fs = "0.0.5"
 git2 = "0.20.0"
 hallomai = "0.1.5"
 home = "0.5.9"
-jsonschema = "0.32.1"
-md5 = "0.7.0"
+valico = "2"
+md5 = "0.8.0"
 regex = "1.11.1"
-rocket = { version = "0.5.0", features = ["json"] }
+rocket = { version = "0.5.1", features = ["json"] }
 rocket-multipart-form-data = "0.10.7"
 s2n-quic = "1.48.0"
 serde = "1.0.210"
@@ -37,6 +37,6 @@ serde_json = "1.0.132"
 tokio = "1.43.0"
 ureq = { version = "2.11.0", features = ["json"] }
 url = "2.5.4"
-uuid = {  version = "1.14.0", features = ["v4"] }
+uuid = {  version = "1.18.0", features = ["v4"] }
 walkdir = "2"
 whoami = "1.6.0"
