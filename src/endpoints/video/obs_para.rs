@@ -12,9 +12,13 @@ use ffmpeg_sidecar::version::ffmpeg_version;
 use ffmpeg_sidecar::command::FfmpegCommand;
 use std::path::Path;
 
-/// *`POST /ffmpeg/video/obs-para/<repo_path>`*
+/// *`POST /obs-para/<repo_path>`*
 ///
-/// Typically mounted as **`/audio/ffmpeg/video/obs-para/<repo_path>`**
+/// Typically mounted as **`/video/obs-para/<repo_path>`**
+///
+/// Example body:
+///
+/// `{"story_n": 1, "para_n": 1, "audio_path": "audio_content/01-01/01-01_0_1.mp3"}`
 
 #[derive(Deserialize)]
 pub struct ObsParaForm {
@@ -23,12 +27,19 @@ pub struct ObsParaForm {
     audio_path: String
 }
 
-#[post("/ffmpeg/video/obs-para/<repo_path..>", format = "json", data = "<json_form>")]
+#[post("/obs-para/<repo_path..>", format = "json", data = "<json_form>")]
 pub fn obs_para_video(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     json_form: Json<ObsParaForm>,
 ) -> status::Custom<(ContentType, String)> {
+    match ffmpeg_version() {
+        Ok(_) => {},
+        Err(_) => return not_ok_json_response(
+            Status::InternalServerError,
+            make_bad_json_data_response("ffmpeg not found".to_string()),
+        ),
+    }
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
         let repo_dir = state.repo_dir.lock().unwrap().clone();
@@ -59,9 +70,9 @@ pub fn obs_para_video(
             json_form.para_n.to_string()
         };
 
-        // Chemin du fichier audio
+        // Chemin du fichier video
         let audio_path = format!("{}/ingredients/{}", repo_path, json_form.audio_path);
-        // Vérifier si le fichier audio existe
+        // Vérifier si le fichier video existe
         if !Path::new(&audio_path).exists() {
             return not_ok_json_response(
                 Status::NotFound,

@@ -120,11 +120,9 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             ]
         )
     .mount(
-        "/audio",
+        "/video",
         routes![
-            endpoints::audio::download_ffmpeg::download_ffmpeg,
-            endpoints::audio::test_ffmpeg::test_ffmpeg,
-            endpoints::audio::obs_para::obs_para_video
+            endpoints::video::obs_para::obs_para_video,
         ]
     )
 }
