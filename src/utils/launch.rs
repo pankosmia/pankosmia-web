@@ -123,6 +123,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         "/video",
         routes![
             endpoints::video::obs_para::obs_para_video,
+            endpoints::video::obs_story::obs_story_video
         ]
     )
 }
