@@ -117,8 +117,15 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::burrito2::summary_metadatas::summary_metadatas,
                 endpoints::burrito2::get_repo_file_paths::get_repo_file_paths,
                 endpoints::burrito2::audit::audit
-            ],
+            ]
         )
+    .mount(
+        "/video",
+        routes![
+            endpoints::video::obs_para::obs_para_video,
+            endpoints::video::obs_story::obs_story_video
+        ]
+    )
 }
 
 pub(crate) fn add_catchers(rocket_instance: Rocket<Build>) -> Rocket<Build> {
