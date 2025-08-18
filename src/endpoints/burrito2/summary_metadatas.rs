@@ -26,6 +26,10 @@ pub fn summary_metadatas(
         let uw_server_path_ob = server_path.unwrap().path();
         let uw_server_path_ob2 = uw_server_path_ob.clone();
         let server_leaf = uw_server_path_ob2.file_name().unwrap();
+        if server_leaf.to_str().unwrap().starts_with(".") {
+            println!("Skipping . file or dir {}", &server_leaf.to_str().unwrap());
+            continue;
+        }
         if !std::path::Path::new(&uw_server_path_ob).is_dir() {
             println!("Skipping server non-dir {}", server_leaf.to_string_lossy());
             continue;
@@ -52,11 +56,15 @@ pub fn summary_metadatas(
                     if server_org == "_local_/_archive_" {continue};
                 }
             }
+            if org_leaf.to_str().unwrap().starts_with(".") {
+                println!("Skipping . file or dir {}", &server_org);
+                continue;
+            }
             if !std::path::Path::new(&uw_org_path_ob).is_dir() {
                 println!("Skipping org non-dir {}", &server_org);
                 continue;
             }
-            for repo_path in std::fs::read_dir(uw_org_path_ob).unwrap() {
+            for repo_path in std::fs::read_dir(&uw_org_path_ob).unwrap() {
                 let uw_repo_path_ob = repo_path.unwrap().path();
                 let repo_leaf = uw_repo_path_ob.file_name().unwrap();
                 let repo_url_string = format!(
@@ -65,6 +73,14 @@ pub fn summary_metadatas(
                     org_leaf.to_str().unwrap(),
                     repo_leaf.to_str().unwrap()
                 );
+                if repo_leaf.to_str().unwrap().starts_with(".") {
+                    println!("Skipping . file or dir {}", &repo_leaf.to_str().unwrap());
+                    continue;
+                }
+                if !std::path::Path::new(&uw_repo_path_ob).is_dir() {
+                    println!("Skipping org non-dir {}", &repo_url_string);
+                    continue;
+                }
                 let metadata_path = format!(
                     "{}{}{}{}metadata.json",
                     state.repo_dir.lock().unwrap().clone(),

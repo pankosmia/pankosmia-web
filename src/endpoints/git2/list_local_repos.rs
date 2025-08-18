@@ -20,6 +20,10 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
         let uw_server_path_ob = server_path.unwrap().path();
         let uw_server_path_ob2 = uw_server_path_ob.clone();
         let server_leaf = uw_server_path_ob2.file_name().unwrap();
+        if server_leaf.to_str().unwrap().starts_with(".") {
+            println!("Skipping . file or dir {}", &server_leaf.to_str().unwrap());
+            continue;
+        }
         if !std::path::Path::new(&uw_server_path_ob).is_dir() {
             println!("Skipping server non-dir {}", server_leaf.to_string_lossy());
             continue;
@@ -33,6 +37,10 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
                 server_leaf.to_str().unwrap(),
                 org_leaf.to_str().unwrap()
             );
+            if org_leaf.to_str().unwrap().starts_with(".") {
+                println!("Skipping . file or dir {}", &server_org);
+                continue;
+            }
             if !std::path::Path::new(&uw_org_path_ob).is_dir() {
                 println!("Skipping org non-dir {}", &server_org);
                 continue;
