@@ -21,7 +21,7 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
         let uw_server_path_ob2 = uw_server_path_ob.clone();
         let server_leaf = uw_server_path_ob2.file_name().unwrap();
         if server_leaf.to_str().unwrap().starts_with(".") {
-            println!("Skipping . file or dir {}", &server_leaf.to_str().unwrap());
+            println!("Skipping server . file or dir {}", &server_leaf.to_str().unwrap());
             continue;
         }
         if !std::path::Path::new(&uw_server_path_ob).is_dir() {
@@ -38,7 +38,7 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
                 org_leaf.to_str().unwrap()
             );
             if org_leaf.to_str().unwrap().starts_with(".") {
-                println!("Skipping . file or dir {}", &server_org);
+                println!("Skipping org . file or dir {}", &server_org);
                 continue;
             }
             if !std::path::Path::new(&uw_org_path_ob).is_dir() {
@@ -56,6 +56,14 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
                     org_leaf.to_str().unwrap(),
                     repo_leaf.to_str().unwrap()
                 );
+                if repo_leaf.to_str().unwrap().starts_with(".") {
+                    println!("Skipping repo . file or dir {}", &repo_leaf.to_str().unwrap());
+                    continue;
+                }
+                if !std::path::Path::new(&uw_repo_path_ob).is_dir() {
+                    println!("Skipping repo non-dir {}", &repo_url_string);
+                    continue;
+                }
                 repos.push(repo_url_string);
             }
         }
