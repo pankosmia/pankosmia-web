@@ -47,6 +47,7 @@ pub fn list_local_repos(state: &State<AppSettings>) -> status::Custom<(ContentTy
             }
             if server_org == "_local_/_quarantine_" {continue};
             if server_org == "_local_/_archive_" {continue};
+            if server_org == "_local_/_updates_" {continue};
             for repo_path in std::fs::read_dir(uw_org_path_ob).unwrap() {
                 let uw_repo_path_ob = repo_path.unwrap().path();
                 let repo_leaf = uw_repo_path_ob.file_name().unwrap();

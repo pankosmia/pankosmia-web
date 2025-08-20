@@ -54,6 +54,7 @@ pub fn summary_metadatas(
                         continue;
                     }
                     if server_org == "_local_/_archive_" {continue};
+                    if server_org == "_local_/_updates_" {continue};
                 }
             }
             if org_leaf.to_str().unwrap().starts_with(".") {
