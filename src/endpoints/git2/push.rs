@@ -1,29 +1,43 @@
+use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
 use crate::utils::response::{
-    not_ok_bad_repo_json_response, not_ok_json_response, ok_ok_json_response,
+    not_ok_bad_repo_json_response, not_ok_json_response, not_ok_offline_json_response,
+    ok_ok_json_response,
 };
 use git2::{Cred, RemoteCallbacks, Repository};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
+use rocket::serde::json::Json;
+use rocket::serde::Deserialize;
 use rocket::{post, State};
 use std::env;
 use std::path::{Components, PathBuf};
+use std::sync::atomic::Ordering;
 
-/// *`POST /push/<remote>/<repo_path>?cred_type=<cred_type>&passkey=<passkey>`*
+#[derive(Deserialize)]
+pub struct PushForm {
+    remote: String,
+    cred_type: String,
+    pass_key: Option<String>,
+}
+/// *`POST /push/<remote>/<repo_path>`*
 ///
-/// Typically mounted as **`/push/<remote>/<repo_path>?cred_type=<cred_type>&passkey=<passkey>`**
+/// Typically mounted as **`/push/<remote>/<repo_path>`**
 ///
-/// Push to remote from the given repo path. cred_type is a type of SSH key, eg 'rsa'. passkey is optional.
-#[post("/push/<remote>/<repo_path..>?<cred_type>&<passkey>")]
+/// Push to remote from the given repo path. In the JSON body,
+/// - cred_type is the type of SSH key, eg 'rsa'
+/// - pass_key is the optional passkey for the SSH key
+#[post("/push/<repo_path..>", format = "json", data = "<json_form>")]
 pub async fn push_repo(
     state: &State<AppSettings>,
-    remote: String,
     repo_path: PathBuf,
-    cred_type: String,
-    passkey: Option<&str>,
+    json_form: Json<PushForm>,
 ) -> status::Custom<(ContentType, String)> {
+    if !NET_IS_ENABLED.load(Ordering::Relaxed) {
+        return not_ok_offline_json_response();
+    }
     let git_credentials_callback = |_user: &str,
                                     _user_from_url: Option<&str>,
                                     _cred: git2::CredentialType|
@@ -35,14 +49,17 @@ pub async fn push_repo(
             Some(std::path::Path::new(&format!(
                 "{}/.ssh/id_{}.pub",
                 env::var("HOME").unwrap(),
-                &cred_type
+                &json_form.cred_type
             ))),
             std::path::Path::new(&format!(
                 "{}/.ssh/id_{}",
                 env::var("HOME").unwrap(),
-                &cred_type
+                &json_form.cred_type
             )),
-            passkey,
+            match &json_form.pass_key {
+                Some(s) => Some(s.as_str()),
+                None => None,
+            },
         ) {
             Ok(c) => {
                 // println!("Cred created successfully!");
@@ -66,14 +83,14 @@ pub async fn push_repo(
         );
         match Repository::open(repo_path_string) {
             Ok(repo) => {
-                let mut remote_object = match repo.find_remote(remote.as_str()) {
+                let mut remote_object = match repo.find_remote(&json_form.remote.as_str()) {
                     Ok(ro) => ro,
                     Err(e) => {
                         return not_ok_json_response(
                             Status::BadRequest,
                             make_bad_json_data_response(format!(
                                 "Could not find remote {}: {}",
-                                &remote, e
+                                &json_form.remote, e
                             )),
                         )
                     }
