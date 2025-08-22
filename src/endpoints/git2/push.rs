@@ -15,6 +15,7 @@ use rocket::{post, State};
 use std::env;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
+use crate::utils::paths::home_dir_string;
 
 #[derive(Deserialize)]
 pub struct PushForm {
@@ -48,12 +49,12 @@ pub async fn push_repo(
             user,
             Some(std::path::Path::new(&format!(
                 "{}/.ssh/id_{}.pub",
-                env::var("HOME").unwrap(),
+                home_dir_string(),
                 &json_form.cred_type
             ))),
             std::path::Path::new(&format!(
                 "{}/.ssh/id_{}",
-                env::var("HOME").unwrap(),
+                home_dir_string(),
                 &json_form.cred_type
             )),
             match &json_form.pass_key {
