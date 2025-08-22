@@ -48,12 +48,12 @@ pub async fn push_repo(
         let cred = match Cred::ssh_key(
             user,
             Some(std::path::Path::new(&format!(
-                "{}/.ssh/id_{}.pub",
+                "{}\\.ssh\\id_{}.pub",
                 home_dir_string(),
                 &json_form.cred_type
             ))),
             std::path::Path::new(&format!(
-                "{}/.ssh/id_{}",
+                "{}\\.ssh\\id_{}",
                 home_dir_string(),
                 &json_form.cred_type
             )),
