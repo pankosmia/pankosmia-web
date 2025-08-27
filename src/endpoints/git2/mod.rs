@@ -12,3 +12,4 @@ pub mod remotes;
 pub mod add_remote;
 pub mod delete_remote;
 pub mod push;
+pub mod log;

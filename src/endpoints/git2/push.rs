@@ -12,7 +12,6 @@ use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::serde::Deserialize;
 use rocket::{post, State};
-use std::env;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use crate::utils::paths::home_dir_string;
