@@ -50,8 +50,10 @@ pub async fn log_repo(
         match Repository::open(repo_path_string) {
             Ok(repo) => {
                 let mut revwalk = repo.revwalk().expect("Could not revwalk repository");
-                revwalk.set_sorting(git2::Sort::REVERSE).unwrap();
-                let rev_spec = repo.revparse("main").expect("Could not rev_parse");
+                revwalk.set_sorting(git2::Sort::TIME).unwrap();
+                let head = repo.head().expect("Could not locate head");
+                let head_branch_name = head.name().expect("Could not get branch name from head");
+                let rev_spec = repo.revparse(head_branch_name).expect("Could not rev_parse");
                 if rev_spec.mode().contains(git2::RevparseMode::SINGLE) {
                     revwalk
                         .push(rev_spec.from().unwrap().id())
