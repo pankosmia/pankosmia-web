@@ -86,7 +86,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::git2::add_remote::add_remote_to_repo,
                 endpoints::git2::delete_remote::delete_remote_from_repo,
                 endpoints::git2::push::push_repo,
-                endpoints::git2::log::log_repo
+                endpoints::git2::log::log_repo,
+                endpoints::git2::branches::list_branches_for_repo
             ],
         )
         .mount(
