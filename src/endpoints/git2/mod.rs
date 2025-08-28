@@ -14,3 +14,4 @@ pub mod delete_remote;
 pub mod push;
 pub mod log;
 pub mod branches;
+pub mod set_branch;

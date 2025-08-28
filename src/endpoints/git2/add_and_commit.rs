@@ -63,7 +63,7 @@ pub async fn add_and_commit(
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,
                 make_bad_json_data_response(
-                    format!("could not add/commit repo: {}", e).to_string(),
+                    format!("could not open repo: {}", e).to_string(),
                 ),
             ),
         };
