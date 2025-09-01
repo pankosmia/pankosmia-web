@@ -100,6 +100,7 @@ pub fn summary_metadatas(
                         language_code: "?".to_string(),
                         script_direction: "?".to_string(),
                         book_codes: vec![],
+                        timestamp: 0
                     });
                 repos.insert(repo_url_string, summary);
             }

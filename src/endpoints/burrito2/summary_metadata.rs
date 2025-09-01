@@ -52,6 +52,7 @@ pub async fn summary_metadata(
             language_code: "?".to_string(),
             script_direction: "?".to_string(),
             book_codes: vec![],
+            timestamp: 0
         });
         match serde_json::to_string(&summary) {
             Ok(v) => ok_json_response(v),
