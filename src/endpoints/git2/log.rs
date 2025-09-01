@@ -26,6 +26,7 @@ struct CommitJson {
     id: String,
     author: String,
     date: String,
+    epoch: i64,
     message: String
 }
 
@@ -80,6 +81,7 @@ pub async fn log_repo(
                         id: commit.id().to_string(),
                         author: commit.author().to_string(),
                         date: print_time(&commit.time()),
+                        epoch: commit.time().seconds(),
                         message: commit.message().unwrap_or("No Message").to_string(),
                     });
                 }

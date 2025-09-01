@@ -1,5 +1,4 @@
 use crate::static_vars::NET_IS_ENABLED;
-use crate::structs::RemoteRepoRecord;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::response::{
     not_ok_json_response, not_ok_offline_json_response, ok_json_response,
@@ -9,6 +8,7 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use serde_json::Value;
 use std::sync::atomic::Ordering;
+use rocket::serde::{Deserialize, Serialize};
 
 /// *`GET /remote-repos/<gitea_server>/<gitea_org>`*
 ///
@@ -28,11 +28,30 @@ use std::sync::atomic::Ordering;
 ///     "language_code": "fr",
 ///     "script_direction": "ltr",
 ///     "branch_or_tag": "master",
-///     "clone_url": "2024-11-15T11:06:59Z"
+///     "released": "2024-11-15T11:06:59Z",
+///     "clone_url": "https://git.door43.org/BurritoTruck/fr_psle.git",
+///     "updated_at": "2024-11-15T11:06:59Z"
 ///   },
 ///   ...
 /// ]
 /// ```
+
+#[derive(Serialize, Deserialize)]
+pub struct RemoteRepoRecord {
+    pub name: String,
+    pub abbreviation: String,
+    pub description: String,
+    pub avatar_url: String,
+    pub flavor: String,
+    pub flavor_type: String,
+    pub language_code: String,
+    pub script_direction: String,
+    pub branch_or_tag: String,
+    pub clone_url: String,
+    pub released: String,
+    pub updated_at: String,
+}
+
 #[get("/remote-repos/<gitea_server>/<gitea_org>")]
 pub fn gitea_remote_repos(
     gitea_server: &str,
@@ -64,7 +83,12 @@ pub fn gitea_remote_repos(
                             Some(s) => s.to_string(),
                             _ => "".to_string(),
                         },
-                        clone_url: match latest["released"].as_str() {
+                        released: match latest["released"].as_str() {
+                            Some(s) => s.to_string(),
+                            _ => "".to_string(),
+                        },
+                        updated_at: json_record["updated_at"].as_str().unwrap().to_string(),
+                        clone_url: match json_record["clone_url"].as_str() {
                             Some(s) => s.to_string(),
                             _ => "".to_string(),
                         },
