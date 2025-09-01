@@ -14,9 +14,7 @@ use std::path::{Components, PathBuf};
 ///
 /// Typically mounted as **`/git/branch/<branch_ref>/<repo_path>`**
 ///
-/// Changes the selected branch for a given repo.
-
-
+/// Changes the selected branch for a given repo. The branch must exist.
 
 #[post("/branch/<branch_ref>/<repo_path..>")]
 pub async fn set_branch(

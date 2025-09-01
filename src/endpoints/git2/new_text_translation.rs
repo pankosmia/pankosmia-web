@@ -1,15 +1,31 @@
-use crate::structs::{AppSettings, NewTextTranslationContentForm};
+use crate::structs::{AppSettings};
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response};
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
 use chrono::Utc;
-use git2::Repository;
+use git2::{Repository, RepositoryInitOptions};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
-use rocket::{post, State};
+use rocket::{post, FromForm, State};
+use rocket::serde::Deserialize;
 use serde_json::{json, Value};
+
+#[derive(FromForm, Deserialize)]
+pub struct NewTextTranslationContentForm {
+    pub content_name: String,
+    pub content_abbr: String,
+    pub content_type: String,
+    pub content_language_code: String,
+    pub add_book: bool,
+    pub book_code: Option<String>,
+    pub book_title: Option<String>,
+    pub book_abbr: Option<String>,
+    pub add_cv: Option<bool>,
+    pub versification: Option<String>,
+    pub branch_name: Option<String>
+}
 
 /// *`POST /new-text-translation`*
 ///
@@ -26,6 +42,7 @@ use serde_json::{json, Value};
 /// - book_title (null or string)
 /// - book_abbr (null or string)
 /// - add_cv (null or boolean)
+/// - branch_name (null or string)
 #[post("/new-text-translation", format = "json", data = "<json_form>")]
 pub fn new_text_translation_repo(
     state: &State<AppSettings>,
@@ -90,7 +107,10 @@ pub fn new_text_translation_repo(
         }
     }
     // Init repo
-    let new_repo = match Repository::init(&path_to_new_repo) {
+    let final_new_branch_name = json_form.branch_name.clone().unwrap_or("master".to_string());
+    let mut repo_options = RepositoryInitOptions::new();
+    let repo_options2 = repo_options.initial_head(final_new_branch_name.as_str());
+    let new_repo = match Repository::init_opts(&path_to_new_repo, &repo_options2) {
         Ok(repo) => repo,
         Err(e) => {
             return not_ok_json_response(

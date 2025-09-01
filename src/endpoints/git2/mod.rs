@@ -15,3 +15,4 @@ pub mod push;
 pub mod log;
 pub mod branches;
 pub mod set_branch;
+pub mod create_and_set_branch;
