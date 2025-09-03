@@ -1,7 +1,8 @@
 [package]
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
-version = "0.9.27"
+
+version = "0.9.28"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"
@@ -20,6 +21,7 @@ crate-type = [
 path = "src/lib.rs"
 
 [dependencies]
+boon = "0.6.1"
 chrono = "0.4.41"
 copy_dir = "0.1.3"
 ffmpeg-sidecar = "2.1.0"
