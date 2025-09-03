@@ -14,14 +14,34 @@ use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use std::time::SystemTime;
 
-/// *`GET /fetch-repo/<repo_path>`*
+fn fast_forward(
+    repo: &Repository,
+    lb: &mut git2::Reference,
+    rc: &git2::AnnotatedCommit,
+) -> Result<(), git2::Error> {
+    let name = match lb.name() {
+        Some(s) => s.to_string(),
+        None => String::from_utf8_lossy(lb.name_bytes()).to_string(),
+    };
+    let msg = format!("Fast-Forward: Setting {} to id: {}", name, rc.id());
+    // println!("{}", msg);
+    lb.set_target(rc.id(), &msg).expect("Set FF target failed");
+    repo.set_head(&name).expect("set_head failed");
+    repo.checkout_head(Some(
+        git2::build::CheckoutBuilder::default().force(),
+    )).expect("checkout head failed");
+    Ok(())
+}
+
+/// *`GET /pull-repo/<remote_name>/<repo_path>`*
 ///
-/// Typically mounted as **`/git/fetch-repo/<repo_path>`**
+/// Typically mounted as **`/git/pull-repo/<remote_name>/<repo_path>`**
 ///
-/// Fetches for a repo.
-#[get("/fetch-repo/<repo_path..>")]
-pub async fn fetch_repo(
+/// Pulls (fetches and merges) for a repo.
+#[get("/pull-repo/<remote_name>/<repo_path..>")]
+pub async fn pull_repo(
     state: &State<AppSettings>,
+    remote_name: &str,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
@@ -37,7 +57,6 @@ pub async fn fetch_repo(
         );
         match Repository::open(&repo_path_string) {
             Ok(repo) => {
-                let remote_name = "origin";
                 let mut remote = repo
                     .find_remote(remote_name)
                     .or_else(|_| repo.remote_anonymous(remote_name))
@@ -63,6 +82,29 @@ pub async fn fetch_repo(
                         None,
                     )
                     .expect("could not update tips");
+                let fetch_head_ref = repo.find_reference("FETCH_HEAD").expect("Could not find reference FETCH_HEAD");
+                let fetch_commit = repo.reference_to_annotated_commit(&fetch_head_ref).expect("Could not find fetch commit");
+                let analysis = repo.merge_analysis(&[&fetch_commit]).expect("Could not do analysis");
+                if analysis.0.is_fast_forward() {
+                    // println!("Fast-forward");
+                    let head = repo.head().expect("Could not locate head");
+                    let head_branch_name = head.name().expect("Could not get branch name from head");
+                    match repo.find_reference(&format!("{}", &head_branch_name)) {
+                        Ok(mut r) => {
+                            fast_forward(&repo, &mut r, &fetch_commit).expect("Could not fast forward");
+                        },
+                        Err(e) => {
+                            return not_ok_json_response(
+                                Status::InternalServerError,
+                                make_bad_json_data_response(format!("could not find branch reference {}: {}", head_branch_name, e).to_string()),
+                            )
+                        }
+                    };
+                } else if analysis.0.is_normal() {
+                    println!("Normal - no-op since unexpected for resource pull");
+                } else {
+                    println!("Nothing to do");
+                }
                 let metadata_path =
                     format!("{}{}metadata.json", &repo_path_string, os_slash_str(),);
                 std::fs::File::open(&metadata_path)
