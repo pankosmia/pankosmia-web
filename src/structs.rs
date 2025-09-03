@@ -121,20 +121,6 @@ pub struct JsonNetStatusResponse {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct RemoteRepoRecord {
-    pub name: String,
-    pub abbreviation: String,
-    pub description: String,
-    pub avatar_url: String,
-    pub flavor: String,
-    pub flavor_type: String,
-    pub language_code: String,
-    pub script_direction: String,
-    pub branch_or_tag: String,
-    pub clone_url: String,
-}
-
-#[derive(Serialize, Deserialize)]
 pub struct GitStatusRecord {
     pub path: String,
     pub change_type: String,
@@ -151,46 +137,13 @@ pub struct MetadataSummary {
     pub language_code: String,
     pub script_direction: String,
     pub book_codes: Vec<String>,
+    pub timestamp: u64,
 }
 
 #[derive(Responder)]
 pub enum ContentOrRedirect {
     Content(status::Custom<(ContentType, String)>),
     Redirect(Redirect),
-}
-
-#[derive(FromForm, Deserialize)]
-pub struct NewTextTranslationContentForm {
-    pub content_name: String,
-    pub content_abbr: String,
-    pub content_type: String,
-    pub content_language_code: String,
-    pub add_book: bool,
-    pub book_code: Option<String>,
-    pub book_title: Option<String>,
-    pub book_abbr: Option<String>,
-    pub add_cv: Option<bool>,
-    pub versification: Option<String>
-}
-
-#[derive(FromForm, Deserialize)]
-pub struct NewBcvResourceContentForm {
-    pub content_name: String,
-    pub content_abbr: String,
-    pub tsv_type: String,
-    pub content_language_code: String,
-    pub add_book: bool,
-    pub book_code: Option<String>,
-    pub book_title: Option<String>,
-    pub book_abbr: Option<String>,
-    pub versification: Option<String>
-}
-
-#[derive(FromForm, Deserialize)]
-pub struct NewObsContentForm {
-    pub content_name: String,
-    pub content_abbr: String,
-    pub content_language_code: String
 }
 
 #[derive(FromForm, Deserialize, Serialize, Debug)]

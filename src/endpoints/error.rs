@@ -8,7 +8,7 @@ use rocket::{catch, Request};
 pub(crate) fn not_found_catcher(req: &Request<'_>) -> status::Custom<(ContentType, String)> {
     not_ok_json_response(
         Status::NotFound,
-        make_bad_json_data_response(format!("Resource {} was not found", req.uri())).to_string(),
+        make_bad_json_data_response(format!("Resource at URL {} was not found", req.uri())).to_string(),
     )
 }
 

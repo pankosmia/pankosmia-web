@@ -1,6 +1,7 @@
 use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
+use serde_json::{json, Value};
 
 pub(crate) fn string_response(
     status_code: Status,
@@ -8,6 +9,14 @@ pub(crate) fn string_response(
     content: String,
 ) -> status::Custom<(ContentType, String)> {
     status::Custom(status_code, (mime_type, content))
+}
+
+pub(crate) fn json_payload_response(
+    status_code: Status,
+    content: Value,
+) -> status::Custom<(ContentType, String)> {
+    let ok_content = json!({"is_good": status_code == Status::Ok, "payload": content});
+    status::Custom(status_code, (ContentType::JSON, serde_json::to_string(&ok_content).unwrap()))
 }
 
 pub(crate) fn ok_json_response(content: String) -> status::Custom<(ContentType, String)> {
