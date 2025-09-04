@@ -4,7 +4,7 @@ use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, not_ok_offline_json_response,
-    ok_ok_json_response,
+    ok_json_response,
 };
 use git2::{AutotagOption, FetchOptions, RemoteUpdateFlags, Repository};
 use rocket::http::{ContentType, Status};
@@ -13,6 +13,7 @@ use rocket::{get, State};
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use std::time::SystemTime;
+use serde_json::json;
 
 fn fast_forward(
     repo: &Repository,
@@ -27,10 +28,44 @@ fn fast_forward(
     // println!("{}", msg);
     lb.set_target(rc.id(), &msg).expect("Set FF target failed");
     repo.set_head(&name).expect("set_head failed");
-    repo.checkout_head(Some(
-        git2::build::CheckoutBuilder::default().force(),
-    )).expect("checkout head failed");
+    repo.checkout_head(Some(git2::build::CheckoutBuilder::default().force()))
+        .expect("checkout head failed");
     Ok(())
+}
+
+fn normal_merge(
+    repo: &Repository,
+    local: &git2::AnnotatedCommit,
+    remote: &git2::AnnotatedCommit,
+) -> Result<bool, git2::Error> {
+    let local_tree = repo.find_commit(local.id())?.tree()?;
+    let remote_tree = repo.find_commit(remote.id())?.tree()?;
+    let ancestor = repo
+        .find_commit(repo.merge_base(local.id(), remote.id())?)?
+        .tree()?;
+    let mut idx = repo.merge_trees(&ancestor, &local_tree, &remote_tree, None)?;
+    if idx.has_conflicts() {
+        repo.checkout_index(Some(&mut idx), None)?;
+        return Ok(true);
+    }
+    let result_tree = repo.find_tree(idx.write_tree_to(repo)?)?;
+    // now create the merge commit
+    let msg = format!("Merge: {} into {}", remote.id(), local.id());
+    let sig = repo.signature()?;
+    let local_commit = repo.find_commit(local.id())?;
+    let remote_commit = repo.find_commit(remote.id())?;
+    // Do our merge commit and set current branch head to that commit.
+    let _merge_commit = repo.commit(
+        Some("HEAD"),
+        &sig,
+        &sig,
+        &msg,
+        &result_tree,
+        &[&local_commit, &remote_commit],
+    )?;
+    // Set working tree to match head.
+    repo.checkout_head(None)?;
+    Ok(false)
 }
 
 /// *`GET /pull-repo/<remote_name>/<repo_path>`*
@@ -82,28 +117,50 @@ pub async fn pull_repo(
                         None,
                     )
                     .expect("could not update tips");
-                let fetch_head_ref = repo.find_reference("FETCH_HEAD").expect("Could not find reference FETCH_HEAD");
-                let fetch_commit = repo.reference_to_annotated_commit(&fetch_head_ref).expect("Could not find fetch commit");
-                let analysis = repo.merge_analysis(&[&fetch_commit]).expect("Could not do analysis");
+                let fetch_head_ref = repo
+                    .find_reference("FETCH_HEAD")
+                    .expect("Could not find reference FETCH_HEAD");
+                let fetch_commit = repo
+                    .reference_to_annotated_commit(&fetch_head_ref)
+                    .expect("Could not find fetch commit");
+                let analysis = repo
+                    .merge_analysis(&[&fetch_commit])
+                    .expect("Could not do analysis");
+                let mut merge_type = "fast-forward";
+                let mut has_conflicts = false;
                 if analysis.0.is_fast_forward() {
-                    // println!("Fast-forward");
                     let head = repo.head().expect("Could not locate head");
-                    let head_branch_name = head.name().expect("Could not get branch name from head");
+                    let head_branch_name =
+                        head.name().expect("Could not get branch name from head");
                     match repo.find_reference(&format!("{}", &head_branch_name)) {
                         Ok(mut r) => {
-                            fast_forward(&repo, &mut r, &fetch_commit).expect("Could not fast forward");
-                        },
+                            fast_forward(&repo, &mut r, &fetch_commit)
+                                .expect("Could not fast forward");
+                        }
                         Err(e) => {
                             return not_ok_json_response(
                                 Status::InternalServerError,
-                                make_bad_json_data_response(format!("could not find branch reference {}: {}", head_branch_name, e).to_string()),
+                                make_bad_json_data_response(
+                                    format!(
+                                        "could not find branch reference {}: {}",
+                                        head_branch_name, e
+                                    )
+                                    .to_string(),
+                                ),
                             )
                         }
                     };
                 } else if analysis.0.is_normal() {
-                    println!("Normal - no-op since unexpected for resource pull");
+                    merge_type = "normal";
+                    let head_commit = repo
+                        .reference_to_annotated_commit(
+                            &repo.head().expect("Could not get repo head"),
+                        )
+                        .expect("could not get reference to head");
+                    has_conflicts = normal_merge(&repo, &head_commit, &fetch_commit)
+                        .expect("Could not normal merge");
                 } else {
-                    println!("Nothing to do");
+                    merge_type = "up-to-date";
                 }
                 let metadata_path =
                     format!("{}{}metadata.json", &repo_path_string, os_slash_str(),);
@@ -111,7 +168,8 @@ pub async fn pull_repo(
                     .expect("Could not open metadata file")
                     .set_modified(SystemTime::now())
                     .expect("Could not set timestamp of metadata file");
-                ok_ok_json_response()
+                let response_json = json!({"is_good":true, "reason":"ok", "merge_type": merge_type, "has_conflicts": has_conflicts});
+                ok_json_response(serde_json::to_string(&response_json).unwrap())
             }
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,
