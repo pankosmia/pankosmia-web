@@ -7,13 +7,14 @@ use crate::utils::response::{
     ok_json_response,
 };
 use git2::{AutotagOption, FetchOptions, RemoteUpdateFlags, Repository};
+use regex::Regex;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, State};
+use serde_json::json;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 use std::time::SystemTime;
-use serde_json::json;
 
 fn fast_forward(
     repo: &Repository,
@@ -79,9 +80,6 @@ pub async fn pull_repo(
     remote_name: &str,
     repo_path: PathBuf,
 ) -> status::Custom<(ContentType, String)> {
-    if !NET_IS_ENABLED.load(Ordering::Relaxed) {
-        return not_ok_offline_json_response();
-    }
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
         let repo_path_string = format!(
@@ -90,6 +88,10 @@ pub async fn pull_repo(
             os_slash_str(),
             &repo_path.display().to_string().clone()
         );
+        let remote_transport_regex = Regex::new(r"^(https?|ssh)://|git@").unwrap();
+        if remote_transport_regex.is_match(&remote_name) && !NET_IS_ENABLED.load(Ordering::Relaxed) {
+            return not_ok_offline_json_response();
+        }
         match Repository::open(&repo_path_string) {
             Ok(repo) => {
                 let mut remote = repo
