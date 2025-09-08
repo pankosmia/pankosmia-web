@@ -10,7 +10,7 @@ use git2::{AutotagOption, FetchOptions, RemoteUpdateFlags, Repository};
 use regex::Regex;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use rocket::{get, State};
+use rocket::{post, State};
 use serde_json::json;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
@@ -69,12 +69,12 @@ fn normal_merge(
     Ok(false)
 }
 
-/// *`GET /pull-repo/<remote_name>/<repo_path>`*
+/// *`POST /pull-repo/<remote_name>/<repo_path>`*
 ///
 /// Typically mounted as **`/git/pull-repo/<remote_name>/<repo_path>`**
 ///
 /// Pulls (fetches and merges) for a repo.
-#[get("/pull-repo/<remote_name>/<repo_path..>")]
+#[post("/pull-repo/<remote_name>/<repo_path..>")]
 pub async fn pull_repo(
     state: &State<AppSettings>,
     remote_name: &str,
