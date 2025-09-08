@@ -1,9 +1,10 @@
+use std::time::SystemTime;
 use crate::structs::AppSettings;
 use crate::utils::files::load_json;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use git2::{Repository, RepositoryInitOptions};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
@@ -196,7 +197,9 @@ pub fn new_bcv_resource_repo(
             )
         }
     };
-    let now_time = Utc::now();
+    let now = SystemTime::now();
+    let now_dt: DateTime<Utc> = now.into();
+    let now_time = now_dt.to_rfc3339();
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
