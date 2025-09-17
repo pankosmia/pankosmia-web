@@ -9,16 +9,16 @@ use crate::utils::response::{
 use git2::Repository;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use rocket::{get, State};
+use rocket::{post, State};
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
 
-/// *`GET /clone-repo/<repo_path>`*
+/// *`POST /clone-repo/<repo_path>`*
 ///
 /// Typically mounted as **`/git/clone-repo/<repo_path>`**
 ///
 /// Makes a local clone of a repo from the given repo path.
-#[get("/clone-repo/<repo_path..>")]
+#[post("/clone-repo/<repo_path..>")]
 pub async fn clone_repo(
     state: &State<AppSettings>,
     repo_path: PathBuf,
