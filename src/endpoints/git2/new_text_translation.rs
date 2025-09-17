@@ -289,7 +289,7 @@ pub fn new_text_translation_repo(
                 cv_bits.push("\\p".to_string());
                 let max_verse_number = max_verse.as_str().unwrap().parse::<i32>().unwrap();
                 for verse_number in 1..=max_verse_number {
-                    cv_bits.push(format!("\\v {}", verse_number));
+                    cv_bits.push(format!("\\v {} ...", verse_number));
                 }
             }
             // Insert

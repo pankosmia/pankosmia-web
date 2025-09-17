@@ -28,7 +28,7 @@ pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, Strin
 ///
 /// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>`**
 ///
-/// Sets global BCV
+/// Sets global BCV.
 #[post("/bcv/<book_code>/<chapter>/<verse>")]
 pub fn post_bcv(
     state: &State<AppSettings>,
