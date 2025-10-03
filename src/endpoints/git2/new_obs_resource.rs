@@ -1,9 +1,7 @@
-use std::time::SystemTime;
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
-use chrono::{DateTime, Utc};
 use git2::{Repository, RepositoryInitOptions};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
@@ -11,6 +9,7 @@ use rocket::serde::json::Json;
 use rocket::{post, FromForm, State};
 use copy_dir::copy_dir;
 use rocket::serde::Deserialize;
+use crate::utils::time::utc_now_timestamp_string;
 
 #[derive(FromForm, Deserialize)]
 pub struct NewObsContentForm {
@@ -134,6 +133,42 @@ pub fn new_obs_resource_repo(
             )
         }
     }
+
+    // Copy gitignore file
+    let path_to_gitignore_template = format!(
+        "{}{}templates{}content_templates{}gitignore.txt",
+        &state.app_resources_dir,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+    );
+    let gitignore_string = match std::fs::read_to_string(&path_to_gitignore_template) {
+        Ok(v) => v,
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not load gitignore template as string: {}",
+                    e
+                )),
+            )
+        }
+    };
+    let path_to_repo_gitignore =
+        format!("{}{}.gitignore", path_to_new_repo, os_slash_str(),);
+    match std::fs::write(path_to_repo_gitignore, &gitignore_string) {
+        Ok(_) => (),
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not write gitignore to repo: {}",
+                    e
+                )),
+            )
+        }
+    }
+
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -147,9 +182,7 @@ pub fn new_obs_resource_repo(
             )
         }
     };
-    let now = SystemTime::now();
-    let now_dt: DateTime<Utc> = now.into();
-    let now_time = now_dt.to_rfc3339();
+    let now_time = utc_now_timestamp_string();
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
