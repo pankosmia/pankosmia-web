@@ -13,7 +13,8 @@ use rocket::serde::json::Json;
 use rocket::{post, State};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use std::path::{Components, PathBuf};
+use std::path::{Components, PathBuf, Path};
+use copy_dir::copy_dir;
 
 /// *`POST /new-scripture-book/<repo_path>`*
 ///
@@ -120,7 +121,7 @@ pub async fn new_scripture_book(
             .replace("%%BOOKABBR%%", json_form.book_abbr.clone().as_str());
         // - If ve
         if json_form.add_cv {
-            // Load vrs file from repo
+            // Path to VRS file in repo
             let path_to_repo_vrs = format!(
                 "{}{}_local_{}_local_{}{}{}ingredients{}vrs.json",
                 repo_dir_path,
@@ -131,6 +132,50 @@ pub async fn new_scripture_book(
                 os_slash_str(),
                 os_slash_str(),
             );
+            // Does that repo VRS file exist?
+            let repo_vrs_found = Path::new(&path_to_repo_vrs).is_file();
+            if !repo_vrs_found {
+                // If not -
+                // -- do we have a vrs_name value? If not die
+                let vrs_name = match json_form.vrs_name.clone() {
+                    Some(v) => v,
+                    None => {
+                        return not_ok_json_response(
+                            Status::InternalServerError,
+                            make_bad_json_data_response("No VRS ingredient found in repo and no versification name provided in API call".to_string()),
+                        )
+                    }
+                };
+                //    Get versification file as JSON
+                let path_to_template_vrs = format!(
+                    "{}{}templates{}content_templates{}vrs{}{}.json",
+                    &state.app_resources_dir,
+                    os_slash_str(),
+                    os_slash_str(),
+                    os_slash_str(),
+                    os_slash_str(),
+                    json_form.vrs_name.clone().unwrap(),
+                );
+                // -- is there a template file for that vrs_name? If not die
+                let template_vrs_found = Path::new(&path_to_template_vrs).is_file();
+                if !template_vrs_found {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!("No VRS template for {} found in repo and no versification name provided in API call", vrs_name.clone())),
+                    )
+                };
+                // -- copy from template to repo, and we're good to go
+                match copy_dir(&path_to_template_vrs, &path_to_repo_vrs) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        return not_ok_json_response(
+                            Status::BadRequest,
+                            make_bad_json_data_response(format!("could not copy vrs from template to repo: {}", e).to_string()),
+                        )
+                    }
+                }
+            }
+            // Load versification file
             let versification_ob = match load_json(&path_to_repo_vrs) {
                 Ok(j) => j,
                 Err(e) => {

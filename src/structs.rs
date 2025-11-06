@@ -75,12 +75,6 @@ pub struct AppSettings {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum ClientSource {
-    App,
-    User
-}
-
-#[derive(Clone, Serialize, Deserialize)]
 pub struct Client {
     pub id: String,
     pub src: String,
@@ -152,6 +146,7 @@ pub struct NewScriptureBookForm {
     pub book_title: String,
     pub book_abbr: String,
     pub add_cv: bool,
+    pub vrs_name: Option<String>
 }
 
 #[allow(non_snake_case)]
@@ -159,6 +154,7 @@ pub struct NewScriptureBookForm {
 pub struct BurritoMetadataIngredient {
     pub checksum: Value,
     pub mimeType: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scope: Option<Value>,
     pub size: usize
 }
