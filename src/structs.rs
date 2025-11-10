@@ -149,6 +149,14 @@ pub struct NewScriptureBookForm {
     pub vrs_name: Option<String>
 }
 
+#[derive(FromForm, Deserialize, Serialize, Debug)]
+pub struct NewBcvResourceBookForm {
+    pub book_code: String,
+    pub book_title: String,
+    pub book_abbr: String,
+    pub vrs_name: Option<String>
+}
+
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BurritoMetadataIngredient {
