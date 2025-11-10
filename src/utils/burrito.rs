@@ -103,7 +103,13 @@ pub fn ingredients_metadata_from_files(
                     let entry_copy = truncated_entry_string.clone();
                     let file_path_parts: Vec<_> = entry_copy.split("/").collect();
                     let file_name_parts: Vec<_> = file_path_parts.last().unwrap().split(".").collect();
+                    if file_name_parts.len() < 2 {
+                        continue;
+                    }
                     if file_name_parts[0] == "metadata" && file_name_parts[1] == "json" {
+                        continue;
+                    }
+                    if file_name_parts.len() == 3 && file_name_parts[1] == "bak" {
                         continue;
                     }
                     let file_part1 = file_name_parts[0];
@@ -144,4 +150,22 @@ pub fn ingredients_metadata_from_files(
             }
         }
     ingredients
+}
+
+pub fn ingredients_scopes_from_files(repo_path: String) -> BTreeMap<String, Value> {
+    let mut scopes = BTreeMap::new();
+    let ingredients_map = ingredients_metadata_from_files(repo_path);
+    for (_key, value) in ingredients_map.iter() {
+        match value.clone().scope {
+            None => {},
+            Some(_) => {
+                let scope_object_value = value.clone().scope.unwrap();
+                let scope_object = scope_object_value.as_object().unwrap();
+                for (jk, jv) in scope_object {
+                    scopes.insert(jk.to_string(), jv.clone());
+                }
+            }
+        }
+    }
+    scopes
 }

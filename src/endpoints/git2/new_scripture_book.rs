@@ -1,6 +1,7 @@
 use crate::structs::{
-    AppSettings, BurritoMetadata, BurritoMetadataIngredient, NewScriptureBookForm,
+    AppSettings, BurritoMetadata, NewScriptureBookForm,
 };
+use crate::utils::burrito::{ingredients_metadata_from_files, ingredients_scopes_from_files};
 use crate::utils::files::load_json;
 use crate::utils::json_responses::{make_bad_json_data_response};
 use crate::utils::paths::{check_local_path_components, os_slash_str};
@@ -11,8 +12,7 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::{post, State};
-use serde_json::{json, Value};
-use std::collections::BTreeMap;
+use serde_json::Value;
 use std::path::{Components, PathBuf, Path};
 use copy_dir::copy_dir;
 
@@ -49,13 +49,17 @@ pub async fn new_scripture_book(
             .as_os_str()
             .to_str()
             .unwrap();
-        let path_to_repo_metadata = format!(
-            "{}{}_local_{}_local_{}{}{}metadata.json",
+        let full_repo_dir = format!(
+            "{}{}_local_{}_local_{}{}",
             repo_dir_path,
             os_slash_str(),
             os_slash_str(),
             os_slash_str(),
-            &repo_name,
+            &repo_name
+        );
+        let path_to_repo_metadata = format!(
+            "{}{}metadata.json",
+            full_repo_dir,
             os_slash_str(),
         );
         let metadata_string = match std::fs::read_to_string(&path_to_repo_metadata) {
@@ -71,7 +75,7 @@ pub async fn new_scripture_book(
             }
         };
         // Make struct from metadata
-        let metadata_struct: BurritoMetadata = match serde_json::from_str(&metadata_string) {
+        let mut metadata_struct: BurritoMetadata = match serde_json::from_str(&metadata_string) {
             Ok(v) => v,
             Err(e) => {
                 return not_ok_json_response(
@@ -250,22 +254,19 @@ pub async fn new_scripture_book(
                 )
             }
         }
-        // Add ingredient record for USFM
+        // Add ingredient record and currentScope value for USFM
         if let mut ingredients = metadata_struct.ingredients.lock().unwrap() {
-            let mut new_ingredients = BTreeMap::new();
-            for (k, v) in ingredients.iter() {
-                new_ingredients.insert(k.clone(), v.clone());
-            }
-            let ingredient_key = format!("ingredients/{}.usfm", &json_form.book_code);
-            let ingredient_struct = BurritoMetadataIngredient {
-                checksum: json!({"md5": format!("{:?}", md5::compute(&usfm_string))}),
-                mimeType: "text/plain".to_string(),
-                scope: Some(json!({json_form.book_code.to_string(): []})),
-                size: usfm_string.len(),
-            };
-            new_ingredients.insert(ingredient_key, ingredient_struct);
+            let new_ingredients = ingredients_metadata_from_files(full_repo_dir.clone());
             *ingredients = new_ingredients;
         }
+        if let type_info = metadata_struct.r#type {
+            let mut type_ob = type_info.as_object().unwrap().clone();
+            let flavor_type_ob = type_ob["flavorType"].as_object_mut().unwrap();
+            let new_current_scope = ingredients_scopes_from_files(full_repo_dir.clone());
+            flavor_type_ob["currentScope"] = serde_json::from_str(serde_json::to_string(&new_current_scope).unwrap().as_str()).unwrap();
+            metadata_struct.r#type = serde_json::from_str(serde_json::to_string(&type_ob).unwrap().as_str()).unwrap();
+        }
+
         // Write metadata
         let metadata_output_string = match serde_json::to_string(&metadata_struct) {
             Ok(s) => s,

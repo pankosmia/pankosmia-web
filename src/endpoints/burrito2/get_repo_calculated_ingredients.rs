@@ -26,8 +26,7 @@ pub async fn get_repo_calculated_ingredients(
             os_slash_str(),
             &repo_path.display().to_string()
         );
-        let ingredients = ingredients_metadata_from_files(full_repo_dir);
-        // println!("{:?}", &ingredients);
+        let ingredients = ingredients_metadata_from_files(full_repo_dir.clone());
         ok_json_response(serde_json::to_string(&ingredients).unwrap())
     } else {
         not_ok_bad_repo_json_response()
