@@ -11,17 +11,18 @@ use rocket::{post, State};
 use std::path::{Components, PathBuf};
 use crate::utils::burrito::destination_parent;
 
-/// *`POST /copy/<repo_path>?target_path=<target_path>&delete_src`*
+/// *`POST /copy/<repo_path>?target_path=<target_path>&delete_src&add_ignore`*
 ///
 /// Typically mounted as **`/git/copy/<repo_path>?target_path=<target_path>&delete_src`**
 ///
-/// Copies a repo to a new location, optionally deleting the source.
-#[post("/copy/<repo_path..>?<target_path>&<delete_src>")]
+/// Copies a repo to a new location, optionally deleting the source and optionally adding a .gitignore file
+#[post("/copy/<repo_path..>?<target_path>&<delete_src>&<add_ignore>")]
 pub async fn copy_repo(
     state: &State<AppSettings>,
     repo_path: PathBuf,
     target_path: String,
     delete_src: Option<bool>,
+    add_ignore: Option<bool>
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone())
@@ -70,13 +71,49 @@ pub async fn copy_repo(
             }
         }
         // copy repo
-        match copy_dir(full_src_path.clone(), full_target_path) {
+        match copy_dir(full_src_path.clone(), full_target_path.clone()) {
             Ok(_) => {}
             Err(e) => {
                 return not_ok_json_response(
                     Status::BadRequest,
                     make_bad_json_data_response(format!("could not copy repo: {}", e).to_string()),
                 )
+            }
+        }
+        // Maybe add gitignore file
+        if add_ignore.is_some() && add_ignore.unwrap() {
+            let path_to_gitignore_template = format!(
+                "{}{}templates{}content_templates{}gitignore.txt",
+                &state.app_resources_dir,
+                os_slash_str(),
+                os_slash_str(),
+                os_slash_str(),
+            );
+            let gitignore_string = match std::fs::read_to_string(&path_to_gitignore_template) {
+                Ok(v) => v,
+                Err(e) => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not load gitignore template as string: {}",
+                            e
+                        )),
+                    )
+                }
+            };
+            let path_to_repo_gitignore =
+                format!("{}{}.gitignore", full_target_path, os_slash_str(), );
+            match std::fs::write(path_to_repo_gitignore, &gitignore_string) {
+                Ok(_) => (),
+                Err(e) => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not write gitignore to repo: {}",
+                            e
+                        )),
+                    )
+                }
             }
         }
         // Maybe delete src repo

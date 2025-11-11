@@ -90,8 +90,8 @@ pub async fn new_bcv_resource_book(
                 );
             }
         }
-        // TODO Make empty book TSV
-        // TODO Find flavor so we can load correct template
+        // Make empty book TSV
+        // Find flavor so we can load correct template
         let type_info = metadata_struct.r#type.clone();
         let type_ob = type_info.as_object().expect("Metadata type as object");
         let flavor_type_ob = type_ob["flavorType"].as_object().expect("flavorType as object");
