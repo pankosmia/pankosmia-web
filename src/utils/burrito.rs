@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use crate::structs::{BurritoMetadataIngredient, MetadataSummary};
+use crate::utils::bcv_ref::canonical_book_codes;
 use serde_json::{json, Map, Value};
 use std::fs;
 use std::fs::File;
@@ -14,7 +15,7 @@ use mime_infer;
 pub(crate) fn summary_metadata_from_file(
     repo_metadata_path: String,
 ) -> Result<MetadataSummary, io::Error> {
-    let file_string = match std::fs::read_to_string(&repo_metadata_path) {
+    let file_string = match fs::read_to_string(&repo_metadata_path) {
         Ok(v) => v,
         Err(e) => return Err(e),
     };
@@ -91,6 +92,7 @@ pub(crate) fn destination_parent(destination: String) -> String {
 }
 
 pub fn ingredients_metadata_from_files(
+    app_resources_dir: String,
     repo_path: String,
 ) -> BTreeMap<String, BurritoMetadataIngredient> {
         let mut ingredients = BTreeMap::new();
@@ -109,13 +111,14 @@ pub fn ingredients_metadata_from_files(
                     if file_name_parts[0] == "metadata" && file_name_parts[1] == "json" {
                         continue;
                     }
-                    if file_name_parts.len() == 3 && file_name_parts[1] == "bak" {
+                    if file_name_parts.len() == 3 && file_name_parts[2] == "bak" {
                         continue;
                     }
                     let file_part1 = file_name_parts[0];
                     // Scope
                     let bible_regex = Regex::new("^[1-6A-Z]{3}$").unwrap();
-                    if bible_regex.is_match(&file_part1) {
+                    let book_string = file_part1.to_string();
+                    if bible_regex.is_match(&file_part1) && canonical_book_codes(app_resources_dir.clone()).contains(&book_string) {
                         ingredient_scope = Some(json!({file_part1.to_string(): []}));
                     }
                     // Size
@@ -152,9 +155,12 @@ pub fn ingredients_metadata_from_files(
     ingredients
 }
 
-pub fn ingredients_scopes_from_files(repo_path: String) -> BTreeMap<String, Value> {
+pub fn ingredients_scopes_from_files(
+    app_resources_dir: String,
+    repo_path: String
+) -> BTreeMap<String, Value> {
     let mut scopes = BTreeMap::new();
-    let ingredients_map = ingredients_metadata_from_files(repo_path);
+    let ingredients_map = ingredients_metadata_from_files(app_resources_dir, repo_path);
     for (_key, value) in ingredients_map.iter() {
         match value.clone().scope {
             None => {},

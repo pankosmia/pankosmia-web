@@ -20,13 +20,14 @@ pub async fn get_repo_calculated_ingredients(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
+        let app_resources_dir = format!("{}", &state.app_resources_dir);
         let full_repo_dir = format!(
             "{}{}{}",
             state.repo_dir.lock().unwrap().clone(),
             os_slash_str(),
             &repo_path.display().to_string()
         );
-        let ingredients = ingredients_metadata_from_files(full_repo_dir.clone());
+        let ingredients = ingredients_metadata_from_files(app_resources_dir, full_repo_dir.clone());
         ok_json_response(serde_json::to_string(&ingredients).unwrap())
     } else {
         not_ok_bad_repo_json_response()

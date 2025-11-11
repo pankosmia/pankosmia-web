@@ -40,6 +40,7 @@ pub async fn new_scripture_book(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_local_path_components(&mut path_components.clone()) {
+        let app_resources_dir = format!("{}", &state.app_resources_dir);
         // Read metadata
         let repo_dir_path = state.repo_dir.lock().unwrap().clone();
         let repo_name = path_components
@@ -256,13 +257,13 @@ pub async fn new_scripture_book(
         }
         // Add ingredient record and currentScope value for USFM
         if let mut ingredients = metadata_struct.ingredients.lock().unwrap() {
-            let new_ingredients = ingredients_metadata_from_files(full_repo_dir.clone());
+            let new_ingredients = ingredients_metadata_from_files(app_resources_dir.clone(), full_repo_dir.clone());
             *ingredients = new_ingredients;
         }
         if let type_info = metadata_struct.r#type {
             let mut type_ob = type_info.as_object().unwrap().clone();
             let flavor_type_ob = type_ob["flavorType"].as_object_mut().unwrap();
-            let new_current_scope = ingredients_scopes_from_files(full_repo_dir.clone());
+            let new_current_scope = ingredients_scopes_from_files(app_resources_dir, full_repo_dir.clone());
             flavor_type_ob["currentScope"] = serde_json::from_str(serde_json::to_string(&new_current_scope).unwrap().as_str()).unwrap();
             metadata_struct.r#type = serde_json::from_str(serde_json::to_string(&type_ob).unwrap().as_str()).unwrap();
         }
