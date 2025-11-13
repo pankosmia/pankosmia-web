@@ -197,7 +197,6 @@ pub fn new_text_translation_repo(
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
-        .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
     // Get versification file as JSON
     let path_to_versification = format!(

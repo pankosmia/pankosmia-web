@@ -186,7 +186,6 @@ pub fn new_obs_resource_repo(
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
-        .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
 
     // Write metadata
