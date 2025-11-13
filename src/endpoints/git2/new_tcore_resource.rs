@@ -99,7 +99,7 @@ pub fn new_tcore_resource_repo(
     let source_language = source_metadata.languages[0].as_object().unwrap();
     let source_language_tag_string = source_language["tag"].clone();
     let source_language = source_language_tag_string.as_str().unwrap();
-    let repo_name = format!("{}_tcchecks", &source_abbr);
+    let repo_name = format!("{}_tcchecks", &source_abbr.to_lowercase());
 
     // Build path for new repo and parent
     let path_to_new_repo = format!(
@@ -194,16 +194,16 @@ pub fn new_tcore_resource_repo(
 
     // Make bookProjects dir
     let path_to_book_projects = format!(
-        "{}{}ingredients{}bookProjects{}{}",
+        "{}{}ingredients{}book_projects{}{}",
         path_to_new_repo,
         os_slash_str(),
         os_slash_str(),
         os_slash_str(),
         format!(
             "{}_{}_{}_book",
-            &source_language,
-            &source_abbr,
-            &json_form.book_code
+            &source_language.to_lowercase(),
+            &source_abbr.to_lowercase(),
+            &json_form.book_code.to_lowercase()
         )
     );
     match fs::create_dir_all(&path_to_book_projects) {
@@ -221,8 +221,9 @@ pub fn new_tcore_resource_repo(
 
     // Copy chosen USFM file
     let path_to_usfm_source_repo_usfm = format!(
-        "{}{}{}.usfm",
+        "{}{}ingredients{}{}.usfm",
         &path_to_usfm_source_repo,
+        os_slash_str(),
         os_slash_str(),
         json_form.book_code
     );
@@ -230,8 +231,9 @@ pub fn new_tcore_resource_repo(
         "{}{}{}.usfm",
         &path_to_book_projects,
         os_slash_str(),
-        json_form.book_code
+        json_form.book_code.to_lowercase()
     );
+    println!("\n\n\n{}\n{}\n\n\n", &path_to_usfm_source_repo_usfm, &path_to_target_usfm);
     let usfm_string = match fs::read_to_string(&path_to_usfm_source_repo_usfm) {
         Ok(v) => v,
         Err(e) => {
