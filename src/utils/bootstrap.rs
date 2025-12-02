@@ -1,5 +1,5 @@
 use copy_dir::copy_dir;
-use std::fs;
+use std::{fmt, fs};
 use std::io::Write;
 use std::path::Path;
 use serde_json::{json, Map, Value};
@@ -168,6 +168,54 @@ pub(crate) fn merged_clients(app_setup_json: &Value, user_settings_json: &Value)
     client_records_merged_array
 }
 
+struct Version(i32, i32, i32);
+
+impl fmt::Display for Version {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}.{}.{}", self.0, self.1, self.2)
+    }
+}
+#[derive(PartialEq)]
+enum VersionComparison {
+    LT,
+    EQ,
+    GT,
+}
+
+fn make_version(sem_ver_string: &str) -> Version {
+    let mut crate_bits = sem_ver_string.split(".");
+    Version(
+        crate_bits.nth(0).expect("crateVersion[0]")
+            .parse::<i32>().expect("crateVersion[0] as int"),
+        crate_bits.nth(1).expect("crateVersion[1]")
+            .parse::<i32>().expect("crateVersion[0] as int"),
+        crate_bits.nth(2).expect("crateVersion[2]")
+            .parse::<i32>().expect("crateVersion[0] as int")
+    )
+}
+
+fn compare_versions(v1: &Version, v2: &Version) -> VersionComparison {
+    if v1.0 > v2.0 {
+        return VersionComparison::GT
+    }
+    if v1.0 < v2.0 {
+        return VersionComparison::LT
+    }
+    if v1.1 > v2.1 {
+        return VersionComparison::GT
+    }
+    if v1.1 < v2.1 {
+        return VersionComparison::LT
+    }
+    if v1.2 > v2.2 {
+        return VersionComparison::GT
+    }
+    if v1.2 < v2.2 {
+        return VersionComparison::LT
+    }
+    VersionComparison::EQ
+}
+
 pub(crate) fn build_client_record(client_record: &Value) -> Value {
     // Get requires from metadata
     let client_path = get_string_value_by_key(&client_record, "path");
@@ -182,6 +230,34 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
             );
         }
     };
+    // Check that server and client versions are compatible
+    let min_server_version: Option<&str> = metadata_json["minServerVersion"].as_str();
+    let max_server_version: Option<&str> = metadata_json["maxServerVersion"].as_str();
+    if min_server_version.is_some() || max_server_version.is_some() {
+        let crate_version = make_version(env!("CARGO_PKG_VERSION"));
+        if min_server_version.is_some() {
+            let min_version = make_version(min_server_version.unwrap());
+            if compare_versions(&crate_version, &min_version) == VersionComparison::LT {
+                panic!(
+                    "Server v{} but client {} requires at >= v{}",
+                    crate_version,
+                    metadata_json["id"].as_str().unwrap(),
+                    min_version
+                );
+            }
+        }
+        if max_server_version.is_some() {
+            let max_version = make_version(max_server_version.unwrap());
+            if compare_versions(&crate_version, &max_version) == VersionComparison::GT {
+                panic!(
+                    "Server v{} but client {} requires at <= v{}",
+                    crate_version,
+                    metadata_json["id"].as_str().unwrap(),
+                    max_version
+                );
+            }
+        }
+    }
     let mut debug_flag = false;
     let md_require = metadata_json["require"].as_object().unwrap();
     if md_require.contains_key("debug") {
