@@ -15,8 +15,7 @@ use crate::utils::burrito::{destination_parent, ingredients_metadata_from_files,
 /// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Writes a document, where the document is provided as JSON with a 'payload' key.
-///
-/// /// The target file must exist, ie this is not the way to add new ingredients to a Burrito
+
 #[post(
     "/ingredient/raw/<repo_path..>?<ipath>&<update_ingredients>",
     format = "json",
