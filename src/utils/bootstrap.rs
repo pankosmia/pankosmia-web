@@ -238,6 +238,12 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
         if min_server_version.is_some() {
             let min_version = make_version(min_server_version.unwrap());
             if compare_versions(&crate_version, &min_version) == VersionComparison::LT {
+                println!(
+                    "\n\nServer v{} but client {} requires at >= v{}\n\n",
+                    crate_version,
+                    metadata_json["id"].as_str().unwrap(),
+                    min_version
+                );
                 panic!(
                     "Server v{} but client {} requires at >= v{}",
                     crate_version,
@@ -249,6 +255,12 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
         if max_server_version.is_some() {
             let max_version = make_version(max_server_version.unwrap());
             if compare_versions(&crate_version, &max_version) == VersionComparison::GT {
+                println!(
+                    "\n\nServer v{} but client {} requires at <= v{}\n\n",
+                    crate_version,
+                    metadata_json["id"].as_str().unwrap(),
+                    max_version
+                );
                 panic!(
                     "Server v{} but client {} requires at <= v{}",
                     crate_version,
