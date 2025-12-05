@@ -74,7 +74,7 @@ pub struct AppSettings {
     pub current_project: Mutex<Option<ProjectIdentifier>>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Client {
     pub id: String,
     pub src: String,

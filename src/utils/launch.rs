@@ -15,6 +15,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::clients::redirect_root,
                 endpoints::clients::serve_root_favicon,
                 endpoints::clients::list_clients,
+                endpoints::clients::client_interfaces,
                 endpoints::version::get_version,
             ],
         )
