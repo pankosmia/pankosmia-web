@@ -2,7 +2,7 @@
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
 
-version = "0.11.2"
+version = "0.11.3"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"

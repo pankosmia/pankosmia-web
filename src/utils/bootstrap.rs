@@ -183,13 +183,13 @@ enum VersionComparison {
 }
 
 fn make_version(sem_ver_string: &str) -> Version {
-    let mut crate_bits = sem_ver_string.split(".");
+    let crate_bits: Vec<_> = sem_ver_string.split(".").collect();
     Version(
-        crate_bits.nth(0).expect("crateVersion[0]")
+        crate_bits[0]
             .parse::<i32>().expect("crateVersion[0] as int"),
-        crate_bits.nth(1).expect("crateVersion[1]")
+        crate_bits[1]
             .parse::<i32>().expect("crateVersion[0] as int"),
-        crate_bits.nth(2).expect("crateVersion[2]")
+        crate_bits[2]
             .parse::<i32>().expect("crateVersion[0] as int")
     )
 }
@@ -234,6 +234,7 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
     let min_server_version: Option<&str> = metadata_json["minServerVersion"].as_str();
     let max_server_version: Option<&str> = metadata_json["maxServerVersion"].as_str();
     if min_server_version.is_some() || max_server_version.is_some() {
+        println!(env!("CARGO_PKG_VERSION"));
         let crate_version = make_version(env!("CARGO_PKG_VERSION"));
         if min_server_version.is_some() {
             let min_version = make_version(min_server_version.unwrap());
