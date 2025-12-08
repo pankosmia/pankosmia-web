@@ -234,7 +234,6 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
     let min_server_version: Option<&str> = metadata_json["minServerVersion"].as_str();
     let max_server_version: Option<&str> = metadata_json["maxServerVersion"].as_str();
     if min_server_version.is_some() || max_server_version.is_some() {
-        println!(env!("CARGO_PKG_VERSION"));
         let crate_version = make_version(env!("CARGO_PKG_VERSION"));
         if min_server_version.is_some() {
             let min_version = make_version(min_server_version.unwrap());

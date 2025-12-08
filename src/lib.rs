@@ -28,9 +28,30 @@ type MsgQueue = Arc<Mutex<VecDeque<String>>>;
 pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
 
+    // Get product JSON
+    let binary_dir_path = env::current_dir().unwrap();
+    let binary_parent_dir_path = binary_dir_path.parent().unwrap().to_str().unwrap();
+    let product_path = format!(
+        "{}{}build{}lib{}app_resources{}product{}product.json",
+        binary_parent_dir_path,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str()
+    );
+    let product_json = load_json(product_path.as_str()).expect("Product JSON");
+    let product_short_name = product_json["short_name"].as_str().unwrap().to_string();
+    println!("Product = {}", &product_short_name);
+
     // Default workspace path
     let root_path = home_dir_string() + os_slash_str();
-    let mut working_dir_path = format!("{}pankosmia_working", root_path.clone());
+    let mut working_dir_path = format!(
+        "{}pankosmia_working{}{}",
+        root_path.clone(),
+        os_slash_str(),
+        &product_short_name
+    );
 
     // Override default if another value is supplied
     let launch_working_dir = get_string_value_by_key(&launch_config, "working_dir");
