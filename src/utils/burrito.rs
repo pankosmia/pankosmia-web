@@ -103,7 +103,7 @@ pub fn ingredients_metadata_from_files(
                 if !truncated_entry_string.starts_with(".") && !truncated_entry_string.contains(format!("{}.", os_slash_str()).as_str()) {
                     let mut ingredient_scope: Option<Value> = None;
                     let entry_copy = truncated_entry_string.clone();
-                    let file_path_parts: Vec<_> = entry_copy.split("/").collect();
+                    let file_path_parts: Vec<_> = entry_copy.split(os_slash_str()).collect();
                     let file_name_parts: Vec<_> = file_path_parts.last().unwrap().split(".").collect();
                     if file_name_parts.len() < 2 {
                         continue;
