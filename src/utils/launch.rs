@@ -1,11 +1,11 @@
+use crate::endpoints;
+use crate::structs::{AppSettings, Client, ProductSpec, ProjectIdentifier};
+use crate::utils::paths::{os_slash_str, source_app_resources_path};
+use rocket::fs::FileServer;
+use rocket::{catchers, routes, Build, Rocket};
+use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::sync::Mutex;
-use rocket::{catchers, routes, Build, Rocket};
-use rocket::fs::FileServer;
-use serde_json::{json, Value};
-use crate::endpoints;
-use crate::structs::{AppSettings, Client, ProjectIdentifier};
-use crate::utils::paths::{os_slash_str, source_app_resources_path};
 
 pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
     rocket_instance
@@ -136,14 +136,24 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
 }
 
 pub(crate) fn add_catchers(rocket_instance: Rocket<Build>) -> Rocket<Build> {
-    rocket_instance
-        .register("/", catchers![
+    rocket_instance.register(
+        "/",
+        catchers![
             endpoints::error::not_found_catcher,
             endpoints::error::default_catcher
-        ])
+        ],
+    )
 }
 
-pub(crate) fn add_app_settings(rocket_instance: Rocket<Build>, repo_dir_path: &String, app_resources_dir_path: &String, working_dir_path: &String, user_settings_json: &Value, app_state_json: &Value) -> Rocket<Build> {
+pub(crate) fn add_app_settings(
+    rocket_instance: Rocket<Build>,
+    repo_dir_path: &String,
+    app_resources_dir_path: &String,
+    working_dir_path: &String,
+    user_settings_json: &Value,
+    app_state_json: &Value,
+    product_json: &Value,
+) -> Rocket<Build> {
     rocket_instance.manage(AppSettings {
         repo_dir: Mutex::new(repo_dir_path.clone()),
         app_resources_dir: app_resources_dir_path.clone(),
@@ -161,55 +171,54 @@ pub(crate) fn add_app_settings(rocket_instance: Rocket<Build>, repo_dir_path: &S
                 .collect(),
         ),
         auth_tokens: match user_settings_json["auth_tokens"].clone() {
-            Value::Object(v) => {
-                Mutex::new(serde_json::from_value(Value::Object(v)).unwrap())
-            }
+            Value::Object(v) => Mutex::new(serde_json::from_value(Value::Object(v)).unwrap()),
             _ => Mutex::new(BTreeMap::new()),
         },
         auth_requests: Mutex::new(BTreeMap::new()),
         gitea_endpoints: match user_settings_json["gitea_endpoints"].clone() {
-            Value::Object(v) => {
-                serde_json::from_value(Value::Object(v)).unwrap()
-            }
+            Value::Object(v) => serde_json::from_value(Value::Object(v)).unwrap(),
             _ => BTreeMap::new(),
         },
         typography: match user_settings_json["typography"].clone() {
-            Value::Object(v) => {
-                serde_json::from_value(Value::Object(v)).unwrap()
-            }
+            Value::Object(v) => serde_json::from_value(Value::Object(v)).unwrap(),
             _ => {
                 panic!("Could not read typography from parsed user settings file");
             }
         },
         bcv: match app_state_json["bcv"].clone() {
-            Value::Object(v) => {
-                serde_json::from_value(Value::Object(v)).unwrap()
-            }
+            Value::Object(v) => serde_json::from_value(Value::Object(v)).unwrap(),
             _ => serde_json::from_value(json!({
             "book_code": "TIT",
             "chapter": 1,
             "verse": 1
             }))
-                .unwrap(),
+            .unwrap(),
         },
         current_project: match app_state_json["current_project"].clone() {
-            Value::Object(p) => {
-                Mutex::new(
-                    Some(
-                        ProjectIdentifier {
-                            source: p["source"].as_str().unwrap().to_string(),
-                            organization: p["organization"].as_str().unwrap().to_string(),
-                            project: p["project"].as_str().unwrap().to_string(),
-                        })
-                )
-            }
-            _ => Mutex::new(None)
+            Value::Object(p) => Mutex::new(Some(ProjectIdentifier {
+                source: p["source"].as_str().unwrap().to_string(),
+                organization: p["organization"].as_str().unwrap().to_string(),
+                project: p["project"].as_str().unwrap().to_string(),
+            })),
+            _ => Mutex::new(None),
+        },
+        product: ProductSpec {
+            name: product_json["name"].as_str().unwrap().to_string(),
+            short_name: product_json["short_name"].as_str().unwrap().to_string(),
+            version: product_json["version"].as_str().unwrap().to_string(),
+            date_time: product_json["datetime"].as_str().unwrap().to_string(),
         },
     })
 }
 
-pub(crate) fn add_static_routes(rocket_instance: Rocket<Build>, client_vec: Vec<Client>, app_resources_path: &String, webfonts_dir_path: &String) -> Rocket<Build> {
-    let mut my_rocket = rocket_instance.mount("/webfonts", FileServer::from(webfonts_dir_path.clone()));
+pub(crate) fn add_static_routes(
+    rocket_instance: Rocket<Build>,
+    client_vec: Vec<Client>,
+    app_resources_path: &String,
+    webfonts_dir_path: &String,
+) -> Rocket<Build> {
+    let mut my_rocket =
+        rocket_instance.mount("/webfonts", FileServer::from(webfonts_dir_path.clone()));
     let app_resources_path = source_app_resources_path(&app_resources_path);
     my_rocket = my_rocket.mount("/app-resources", FileServer::from(app_resources_path));
     for client_record in client_vec {

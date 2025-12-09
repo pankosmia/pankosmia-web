@@ -47,7 +47,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Default workspace path
     let root_path = home_dir_string() + os_slash_str();
     let mut working_dir_path = format!(
-        "{}pankosmia_working{}{}",
+        "{}pankosmia{}{}",
         root_path.clone(),
         os_slash_str(),
         &product_short_name
@@ -114,7 +114,15 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     my_rocket = add_static_routes(my_rocket, client_vec, &app_resources_dir_path, &webfonts_dir_path);
 
     // State
-    my_rocket = add_app_settings(my_rocket, &repo_dir_path, &app_resources_dir_path, &working_dir_path, &user_settings_json, &app_state_json);
+    my_rocket = add_app_settings(
+        my_rocket,
+        &repo_dir_path,
+        &app_resources_dir_path,
+        &working_dir_path,
+        &user_settings_json,
+        &app_state_json,
+        &product_json
+    );
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
     my_rocket = my_rocket.manage(msg_queue).manage(clients);
 

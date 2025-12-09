@@ -72,6 +72,7 @@ pub struct AppSettings {
     pub bcv: Mutex<Bcv>,
     pub typography: Mutex<Typography>,
     pub current_project: Mutex<Option<ProjectIdentifier>>,
+    pub product: ProductSpec
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -180,4 +181,12 @@ pub struct BurritoMetadata {
     pub localizedNames: Value,
     pub ingredients: Mutex<BTreeMap<String, BurritoMetadataIngredient>>,
     pub copyright: Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProductSpec {
+    pub name: String,
+    pub short_name: String,
+    pub version: String,
+    pub date_time: String
 }
