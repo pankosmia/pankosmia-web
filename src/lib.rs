@@ -29,18 +29,20 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
 
     // Get product JSON
-    let binary_dir_path = env::current_dir().unwrap();
-    let binary_parent_dir_path = binary_dir_path.parent().unwrap().to_str().unwrap();
+    let binary_path = env::current_exe().unwrap();
+    let binary_parent_dir_path = binary_path.parent().unwrap().parent().unwrap().to_str().unwrap();
     let product_path = format!(
-        "{}{}build{}lib{}app_resources{}product{}product.json",
+        "{}{}lib{}app_resources{}product{}product.json",
         binary_parent_dir_path,
         os_slash_str(),
         os_slash_str(),
         os_slash_str(),
         os_slash_str(),
-        os_slash_str()
     );
-    let product_json = load_json(product_path.as_str()).expect("Product JSON");
+    let product_json = match load_json(product_path.as_str()) {
+        Ok(j) => j,
+        Err(e) => panic!("Could not read and parse product json as {}: {}", product_path, e)
+    };
     let product_short_name = product_json["short_name"].as_str().unwrap().to_string();
     println!("Product = {}", &product_short_name);
 
