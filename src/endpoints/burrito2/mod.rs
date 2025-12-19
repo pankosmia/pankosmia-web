@@ -2,6 +2,7 @@ pub mod raw_metadata;
 pub mod summary_metadata;
 pub mod summary_metadatas;
 pub mod raw_text_ingredient;
+pub mod raw_text_ingredients;
 pub mod raw_bytes_ingredient;
 pub mod post_raw_ingredient;
 pub mod get_ingredient_prettified;
