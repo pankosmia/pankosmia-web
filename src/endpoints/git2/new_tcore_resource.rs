@@ -17,13 +17,11 @@ use std::fs;
 ///
 /// Creates a new, local x-tcore* repo. It requires the following fields as a JSON body:
 /// - usfm_repo_path (string)
-/// - book_code (string)
 /// - branch_name (Optional string)
 
 #[derive(FromForm, Deserialize, Serialize, Debug, Clone)]
 pub struct NewBcvResourceContentForm {
     pub usfm_repo_path: String,
-    pub book_code: String,
     pub branch_name: Option<String>
 }
 
@@ -192,72 +190,6 @@ pub fn new_tcore_resource_repo(
         }
     }
 
-    // Make bookProjects dir
-    let path_to_book_projects = format!(
-        "{}{}ingredients{}book_projects{}{}",
-        path_to_new_repo,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-        format!(
-            "{}_{}_{}_book",
-            &source_language.to_lowercase(),
-            &source_abbr.to_lowercase(),
-            &json_form.book_code.to_lowercase()
-        )
-    );
-    match fs::create_dir_all(&path_to_book_projects) {
-        Ok(_) => (),
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not create bookProjects directories for repo: {}",
-                    e
-                )),
-            )
-        }
-    }
-
-    // Copy chosen USFM file
-    let path_to_usfm_source_repo_usfm = format!(
-        "{}{}ingredients{}{}.usfm",
-        &path_to_usfm_source_repo,
-        os_slash_str(),
-        os_slash_str(),
-        json_form.book_code
-    );
-    let path_to_target_usfm = format!(
-        "{}{}{}.usfm",
-        &path_to_book_projects,
-        os_slash_str(),
-        json_form.book_code.to_lowercase()
-    );
-    println!("\n\n\n{}\n{}\n\n\n", &path_to_usfm_source_repo_usfm, &path_to_target_usfm);
-    let usfm_string = match fs::read_to_string(&path_to_usfm_source_repo_usfm) {
-        Ok(v) => v,
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not read usfm from source repo: {}",
-                    e
-                )),
-            )
-        }
-    };
-    match fs::write(path_to_target_usfm, usfm_string) {
-        Ok(_) => (),
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not write usfm to repo: {}",
-                    e
-                )),
-            )
-        }
-    }
 
     // Read and customize metadata
     let mut metadata_string = match fs::read_to_string(&path_to_template) {
