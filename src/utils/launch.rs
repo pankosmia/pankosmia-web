@@ -125,7 +125,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::burrito2::summary_metadatas::summary_metadatas,
                 endpoints::burrito2::get_repo_file_paths::get_repo_file_paths,
                 endpoints::burrito2::audit::audit,
-                endpoints::burrito2::post_remake_ingredients_metadata::remake_ingredients_metadata
+                endpoints::burrito2::post_remake_ingredients_metadata::remake_ingredients_metadata,
+                endpoints::burrito2::post_zipped_ingredient::post_zipped_ingredient
             ],
         )
     .mount(

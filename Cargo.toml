@@ -2,7 +2,7 @@
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
 
-version = "0.12.5"
+version = "0.12.6"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"
@@ -38,5 +38,7 @@ tokio = "1.47.0"
 ureq = { version = "2.12.1", features = ["json"] }
 uuid = {  version = "1.18.0", features = ["v4"] }
 walkdir = "2.5.0"
-whoami = "1.6.1"
 time = "0.3.37"
+whoami = "1.6.1"
+zip = "7.0.0"
+tempfile = "3.24.0"
