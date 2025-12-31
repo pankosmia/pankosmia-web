@@ -98,7 +98,9 @@ pub fn new_tcore_resource_repo(
     let source_language = &source_metadata.languages[0];
     let source_language_tag_string = source_language.tag.clone();
     let source_language_names = source_language.name.lock().unwrap();
-    let source_language_name_string = source_language_names.get("en").expect("english language name");
+    let source_language_name_string = source_language_names
+        .get("en")
+        .expect("english language name");
     let repo_name = format!("{}_tcchecks", &source_abbr.to_lowercase());
 
     // Build path for new repo and parent
@@ -207,13 +209,13 @@ pub fn new_tcore_resource_repo(
     };
     let now_time = utc_now_timestamp_string();
     let language_json = json!(
-                    {
-                        "tag": source_language_tag_string,
-                        "name": {
-                            "en": source_language_name_string,
-                    }
-                    }
-                );
+        {
+            "tag": source_language_tag_string,
+            "name": {
+                "en": source_language_name_string,
+        }
+        }
+    );
     metadata_string = metadata_string
         .replace("%%ABBR%%", repo_name.as_str())
         .replace(
@@ -222,7 +224,8 @@ pub fn new_tcore_resource_repo(
         )
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str())
         .replace(
-            "%%LANGUAGE%%", serde_json::to_string(&language_json)
+            "%%LANGUAGE%%",
+            serde_json::to_string(&language_json)
                 .expect("language json")
                 .as_str(),
         );
