@@ -175,12 +175,21 @@ pub struct BurritoMetadata {
     pub meta: Value,
     pub idAuthorities: Value,
     pub identification: Value,
-    pub languages: Vec<Value>,
+    pub languages: Vec<BurritoMetadataLanguage>,
     pub r#type: Value,
     pub confidential: bool,
     pub localizedNames: Value,
     pub ingredients: Mutex<BTreeMap<String, BurritoMetadataIngredient>>,
     pub copyright: Value,
+}
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BurritoMetadataLanguage {
+    pub tag: String,
+    pub name: Mutex<BTreeMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scriptDirection: Option<String>
 }
 
 #[derive(Serialize, Deserialize, Debug)]

@@ -9,6 +9,7 @@ use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
 use rocket::{post, FromForm, State};
+use serde_json::json;
 use std::fs;
 
 /// *`POST /new-tcore-resource`*
@@ -22,7 +23,7 @@ use std::fs;
 #[derive(FromForm, Deserialize, Serialize, Debug, Clone)]
 pub struct NewBcvResourceContentForm {
     pub usfm_repo_path: String,
-    pub branch_name: Option<String>
+    pub branch_name: Option<String>,
 }
 
 #[post("/new-tcore-resource", format = "json", data = "<json_form>")]
@@ -94,9 +95,10 @@ pub fn new_tcore_resource_repo(
         .expect("identification name object");
     let source_name_string = source_name_object["en"].clone();
     let source_name = source_name_string.as_str().unwrap();
-    let source_language = source_metadata.languages[0].as_object().unwrap();
-    let source_language_tag_string = source_language["tag"].clone();
-    let source_language = source_language_tag_string.as_str().unwrap();
+    let source_language = &source_metadata.languages[0];
+    let source_language_tag_string = source_language.tag.clone();
+    let source_language_names = source_language.name.lock().unwrap();
+    let source_language_name_string = source_language_names.get("en").expect("english language name");
     let repo_name = format!("{}_tcchecks", &source_abbr.to_lowercase());
 
     // Build path for new repo and parent
@@ -190,7 +192,6 @@ pub fn new_tcore_resource_repo(
         }
     }
 
-
     // Read and customize metadata
     let mut metadata_string = match fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -205,10 +206,26 @@ pub fn new_tcore_resource_repo(
         }
     };
     let now_time = utc_now_timestamp_string();
+    let language_json = json!(
+                    {
+                        "tag": source_language_tag_string,
+                        "name": {
+                            "en": source_language_name_string,
+                    }
+                    }
+                );
     metadata_string = metadata_string
         .replace("%%ABBR%%", repo_name.as_str())
-        .replace("%%CONTENT_NAME%%", format!("tC Checks ({})", source_name).as_str())
-        .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
+        .replace(
+            "%%CONTENT_NAME%%",
+            format!("tC Checks ({})", source_name).as_str(),
+        )
+        .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str())
+        .replace(
+            "%%LANGUAGE%%", serde_json::to_string(&language_json)
+                .expect("language json")
+                .as_str(),
+        );
     // No ingredients
     metadata_string = metadata_string.replace("%%SCOPE%%", "");
     // Write metadata
