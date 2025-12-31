@@ -219,6 +219,40 @@ pub fn new_bcv_resource_repo(
         }
     }
 
+    // Read language lookup
+    let path_to_language_lookup = format!(
+        "{}{}app_resources{}lookups{}iso639-3.json",
+        &state.app_resources_dir,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+    );
+
+    let language_lookup_json = match load_json(&path_to_language_lookup) {
+        Ok(v) => v,
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not load and parse language lookup: {}",
+                    e
+                )),
+            )
+        }
+    };
+
+    let language_record = match language_lookup_json[&json_form.content_language_code].as_object() {
+        Some(r) =>r,
+        None => return not_ok_json_response(
+            Status::InternalServerError,
+            make_bad_json_data_response(format!(
+                "Could not find language code '{}' in language lookup",
+                json_form.content_language_code,
+            )),
+        )
+    };
+    let language_name = language_record["en"].as_str().expect("English language name");
+
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -233,10 +267,24 @@ pub fn new_bcv_resource_repo(
         }
     };
     let now_time = utc_now_timestamp_string();
+    let language_json = json!(
+        {
+            "tag": &json_form.content_language_code,
+            "name": {
+                "en": &language_name,
+        }
+        }
+    );
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
-        .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str());
+        .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str())
+        .replace(
+            "%%LANGUAGE%%",
+            serde_json::to_string(&language_json)
+                .expect("language json")
+                .as_str(),
+        );
     // Get versification file as JSON
     let path_to_versification = format!(
         "{}{}templates{}content_templates{}vrs{}{}.json",
