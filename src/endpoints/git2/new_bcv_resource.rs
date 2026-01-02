@@ -221,7 +221,7 @@ pub fn new_bcv_resource_repo(
 
     // Read language lookup
     let path_to_language_lookup = format!(
-        "{}{}app_resources{}lookups{}iso639-3.json",
+        "{}{}app_resources{}lookups{}bcp47-language_codes.json",
         &state.app_resources_dir,
         os_slash_str(),
         os_slash_str(),
@@ -241,17 +241,10 @@ pub fn new_bcv_resource_repo(
         }
     };
 
-    let language_record = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(r) =>r,
-        None => return not_ok_json_response(
-            Status::InternalServerError,
-            make_bad_json_data_response(format!(
-                "Could not find language code '{}' in language lookup",
-                json_form.content_language_code,
-            )),
-        )
+    let language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
+        Some(r) => r["en"].as_str().expect("English language name").to_string(),
+        None => json_form.content_language_code.clone()
     };
-    let language_name = language_record["en"].as_str().expect("English language name");
 
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
