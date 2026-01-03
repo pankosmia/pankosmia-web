@@ -193,6 +193,11 @@ pub fn new_obs_resource_repo(
         }
     };
 
+    let language_tag = match language_lookup_json[&json_form.content_language_code].as_object() {
+        Some(_) => json_form.content_language_code.clone(),
+        None => format!("x-{}", &json_form.content_language_code)
+    };
+
     let language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
         Some(r) => r["en"].as_str().expect("English language name").to_string(),
         None => json_form.content_language_code.clone()
@@ -214,7 +219,7 @@ pub fn new_obs_resource_repo(
     let now_time = utc_now_timestamp_string();
     let language_json = json!(
         {
-            "tag": &json_form.content_language_code,
+            "tag": &language_tag,
             "name": {
                 "en": &language_name,
         }
