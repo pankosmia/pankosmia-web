@@ -15,3 +15,4 @@ pub mod post_copy_ingredient;
 pub mod audit;
 pub mod post_remake_ingredients_metadata;
 pub mod post_zipped_ingredient;
+pub mod get_zipped_ingredients;

@@ -199,3 +199,9 @@ pub struct ProductSpec {
     pub version: String,
     pub date_time: String
 }
+
+#[derive(Responder)]
+pub enum BytesOrError {
+    Error(String),
+    Bytes(Vec<u8>),
+}

@@ -1,17 +1,11 @@
-use crate::structs::AppSettings;
+use crate::structs::{AppSettings, BytesOrError};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::mime::mime_types;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use rocket::{get, Responder, State};
+use rocket::{get, State};
 use std::path::{Components, PathBuf};
-
-#[derive(Responder)]
-pub enum BytesOrError {
-    Error(String),
-    Bytes(Vec<u8>),
-}
 
 /// *`GET /ingredient/bytes/<repo_path>?ipath=my_burrito_path`*
 ///

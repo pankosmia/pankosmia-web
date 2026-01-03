@@ -99,11 +99,21 @@ pub(crate) fn check_local_path_components(path_components: &mut Components<'_>) 
     ret
 }
 pub(crate) fn check_path_string_components(path_string: String) -> bool {
-    let mut ret = true;
+    if path_string.len() == 0 {
+        return false;
+    }
+    check_dir_path_string_components(path_string)
+}
+
+pub(crate) fn check_dir_path_string_components(path_string: String) -> bool {
+    if path_string.len() == 0 {
+        return true;
+    }
     if path_string.starts_with("/") {
         return false;
     }
     let path_string_parts = path_string.split("/");
+    let mut ret = true;
     for path_string_part in path_string_parts {
         if path_string_part.len() < 1 {
             return false;
