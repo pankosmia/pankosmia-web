@@ -11,3 +11,4 @@ pub(crate) mod burrito;
 pub(crate) mod burrito_api;
 pub(crate) mod time;
 pub(crate) mod bcv_ref;
+pub(crate) mod zip;

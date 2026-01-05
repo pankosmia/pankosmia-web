@@ -11,8 +11,8 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{post, State};
 use std::path::{Components, PathBuf};
-use zip::ZipArchive;
 use tempfile::NamedTempFile;
+use crate::utils::zip::unpack_zip_file;
 
 #[derive(FromForm)]
 pub struct Upload<'f> {
@@ -60,41 +60,21 @@ pub async fn post_zipped_ingredient(
             }
         }
 
-        // Make zip struct
+        // Copy upload to temp file we manage
         let file_path = NamedTempFile::new().expect("tempfile");
         form.file.move_copy_to(&file_path).await.expect("copy zip");
-        let zip_file = std::fs::File::open(file_path).expect("open zip copy");
-        let mut archive = match ZipArchive::new(zip_file) {
-            Ok(a) => a,
-            Err(e) => return not_ok_json_response(
+
+        // Unpack zip
+        match unpack_zip_file(file_path, destination).await {
+            Ok(_) => ok_ok_json_response(),
+            Err(e) => not_ok_json_response(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!("Could not create zip struct: {}", e)),
-            ),
-        };
-        // Iterate over archive files, ignoring bad ones
-        for i in 0..archive.len() {
-            let mut file = archive.by_index(i).expect("file from zip");
-            let out_path = match file.enclosed_name() {
-                Some(p) => p,
-                None => continue
-            };
-            if !file.is_file() {
-                continue;
-            }
-            let full_out_path = format!(
-                "{}{}{}",
-                destination,
-                os_slash_str(),
-                out_path.display()
-            );
-            let out_path_parent = std::path::Path::new(&full_out_path).parent().expect("parent");
-            if !out_path_parent.exists() {
-                std::fs::create_dir_all(&out_path_parent).expect("create all dirs");
-            }
-            let mut out_file = std::fs::File::create(&full_out_path).expect("create");
-            std::io::copy(&mut file, &mut out_file).expect("write");
+                make_bad_json_data_response(format!(
+                    "Could not unpack zip archive: {}",
+                    e
+                )),
+            )
         }
-        ok_ok_json_response()
     } else {
         not_ok_bad_repo_json_response()
     }

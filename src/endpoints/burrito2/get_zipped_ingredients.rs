@@ -5,12 +5,8 @@ use crate::utils::paths::{check_path_components, check_dir_path_string_component
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, State};
-use std::fs::File;
-use std::io::{Read, Write};
 use std::path::{Components, PathBuf};
-use tempfile::NamedTempFile;
-use walkdir::WalkDir;
-use zip::{write::SimpleFileOptions, ZipWriter};
+use crate::utils::zip::{make_zip_file};
 
 /// *`GET /ingredient/zipped/<repo_path>?ipath=my_burrito_path`*
 ///
@@ -40,45 +36,13 @@ pub async fn raw_zipped_ingredient(
                     ContentType::JSON,
                     BytesOrError::Error(
                         make_bad_json_data_response(
-                            format!("could not locate ingredient directory").to_string(),
+                            format!("could not locate repo or ingredient directory").to_string(),
                         ),
                     ),
                 ),
             );
         }
-        // Iterate over ingredients, writing zip to temp file on the way
-        let ingredient_walkdir = WalkDir::new(&path_to_serve);
-        let prefix = std::path::Path::new(&path_to_serve);
-        let ingredient_iterator = ingredient_walkdir.into_iter();
-        let temp_zip_path = NamedTempFile::new().expect("tempfile");
-        let mut zip = ZipWriter::new(&temp_zip_path);
-        let options = SimpleFileOptions::default()
-            .compression_method(zip::CompressionMethod::Deflated)
-            .unix_permissions(0o755);
-        let mut buffer = Vec::new();
-        for entry_result in ingredient_iterator {
-            let entry = entry_result.expect("entry");
-            let path = entry.path();
-            let name = path.strip_prefix(prefix).expect("strip prefix");
-            let path_as_string = match name.to_str().map(str::to_owned) {
-                Some(p) => p,
-                None => continue,
-            };
-            if path.is_file() {
-                // println!("file '{}'", path_as_string);
-                zip.start_file(path_as_string, options).expect("start file");
-                let mut f = File::open(path).expect("open file");
-                f.read_to_end(&mut buffer).expect("read to end");
-                zip.write_all(&buffer).expect("write");
-                buffer.clear();
-            } else if !name.as_os_str().is_empty() {
-                // println!("dir '{}'", path_as_string);
-                zip.add_directory(path_as_string, options)
-                    .expect("add directory");
-            }
-        }
-        zip.finish().expect("finish");
-        // Serve temp file
+        let temp_zip_path = make_zip_file(&path_to_serve);
         match std::fs::read(&temp_zip_path) {
             Ok(b) => status::Custom(
                 Status::Ok,
