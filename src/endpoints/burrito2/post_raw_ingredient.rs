@@ -55,6 +55,7 @@ pub async fn post_raw_ingredient(
         }
         // Maybe make backup file
         let destination_backup_path = format!("{}.bak", &destination);
+        println!("{}, {}", &destination, &destination_backup_path);
         if std::path::Path::new(&destination).exists() {
             match std::fs::rename(&destination, &destination_backup_path) {
                 Ok(_) => (),
