@@ -21,8 +21,9 @@ pub async fn post_delete_ingredient(
     ipath: String,
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
+    let repo_dir = state.repo_dir.lock().expect("lock for repo dir");
     let full_repo_path =
-        state.repo_dir.lock().unwrap().clone() + os_slash_str() + &repo_path.display().to_string();
+        repo_dir.clone() + os_slash_str() + &repo_path.display().to_string();
     if check_path_components(&mut path_components.clone())
         && check_path_string_components(ipath.clone())
         && std::fs::metadata(&full_repo_path).is_ok()
