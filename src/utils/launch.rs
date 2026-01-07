@@ -113,7 +113,6 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::burrito2::raw_text_ingredient::raw_text_ingredient,
                 endpoints::burrito2::raw_text_ingredients::raw_text_ingredients,
                 endpoints::burrito2::raw_bytes_ingredient::raw_bytes_ingredient,
-                endpoints::burrito2::get_ingredient_prettified::get_ingredient_prettified,
                 endpoints::burrito2::post_raw_ingredient::post_raw_ingredient,
                 endpoints::burrito2::post_bytes_ingredient::post_bytes_ingredient,
                 endpoints::burrito2::post_delete_ingredient::post_delete_ingredient,

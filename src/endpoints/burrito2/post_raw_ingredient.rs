@@ -10,14 +10,16 @@ use serde_json::Value;
 use std::path::{Components, PathBuf};
 use crate::utils::burrito::{destination_parent, ingredients_metadata_from_files, ingredients_scopes_from_files};
 
-/// *`POST /ingredient/raw/<repo_path>?ipath=my_burrito_path&update_ingredients`*
+/// *`POST /ingredient/raw/<repo_path>?ipath=my_burrito_path&update_ingredients&no_bak`*
 ///
-/// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path&update_ingredients&no_bak`**
 ///
-/// Writes a document, where the document is provided as JSON with a 'payload' key.
+/// Writes a document, where the document is provided as JSON with a 'payload' key. The ipath parameter is required. There are two optional parameters:
+/// - update_ingredients to rewrite the metadata (default is false)
+/// - no_bak to write bak files (default is true)
 
 #[post(
-    "/ingredient/raw/<repo_path..>?<ipath>&<update_ingredients>",
+    "/ingredient/raw/<repo_path..>?<ipath>&<update_ingredients>&<no_bak>",
     format = "json",
     data = "<json_form>"
 )]
@@ -27,6 +29,7 @@ pub async fn post_raw_ingredient(
     repo_path: PathBuf,
     ipath: String,
     update_ingredients: Option<String>,
+    no_bak: Option<String>,
     json_form: Json<Value>,
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
@@ -55,16 +58,17 @@ pub async fn post_raw_ingredient(
             }
         }
         // Maybe make backup file
-        let destination_backup_path = format!("{}.bak", &destination);
-        println!("{}, {}", &destination, &destination_backup_path);
-        if std::path::Path::new(&destination).exists() {
-            match std::fs::rename(&destination, &destination_backup_path) {
-                Ok(_) => (),
-                Err(e) => {
-                    return not_ok_json_response(
-                        Status::InternalServerError,
-                        make_bad_json_data_response(format!("Could not write backup file: {}", e)),
-                    )
+        if !no_bak.is_some() {
+            let destination_backup_path = format!("{}.bak", &destination);
+            if std::path::Path::new(&destination).exists() {
+                match std::fs::rename(&destination, &destination_backup_path) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        return not_ok_json_response(
+                            Status::InternalServerError,
+                            make_bad_json_data_response(format!("Could not write backup file: {}", e)),
+                        )
+                    }
                 }
             }
         }

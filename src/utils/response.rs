@@ -27,10 +27,6 @@ pub(crate) fn ok_ok_json_response() -> status::Custom<(ContentType, String)> {
     ok_json_response(make_good_json_data_response("ok".to_string()))
 }
 
-pub(crate) fn ok_html_response(content: String) -> status::Custom<(ContentType, String)> {
-    string_response(Status::Ok, ContentType::HTML, content)
-}
-
 pub(crate) fn not_ok_json_response(
     status_code: Status,
     content: String,

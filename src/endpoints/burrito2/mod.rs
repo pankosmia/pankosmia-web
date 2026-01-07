@@ -5,7 +5,6 @@ pub mod raw_text_ingredient;
 pub mod raw_text_ingredients;
 pub mod raw_bytes_ingredient;
 pub mod post_raw_ingredient;
-pub mod get_ingredient_prettified;
 pub mod post_bytes_ingredient;
 pub mod post_delete_ingredient;
 pub mod post_delete_ingredients;
