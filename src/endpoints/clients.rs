@@ -5,6 +5,7 @@ use rocket::http::{ContentType, Status};
 use rocket::response::{status, Redirect};
 use rocket::{get, State};
 use serde_json::Value;
+use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 
@@ -91,6 +92,19 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
     ok_json_response(serde_json::to_string(&summary).unwrap())
 }
 
+/// *`GET /client-config`*
+///
+/// Typically mounted as **`/client-config`**
+///
+/// Returns an object containing client config information if available
+///
+/// `{}`
+#[get("/client-config")]
+pub fn client_config(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+    let client_config_struct = &state.client_config;
+    let json_value = serde_json::to_string(client_config_struct).expect("serialize client config");
+    ok_json_response(json_value)
+}
 
 #[get("/favicon.ico")]
 pub(crate) async fn serve_root_favicon() -> Redirect {

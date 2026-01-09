@@ -72,7 +72,8 @@ pub struct AppSettings {
     pub bcv: Mutex<Bcv>,
     pub typography: Mutex<Typography>,
     pub current_project: Mutex<Option<ProjectIdentifier>>,
-    pub product: ProductSpec
+    pub product: ProductSpec,
+    pub client_config: BTreeMap<String, Vec<ClientConfigSection>>
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -204,4 +205,53 @@ pub struct ProductSpec {
 pub enum BytesOrError {
     Error(String),
     Bytes(Vec<u8>),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ServerDependencies {
+    pub resources: String,
+    pub webfonts: String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClientConfigString {
+    pub id: String,
+    pub i18n: String,
+    value: String,
+    min_length: Option<i32>,
+    max_length: Option<i32>,
+    options: Option<Vec<String>>,
+    regex_string: Option<String>
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClientConfigInteger {
+    pub id: String,
+    pub i18n: String,
+    value: i32,
+    min: Option<i32>,
+    max: Option<i32>,
+    options: Option<Vec<i32>>
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClientConfigBool {
+    pub id: String,
+    pub i18n: String,
+    value: bool
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum ClientConfigField {
+    String(ClientConfigString),
+    Integer(ClientConfigInteger),
+    Bool(ClientConfigBool)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClientConfigSection {
+    pub id: String,
+    pub i18n: String,
+    fields: Vec<ClientConfigField>
 }

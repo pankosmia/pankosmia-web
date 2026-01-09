@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::structs::{AppSettings, Client, ProductSpec, ProjectIdentifier};
+use crate::structs::{AppSettings, Client, ClientConfigSection, ProductSpec, ProjectIdentifier};
 use crate::utils::paths::{os_slash_str, source_app_resources_path};
 use rocket::fs::FileServer;
 use rocket::{catchers, routes, Build, Rocket};
@@ -17,6 +17,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::clients::list_clients,
                 endpoints::clients::client_interfaces,
                 endpoints::version::get_version,
+                endpoints::clients::client_config
             ],
         )
         .mount("/notifications", routes![
@@ -158,6 +159,7 @@ pub(crate) fn add_app_settings(
     user_settings_json: &Value,
     app_state_json: &Value,
     product_json: &Value,
+    client_config: BTreeMap<String, Vec<ClientConfigSection>>
 ) -> Rocket<Build> {
     rocket_instance.manage(AppSettings {
         repo_dir: Mutex::new(repo_dir_path.clone()),
@@ -213,6 +215,7 @@ pub(crate) fn add_app_settings(
             version: product_json["version"].as_str().unwrap().to_string(),
             date_time: product_json["datetime"].as_str().unwrap().to_string(),
         },
+        client_config
     })
 }
 

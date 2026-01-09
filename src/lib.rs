@@ -4,9 +4,9 @@ mod tests;
 
 #[doc(hidden)]
 use rocket::{Build, Rocket};
-use serde_json::{Value};
+use serde_json::{json, Value};
 use std::env;
-use std::collections::{VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
@@ -21,6 +21,8 @@ pub mod endpoints;
 mod static_vars;
 #[allow(unused_imports)]
 use crate::static_vars::{DEBUG_IS_ENABLED, NET_IS_ENABLED};
+use crate::structs::ClientConfigSection;
+
 #[warn(unused_imports)]
 
 type MsgQueue = Arc<Mutex<VecDeque<String>>>;
@@ -45,6 +47,29 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     };
     let product_short_name = product_json["short_name"].as_str().unwrap().to_string();
     println!("Product = {}", &product_short_name);
+
+    // Maybe get client_config JSON
+    let client_config_path = format!(
+        "{}{}lib{}app_resources{}product{}client_config.json",
+        binary_parent_dir_path,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+    );
+    let client_config_json = match load_json(client_config_path.as_str()) {
+        Ok(j) => j,
+        Err(_e) => {
+            println!("WARNING: No client config file found");
+            json!({})
+        }
+    };
+    let mut client_config = BTreeMap::new();
+    let client_config_json_object = client_config_json.as_object().expect("client config as object");
+    for (section_k, section_v) in client_config_json_object {
+        let section: Vec<ClientConfigSection> = serde_json::from_value(section_v.clone()).expect("client config as struct");
+        client_config.insert(section_k.to_string(), section);
+    }
 
     // Default workspace path
     let root_path = home_dir_string() + os_slash_str();
@@ -123,7 +148,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         &working_dir_path,
         &user_settings_json,
         &app_state_json,
-        &product_json
+        &product_json,
+        client_config
     );
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
     my_rocket = my_rocket.manage(msg_queue).manage(clients);
