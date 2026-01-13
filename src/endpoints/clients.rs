@@ -4,7 +4,7 @@ use crate::utils::response::{not_ok_json_response, ok_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::{status, Redirect};
 use rocket::{get, State};
-use serde_json::Value;
+use serde_json::{json, Value};
 use crate::structs::AppSettings;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
@@ -47,8 +47,9 @@ pub fn list_clients(clients: &State<Clients>) -> status::Custom<(ContentType, St
 #[get("/client-interfaces")]
 pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentType, String)> {
     let clients = clients.lock().unwrap().clone();
-    let mut summary = BTreeMap::new();
+    let mut summaries = BTreeMap::new();
     for client_record in clients {
+        let mut endpoints_map = BTreeMap::new();
         // Get pankosmia_metadata json
         let client_path = client_record.path;
         let client_md_path = format!("{}{}pankosmia_metadata.json", &client_path, os_slash_str());
@@ -79,17 +80,25 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
                 )
             }
         };
+        // Look for id
+        let id_value: Value = metadata_json["id"].clone();
+        let id_str = id_value.as_str().expect("id as string").clone();
+        let id = format!("{}", &id_str);
         // Look for endpoints key
         let mut endpoints: Value = metadata_json["endpoints"].clone();
         if endpoints.is_null() {
             continue;
         }
-        let endpoints_ob = endpoints.as_object_mut().unwrap();
+        let endpoints_ob = endpoints.as_object_mut().expect("endpoints as object");
         for (key, value) in endpoints_ob {
-            summary.insert(key.clone(), value.clone());
+            endpoints_map.insert(key.clone(), value.clone());
         }
+        let summary = json!({
+            "endpoints": endpoints_map
+        });
+        summaries.insert(id, summary);
     };
-    ok_json_response(serde_json::to_string(&summary).unwrap())
+    ok_json_response(serde_json::to_string(&summaries).unwrap())
 }
 
 /// *`GET /client-config`*
