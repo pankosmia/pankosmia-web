@@ -82,7 +82,7 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
         };
         // Look for id
         let id_value: Value = metadata_json["id"].clone();
-        let id_str = id_value.as_str().expect("id as string").clone();
+        let id_str = id_value.as_str().expect("id as string");
         let id = format!("{}", &id_str);
         // Look for endpoints key
         let mut endpoints: Value = metadata_json["endpoints"].clone();

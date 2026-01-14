@@ -51,7 +51,7 @@ fn check_burrito_zip(path: &NamedTempFile) -> bool {
 ///
 /// Typically mounted as **`/burrito/zipped/<repo_path>`**
 ///
-/// Writes a new repo from a zip.
+/// Writes a new repo from a zip. The path must start with _local_/_sideloaded_
 #[post(
     "/zipped/<repo_path..>",
     format = "multipart/form-data",
@@ -70,7 +70,29 @@ pub async fn post_zipped_repo(
         &repo_path.display().to_string()
     );
     if check_path_components(&mut path_components.clone()) {
-        if Path::new(&full_repo_path).exists() {
+        let mut path_n = 0;
+        for path_component in path_components {
+            let path_string = path_component
+                .clone()
+                .as_os_str()
+                .to_str()
+                .unwrap()
+                .to_string();
+            if (path_n == 0) && (path_string != "_local_".to_string()) {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!("First repo path component must be '_local_' not '{}'", &path_string)),
+                );
+            }
+            if (path_n == 1) && (path_string != "_sideloaded_".to_string()) {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!("Second repo path component must be '_sideloaded_' not '{}'", &path_string)),
+                );
+            }
+            path_n += 1;
+        };
+    if Path::new(&full_repo_path).exists() {
             return not_ok_json_response(
                 Status::BadRequest,
                 make_bad_json_data_response(format!("Repo already exists")),
