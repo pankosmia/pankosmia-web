@@ -225,14 +225,14 @@ pub async fn new_scripture_book(
                 cv_bits.push("\\p".to_string());
                 let max_verse_number = max_verse.as_str().unwrap().parse::<i32>().unwrap();
                 for verse_number in 1..=max_verse_number {
-                    cv_bits.push(format!("\\v {} ...", verse_number));
+                    cv_bits.push(format!("\\v {} ___", verse_number));
                 }
             }
             // Insert
             usfm_string = usfm_string.replace("%%STUBCONTENT%%", cv_bits.join("\n").as_str());
         } else {
             usfm_string =
-                usfm_string.replace("%%STUBCONTENT%%", "\\c 1\n\\p\n\\v 1\nFirst verse...");
+                usfm_string.replace("%%STUBCONTENT%%", "\\c 1\n\\p\n\\v 1\n___");
         }
         // Save USFM
         let path_to_new_book = format!(
