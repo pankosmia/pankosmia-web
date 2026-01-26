@@ -131,6 +131,7 @@ pub struct MetadataSummary {
     pub flavor_type: String,
     pub flavor: String,
     pub language_code: String,
+    pub language_name: String,
     pub script_direction: String,
     pub book_codes: Vec<String>,
     pub timestamp: u64,

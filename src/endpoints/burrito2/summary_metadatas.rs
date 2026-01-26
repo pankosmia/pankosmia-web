@@ -98,6 +98,7 @@ pub fn summary_metadatas(
                         flavor_type: "?".to_string(),
                         flavor: "?".to_string(),
                         language_code: "?".to_string(),
+                        language_name: "?".to_string(),
                         script_direction: "?".to_string(),
                         book_codes: vec![],
                         timestamp: 0

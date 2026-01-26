@@ -25,6 +25,7 @@ use crate::utils::burrito::summary_metadata_from_file;
 ///   "flavor_type": "scripture",
 ///   "flavor": "textTranslation",
 ///   "language_code": "fr",
+///   "language_name": "French",
 ///   "script_direction": "ltr"
 /// }
 /// ```
@@ -50,6 +51,7 @@ pub async fn summary_metadata(
             flavor_type: "?".to_string(),
             flavor: "?".to_string(),
             language_code: "?".to_string(),
+            language_name: "?".to_string(),
             script_direction: "?".to_string(),
             book_codes: vec![],
             timestamp: 0

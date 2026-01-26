@@ -66,12 +66,16 @@ pub(crate) fn summary_metadata_from_file(
             .as_str()
             .unwrap()
             .to_string(),
+        language_name: raw_metadata_struct["languages"][0]["name"]["en"]
+            .as_str()
+            .unwrap()
+            .to_string(),
         script_direction: match raw_metadata_struct["languages"][0]["scriptDirection"].clone() {
             Value::String(v) => v.as_str().to_string(),
             _ => "?".to_string(),
         },
         book_codes: book_codes,
-        timestamp: std::fs::metadata(&repo_metadata_path)
+        timestamp: fs::metadata(&repo_metadata_path)
             .expect("Could not read fs metadata")
             .modified()
             .expect("Could not get modified for fs")
