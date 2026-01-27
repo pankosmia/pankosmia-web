@@ -18,6 +18,7 @@ pub struct NewTextTranslationContentForm {
     pub content_abbr: String,
     pub content_type: String,
     pub content_language_code: String,
+    pub content_language_name: Option<String>,
     pub add_book: bool,
     pub book_code: Option<String>,
     pub book_title: Option<String>,
@@ -36,6 +37,7 @@ pub struct NewTextTranslationContentForm {
 /// - content_abbr (string)
 /// - content_type (string)
 /// - content_language_code
+/// - content_language_name (optional)
 /// - versification (string)
 /// - add_book (boolean)
 /// - book_code (null or string)
@@ -180,37 +182,54 @@ pub fn new_text_translation_repo(
         }
     }
 
-    // Read language lookup
-    let path_to_language_lookup = format!(
-        "{}{}app_resources{}lookups{}bcp47-language_codes.json",
-        &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-    );
-
-    let language_lookup_json = match load_json(&path_to_language_lookup) {
-        Ok(v) => v,
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
+    // Custom language begins with x- and name must be provided
+    // Non-custom language must be in lookup, provided name is ignored
+    let language_name;
+    if json_form.content_language_code.starts_with("x-") {
+        language_name = match json_form.content_language_name.clone() {
+            Some(n) => n,
+            None => return not_ok_json_response(
+                Status::BadRequest,
                 make_bad_json_data_response(format!(
-                    "Could not load and parse language lookup: {}",
-                    e
+                    "Language code '{}' is custom ('x-') but no language name has been provided",
+                    &json_form.content_language_code
                 )),
             )
         }
-    };
+    } else {
+        // Read language lookup
+        let path_to_language_lookup = format!(
+            "{}{}app_resources{}lookups{}bcp47-language_codes.json",
+            &state.app_resources_dir,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+        );
 
-    let language_tag = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(_) => json_form.content_language_code.clone(),
-        None => format!("x-{}", &json_form.content_language_code)
-    };
+        let language_lookup_json = match load_json(&path_to_language_lookup) {
+            Ok(v) => v,
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(format!(
+                        "Could not load and parse language lookup: {}",
+                        e
+                    )),
+                )
+            }
+        };
 
-    let language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(r) => r["en"].as_str().expect("English language name").to_string(),
-        None => json_form.content_language_code.clone()
-    };
+        language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
+            Some(r) => r["en"].as_str().expect("English language name").to_string(),
+            None => return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "Language code '{}' is not custom (no 'x-') but has not been found in the BCP47 lookup table",
+                    &json_form.content_language_code
+                ))
+            ),
+        };
+    }
 
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
@@ -228,7 +247,7 @@ pub fn new_text_translation_repo(
     let now_time = utc_now_timestamp_string();
     let language_json = json!(
         {
-            "tag": &language_tag,
+            "tag": &json_form.content_language_code,
             "name": {
                 "en": &language_name,
         }
