@@ -29,6 +29,9 @@ pub async fn get_repo_file_paths(
             os_slash_str(),
             &repo_path.display().to_string()
         );
+        if !Path::new(&full_repo_dir).exists() {
+            return ok_json_response("[]".to_string());
+        }
         let mut paths = Vec::new();
         for entry in WalkDir::new(&full_repo_dir) {
             let entry_string = match entry {
