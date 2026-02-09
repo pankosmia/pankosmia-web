@@ -10,11 +10,11 @@ use rocket::response::status;
 use serde_json::Value;
 use std::sync::atomic::Ordering;
 
-/// *`GET /remote-repos/<gitea_server>/<gitea_org>`*
+/// *`GET /user-remote-repos/<gitea_server>/<gitea_org>`*
 ///
-/// Typically mounted as **`/gitea/remote-repos/<gitea_server>/<gitea_org>`**
+/// Typically mounted as **`/gitea/user-remote-repos/<gitea_server>/<gitea_org>`**
 ///
-/// Returns an object containing repo info for a given gitea organization.
+/// Returns an object containing repo info for a given gitea user.
 ///
 /// ```text
 /// [
@@ -36,15 +36,15 @@ use std::sync::atomic::Ordering;
 /// ]
 /// ```
 
-#[get("/remote-repos/<gitea_server>/<gitea_org>")]
-pub fn gitea_remote_repos(
+#[get("/user-remote-repos/<gitea_server>/<gitea_user>")]
+pub fn gitea_user_remote_repos(
     gitea_server: &str,
-    gitea_org: &str,
+    gitea_user: &str,
 ) -> status::Custom<(ContentType, String)> {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
         return not_ok_offline_json_response();
     }
-    let gitea_path = format!("https://{}/api/v1/orgs/{}/repos", gitea_server, gitea_org);
+    let gitea_path = format!("https://{}/api/v1/users/{}/repos", gitea_server, gitea_user);
     match ureq::get(gitea_path.as_str()).call() {
         Ok(r) => match r.into_json::<Value>() {
             Ok(j) => {

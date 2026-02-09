@@ -256,3 +256,21 @@ pub struct ClientConfigSection {
     pub i18n: String,
     fields: Vec<ClientConfigField>
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct RemoteRepoRecord {
+    pub name: String,
+    pub abbreviation: String,
+    pub description: String,
+    pub avatar_url: String,
+    pub flavor: String,
+    pub flavor_type: String,
+    pub language_code: String,
+    pub script_direction: String,
+    pub branch_or_tag: String,
+    pub clone_url: String,
+    pub released: String,
+    pub updated_at: String,
+    pub latest_zip: String,
+    pub metadata_types: String,
+}
