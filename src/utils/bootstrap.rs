@@ -25,6 +25,22 @@ pub(crate) fn initialize_working_dir(pankosmia_dir_path: &String, app_resources_
             panic!("Could not create working dir '{}': {}", working_dir_path, e);
         }
     };
+    // Make temp dir
+    let temp_dir_path = format!("{}{}temp", &working_dir_path, os_slash_str());
+    match fs::create_dir_all(temp_dir_path) {
+        Ok(_) => {}
+        Err(e) => {
+            panic!("Could not create temp dir in working dir '{}': {}", working_dir_path, e);
+        }
+    };
+    // Make blob dir
+    let blob_dir_path = format!("{}{}blobs", &working_dir_path, os_slash_str());
+    match fs::create_dir_all(blob_dir_path) {
+        Ok(_) => {}
+        Err(e) => {
+            panic!("Could not create blob dir in working dir '{}': {}", working_dir_path, e);
+        }
+    };
     // Copy user_settings file to working dir
     let user_settings_template_path = format!("{}/templates/user_settings.json", &app_resources_dir_path);
     let user_settings = user_settings_path(working_dir_path);
