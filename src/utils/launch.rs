@@ -44,6 +44,10 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::atomics::debug::debug_enable,
             endpoints::atomics::debug::debug_disable
         ])
+        .mount("/temp", routes![
+            endpoints::temp_file::read_temp_file::read_temp_file,
+            endpoints::temp_file::write_temp_file::write_temp_file
+        ])
         .mount(
             "/i18n",
             routes![

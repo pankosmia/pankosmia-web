@@ -1,21 +1,15 @@
-use crate::structs::AppSettings;
+use crate::structs::{AppSettings, Upload};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, check_path_string_components, os_slash_str};
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, ok_ok_json_response,
 };
 use crate::utils::burrito::{destination_parent};
-use rocket::form::{Form, FromForm};
-use rocket::fs::TempFile;
+use rocket::form::Form;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{post, State};
 use std::path::{Components, PathBuf};
-
-#[derive(FromForm)]
-pub struct Upload<'f> {
-    file: TempFile<'f>,
-}
 
 /// *`POST /ingredient/bytes/<repo_path>?ipath=my_burrito_path`*
 ///

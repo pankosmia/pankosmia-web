@@ -3,6 +3,7 @@ use std::sync::{Mutex};
 use std::collections::{BTreeMap};
 use std::fmt;
 use rocket::{Responder, FromForm};
+use rocket::fs::TempFile;
 use rocket::http::{ContentType};
 use rocket::response::{status, Redirect};
 use serde_json::Value;
@@ -273,4 +274,9 @@ pub struct RemoteRepoRecord {
     pub updated_at: String,
     pub latest_zip: String,
     pub metadata_types: String,
+}
+
+#[derive(FromForm)]
+pub struct Upload<'f> {
+    pub file: TempFile<'f>,
 }
