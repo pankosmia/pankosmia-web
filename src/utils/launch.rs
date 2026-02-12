@@ -48,6 +48,9 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::temp_file::read_temp_file::read_temp_file,
             endpoints::temp_file::write_temp_file::write_temp_file
         ])
+        .mount("/llm", routes![
+            endpoints::llm::list_llm_models::list_llm_models,
+        ])
         .mount(
             "/i18n",
             routes![
