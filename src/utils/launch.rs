@@ -50,6 +50,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         ])
         .mount("/llm", routes![
             endpoints::llm::list_llm_models::list_llm_models,
+            endpoints::llm::post_rag_prompt::post_rag_prompt
         ])
         .mount(
             "/i18n",
