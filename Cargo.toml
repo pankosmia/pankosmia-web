@@ -41,3 +41,7 @@ time = "0.3.37"
 whoami = "1.6.1"
 zip = "7.0.0"
 tempfile = "3.24.0"
+pankosmia_rag_chat = {version = "0.0.1", path = "../pankosmia-rag-chat"}
+rten = { version = "0.24.0", features = ["all-ops", "mmap"] }
+rten-generate = { version = "0.24.0", features=["text-decoder"] }
+rten-text = { version = "0.24.0" }
