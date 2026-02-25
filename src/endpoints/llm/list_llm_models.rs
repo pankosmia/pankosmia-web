@@ -47,7 +47,6 @@ pub fn list_llm_models(state: &State<AppSettings>) -> status::Custom<(ContentTyp
             &llm_path_string,
             os_slash_str()
         );
-        println!("{}", &non_quantized_path);
         if Path::new(&non_quantized_path).exists() {
             repos.push((format!("{}", &llm_leaf_string), false))
         }
