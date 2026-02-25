@@ -167,9 +167,9 @@ pub async fn pull_repo(
                 let metadata_path =
                     format!("{}{}metadata.json", &repo_path_string, os_slash_str(),);
                 std::fs::File::open(&metadata_path)
-                    .expect("Could not open metadata file")
-                    .set_modified(SystemTime::now())
-                    .expect("Could not set timestamp of metadata file");
+                    .expect("Could not open metadata file");
+                    //.set_modified(SystemTime::now())
+                    //.expect("Could not set timestamp of metadata file");
                 let response_json = json!({"is_good":true, "reason":"ok", "merge_type": merge_type, "has_conflicts": has_conflicts});
                 ok_json_response(serde_json::to_string(&response_json).unwrap())
             }
