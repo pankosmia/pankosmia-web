@@ -199,14 +199,12 @@ pub async fn post_rag_prompt(
     };
     let mut generator = generator_from_model(&model, &tokenizer, top_k, temperature);
 
-    // Build reference for now
-    let _bcv = format!(
-        "{} {} {} {} {}",
+    // Build reference (one verse for now)
+    let bcv = format!(
+        "{} {}:{}",
         &form.book,
         &form.from_chapter,
-        &form.to_chapter.unwrap_or(form.from_chapter),
         &form.from_verse,
-        &form.to_verse.unwrap_or(form.from_verse)
     );
 
     // Query model
@@ -214,6 +212,8 @@ pub async fn post_rag_prompt(
     let output_tokens = match do_one_iteration(
         &mut generator,
         &tokenizer,
+        bcv.clone(),
+        bcv,
         form.rag_context.clone(),
         form.prompt.clone(),
         form.show_prompt,
