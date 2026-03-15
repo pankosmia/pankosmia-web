@@ -1,7 +1,7 @@
 [package]
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
-version = "0.14.2"
+version = "0.14.3"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"
@@ -41,7 +41,7 @@ time = "0.3.37"
 whoami = "1.6.1"
 zip = "7.0.0"
 tempfile = "3.24.0"
-pankosmia_rag_chat = {version = "0.0.2"}
+pankosmia_rag_chat = {version = "0.0.3"}
 rten = { version = "0.24.0", features = ["all-ops", "mmap"] }
 rten-generate = { version = "0.24.0", features=["text-decoder"] }
 rten-text = { version = "0.24.0" }

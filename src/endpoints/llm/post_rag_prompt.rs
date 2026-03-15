@@ -197,7 +197,7 @@ pub async fn post_rag_prompt(
             )
         }
     };
-    let mut generator = generator_from_model(&model, &tokenizer, top_k, temperature);
+    let mut generator = generator_from_model(&model, &tokenizer, top_k, temperature, form.rag_context.prompts.system.clone());
 
     // Build reference (one verse for now)
     let bcv = format!(
