@@ -90,6 +90,32 @@ pub fn gitea_user_remote_repos(
                             Some(s) => s.to_string(),
                             None => "".to_string(),
                         },
+                     topics: match json_record["topics"].as_array() {
+                            Some(s) => s
+                                .to_vec()
+                                .into_iter()
+                                .map(|e: Value| -> String {
+                                    e.as_str().expect("topics as str").to_string()
+                                })
+                                .collect(),
+                            None => Vec::new(),
+                        },
+                        book_codes: match json_record["ingredients"].as_array() {
+                            Some(s) => s
+                                .to_vec()
+                                .into_iter()
+                                .filter(|e| e.as_object().expect("object in ingredients filter")["exists"].as_bool().expect("exists bool"))
+                                .map(|e: Value| -> String {
+                                    e.as_object()
+                                        .expect("object in ingredients")
+                                        ["identifier"]
+                                        .as_str()
+                                        .expect("identifier to str")
+                                        .to_string()
+                                })
+                                .collect(),
+                            None => Vec::new(),
+                        },
                     });
                 }
                 ok_json_response(serde_json::to_string(&records).unwrap())

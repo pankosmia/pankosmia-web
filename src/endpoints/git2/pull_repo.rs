@@ -14,7 +14,7 @@ use rocket::{post, State};
 use serde_json::json;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
-use std::time::SystemTime;
+/*use std::time::SystemTime;*/
 
 fn fast_forward(
     repo: &Repository,

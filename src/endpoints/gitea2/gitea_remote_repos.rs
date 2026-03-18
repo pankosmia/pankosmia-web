@@ -1,9 +1,9 @@
 use crate::static_vars::NET_IS_ENABLED;
+use crate::structs::RemoteRepoRecord;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::response::{
     not_ok_json_response, not_ok_offline_json_response, ok_json_response,
 };
-use crate::structs::RemoteRepoRecord;
 use rocket::get;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
@@ -84,11 +84,37 @@ pub fn gitea_remote_repos(
                                 },
                                 _ => "".to_string(),
                             },
-                            _ => "".to_string()
+                            _ => "".to_string(),
                         },
                         metadata_types: match json_record["metadata_type"].as_str() {
                             Some(s) => s.to_string(),
                             None => "".to_string(),
+                        },
+                        topics: match json_record["topics"].as_array() {
+                            Some(s) => s
+                                .to_vec()
+                                .into_iter()
+                                .map(|e: Value| -> String {
+                                    e.as_str().expect("topics as str").to_string()
+                                })
+                                .collect(),
+                            None => Vec::new(),
+                        },
+                        book_codes: match json_record["ingredients"].as_array() {
+                            Some(s) => s
+                                .to_vec()
+                                .into_iter()
+                                .filter(|e| e.as_object().expect("object in ingredients filter")["exists"].as_bool().expect("exists bool"))
+                                .map(|e: Value| -> String {
+                                    e.as_object()
+                                        .expect("object in ingredients")
+                                        ["identifier"]
+                                        .as_str()
+                                        .expect("identifier to str")
+                                        .to_string()
+                                })
+                                .collect(),
+                            None => Vec::new(),
                         },
                     });
                 }

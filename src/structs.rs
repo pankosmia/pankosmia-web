@@ -274,6 +274,8 @@ pub struct RemoteRepoRecord {
     pub updated_at: String,
     pub latest_zip: String,
     pub metadata_types: String,
+    pub topics: Vec<String>,
+    pub book_codes: Vec<String>
 }
 
 #[derive(FromForm)]
