@@ -6,22 +6,26 @@ use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, not_ok_offline_json_response,
     ok_ok_json_response,
 };
-use git2::Repository;
+use git2::{Repository, build::RepoBuilder, FetchOptions, AutotagOption};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{post, State};
-use std::path::{Components, PathBuf};
+use std::path::{Components, PathBuf,Path};
 use std::sync::atomic::Ordering;
 
-/// *`POST /clone-repo/<repo_path>`*
+/// POST /clone-repo/<repo_path>?<branch>
 ///
-/// Typically mounted as **`/git/clone-repo/<repo_path>`**
+/// Typically mounted as /git/clone-repo/<repo_path>?<branch>
 ///
-/// Makes a local clone of a repo from the given repo path.
-#[post("/clone-repo/<repo_path..>")]
+/// Clones a repository locally from the given repo_path.
+///
+/// An optional branch query parameter can be provided to clone a specific branch.
+/// The request will fail if the specified branch does not exist on the remote.
+#[post("/clone-repo/<repo_path..>?<branch>")]
 pub async fn clone_repo(
     state: &State<AppSettings>,
     repo_path: PathBuf,
+    branch: Option<String>,
 ) -> status::Custom<(ContentType, String)> {
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
         return not_ok_offline_json_response();
@@ -54,24 +58,42 @@ pub async fn clone_repo(
             repo = short_repo_string.as_str().to_owned();
         }
         let url = "https://".to_string() + &repo_path.display().to_string().replace("\\", "/");
-        match Repository::clone(
-            &url,
-            format!(
-                "{}{}{}{}{}{}{}",
-                state.repo_dir.lock().unwrap().clone(),
-                os_slash_str(),
-                source,
-                os_slash_str(),
-                org,
-                os_slash_str(),
-                repo.as_str(),
-            ),
-        ) {
-            Ok(_repo) => ok_ok_json_response(),
-            Err(e) => not_ok_json_response(
-                Status::BadRequest,
-                make_bad_json_data_response(format!("could not clone repo: {}", e).to_string()),
-            ),
+                let local_path_str = format!(
+            "{}{}{}{}{}{}{}",
+            state.repo_dir.lock().unwrap().clone(),
+            os_slash_str(),
+            source,
+            os_slash_str(),
+            org,
+            os_slash_str(),
+            repo.as_str(),
+        );
+        let local_path = Path::new(&local_path_str);
+
+        if let Some(selected_branch) = &branch {
+            let mut fetch_opts = FetchOptions::new();
+            fetch_opts.download_tags(AutotagOption::All);
+            fetch_opts.depth(1);
+            let mut builder = RepoBuilder::new();
+            builder.fetch_options(fetch_opts);
+            builder.branch(selected_branch);
+
+
+            match builder.clone(&url, local_path) {
+                Ok(_) => ok_ok_json_response(),
+                Err(e) => not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!("could not clone branch {}: {}", selected_branch, e)),
+                ),
+            }
+        } else {
+            match Repository::clone(&url, local_path) {
+                Ok(_) => ok_ok_json_response(),
+                Err(e) => not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!("could not clone repo: {}", e)),
+                ),
+            }
         }
     } else {
         not_ok_bad_repo_json_response()
