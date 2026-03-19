@@ -100,7 +100,7 @@ pub async fn set_branch(
         &obj,
         Some(
             CheckoutBuilder::new()
-                .safe() // 👈 important
+                .safe() 
         ),
     ) {
         return not_ok_json_response(
