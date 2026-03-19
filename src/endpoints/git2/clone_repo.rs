@@ -13,11 +13,14 @@ use rocket::{post, State};
 use std::path::{Components, PathBuf,Path};
 use std::sync::atomic::Ordering;
 
-/// *`POST /clone-repo/<repo_path>?<branch>`*
+/// POST /clone-repo/<repo_path>?<branch>
 ///
-/// Typically mounted as **`/git/clone-repo/<repo_path>?<branch>`**
+/// Typically mounted as /git/clone-repo/<repo_path>?<branch>
 ///
-/// Makes a local clone of a repo from the given repo path.
+/// Clones a repository locally from the given repo_path.
+///
+/// An optional branch query parameter can be provided to clone a specific branch.
+/// The request will fail if the specified branch does not exist on the remote.
 #[post("/clone-repo/<repo_path..>?<branch>")]
 pub async fn clone_repo(
     state: &State<AppSettings>,
@@ -67,20 +70,20 @@ pub async fn clone_repo(
         );
         let local_path = Path::new(&local_path_str);
 
-        if let Some(branch) = &branch {
+        if let Some(selected_branch) = &branch {
             let mut fetch_opts = FetchOptions::new();
             fetch_opts.download_tags(AutotagOption::All);
             fetch_opts.depth(1);
             let mut builder = RepoBuilder::new();
             builder.fetch_options(fetch_opts);
-            builder.branch(branch);
+            builder.branch(selected_branch);
 
 
             match builder.clone(&url, local_path) {
                 Ok(_) => ok_ok_json_response(),
                 Err(e) => not_ok_json_response(
                     Status::BadRequest,
-                    make_bad_json_data_response(format!("could not clone branch {}: {}", branch, e)),
+                    make_bad_json_data_response(format!("could not clone branch {}: {}", selected_branch, e)),
                 ),
             }
         } else {
