@@ -8,7 +8,7 @@ use git2::{Repository, build::CheckoutBuilder, StatusOptions};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{post, State};
-use std::path::{Components, PathBuf};
+use std::path::{PathBuf};
 
 /// *`POST /branch/<branch_ref>/<repo_path>`*
 ///
