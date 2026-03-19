@@ -45,7 +45,7 @@ pub async fn set_branch(
         }
     };
 
-    // 🔴 0. PREVENT CHECKOUT IF DIRTY
+    // Prevent checkout if repo is dirty
     let mut status_opts = StatusOptions::new();
     status_opts
         .include_untracked(true)
@@ -84,7 +84,7 @@ pub async fn set_branch(
     // Full ref name (local branch)
     let branch_full = format!("refs/heads/{}", branch_ref);
 
-    // 1. Resolve branch
+    // Resolve branch
     let obj = match repo.revparse_single(&branch_full) {
         Ok(o) => o,
         Err(e) => {
@@ -95,12 +95,12 @@ pub async fn set_branch(
         }
     };
 
-    // 2. SAFE checkout (no force)
+    // Safe checkout (no force)
     if let Err(e) = repo.checkout_tree(
         &obj,
         Some(
             CheckoutBuilder::new()
-                .safe() 
+                .safe()
         ),
     ) {
         return not_ok_json_response(
@@ -109,7 +109,7 @@ pub async fn set_branch(
         );
     }
 
-    // 3. Move HEAD
+    // Move HEAD
     if let Err(e) = repo.set_head(&branch_full) {
         return not_ok_json_response(
             Status::InternalServerError,

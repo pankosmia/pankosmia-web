@@ -103,7 +103,9 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::git2::create_and_set_branch::create_and_set_branch,
                 endpoints::git2::pull_repo::pull_repo,
                 endpoints::git2::new_bcv_resource_book::new_bcv_resource_book,
-                endpoints::git2::new_tcore_resource::new_tcore_resource_repo
+                endpoints::git2::new_tcore_resource::new_tcore_resource_repo,
+                endpoints::git2::create_local_main_from_remote::create_local_main_from_remote
+
             ],
         )
         .mount(
