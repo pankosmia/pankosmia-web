@@ -116,6 +116,12 @@ pub fn gitea_user_remote_repos(
                                 .collect(),
                             None => Vec::new(),
                         },
+                        parent_clone_url: match json_record["parent"].as_object(){
+                            Some(ob1) => match ob1["html_url"].as_str() {
+                                 Some(s) => s.to_string(),
+                                    _=> "".to_string(),
+                            } _ => "".to_string(),
+                        },
                     });
                 }
                 ok_json_response(serde_json::to_string(&records).unwrap())
