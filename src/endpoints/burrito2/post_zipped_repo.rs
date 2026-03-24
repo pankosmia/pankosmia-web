@@ -121,7 +121,7 @@ pub async fn post_zipped_repo(
         }
 
         // Unpack zip
-        match unpack_zip_file(file_path, full_repo_path).await {
+        match unpack_zip_file(file_path, full_repo_path,None).await {
             Ok(_) => ok_ok_json_response(),
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,

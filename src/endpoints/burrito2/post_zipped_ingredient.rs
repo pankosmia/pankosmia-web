@@ -65,7 +65,7 @@ pub async fn post_zipped_ingredient(
         form.file.move_copy_to(&file_path).await.expect("copy zip");
 
         // Unpack zip
-        match unpack_zip_file(file_path, destination).await {
+        match unpack_zip_file(file_path, destination,None).await {
             Ok(_) => ok_ok_json_response(),
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,

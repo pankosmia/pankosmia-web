@@ -17,3 +17,4 @@ pub mod post_zipped_ingredient;
 pub mod get_zipped_ingredients;
 pub mod get_zipped_repo;
 pub mod post_zipped_repo;
+pub mod remake_burrito_from_zip;

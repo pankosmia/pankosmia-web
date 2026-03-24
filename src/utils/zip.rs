@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::path::PathBuf;
 use tempfile::NamedTempFile;
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
@@ -44,7 +45,7 @@ pub fn make_zip_file(path_to_zip: &String) -> NamedTempFile {
 }
 
 /// Unpack the zip archive at the specified path to the specified destination. The destination directory's parent must exist.
-pub async fn unpack_zip_file(archive_path: NamedTempFile, destination: String) -> Result<(), std::io::Error> {
+pub async fn unpack_zip_file(archive_path: NamedTempFile, destination: String,only_depth: Option<usize>) -> Result<(), std::io::Error> {
     // Make zip struct
     let zip_file = File::open(archive_path).expect("open zip archive file");
     let mut archive = ZipArchive::new(zip_file)?;
@@ -58,11 +59,24 @@ pub async fn unpack_zip_file(archive_path: NamedTempFile, destination: String) -
         if !file.is_file() {
             continue;
         }
+        let components: Vec<_> = out_path.components().collect();
+        let trimmed_path = match only_depth {
+            Some(depth) => {
+                if components.len() < depth {
+                    continue; // skip files shallower than requested depth
+                }
+                components.iter().skip(depth).fold(PathBuf::new(), |mut acc, c| {
+                    acc.push(c.as_os_str());
+                    acc
+                })
+            }
+            None => out_path.clone(), // keep full path
+        };
         let full_out_path = format!(
             "{}{}{}",
             destination,
             os_slash_str(),
-            out_path.display()
+            trimmed_path.display().to_string()
         );
         let out_path_parent = std::path::Path::new(&full_out_path).parent().expect("parent");
         if !out_path_parent.exists() {

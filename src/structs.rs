@@ -275,8 +275,10 @@ pub struct RemoteRepoRecord {
     pub latest_zip: String,
     pub metadata_types: String,
     pub topics: Vec<String>,
-    pub book_codes: Vec<String>
+    pub book_codes: Vec<String>,
+    pub parent_clone_url: String
 }
+
 
 #[derive(FromForm)]
 pub struct Upload<'f> {
