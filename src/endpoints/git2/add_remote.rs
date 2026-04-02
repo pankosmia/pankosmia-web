@@ -15,7 +15,7 @@ use regex::Regex;
 ///
 /// Typically mounted as **`/git/remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`**
 ///
-/// Adds a remote to the given repo path.
+/// Adds a remote to the given repo path. **Do not add .git at the end of the remote url!**
 #[post("/remote/add/<repo_path..>?<remote_name>&<remote_url>")]
 pub async fn add_remote_to_repo(
     state: &State<AppSettings>,

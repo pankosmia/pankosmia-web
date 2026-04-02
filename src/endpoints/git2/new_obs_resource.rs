@@ -90,7 +90,7 @@ pub fn new_obs_resource_repo(
         }
     }
     // Init repo
-    let final_new_branch_name = json_form.branch_name.clone().unwrap_or("master".to_string());
+    let final_new_branch_name = json_form.branch_name.clone().unwrap_or("main".to_string());
     let mut repo_options = RepositoryInitOptions::new();
     let repo_options2 = repo_options.initial_head(final_new_branch_name.as_str());
     let new_repo = match Repository::init_opts(&path_to_new_repo, &repo_options2) {
