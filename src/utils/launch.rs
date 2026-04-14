@@ -115,7 +115,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::content_utils2::list_content_template_filenames::list_content_template_filenames,
                 endpoints::content_utils2::content_template::content_template,
                 endpoints::content_utils2::list_versifications::list_versifications,
-                endpoints::content_utils2::versification::versification
+                endpoints::content_utils2::versification::versification,
+                endpoints::content_utils2::product_content::product_content_catalog,
             ]
         )
         .mount(
