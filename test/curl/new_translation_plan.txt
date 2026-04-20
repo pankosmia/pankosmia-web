@@ -1,0 +1,1 @@
+curl -X "POST"  --header "Content-Type: application/json"  --data '@new_translation_plan_payload.json' "localhost:19119/git/new-translation-plan-resource"
