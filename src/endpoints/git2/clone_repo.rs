@@ -6,11 +6,11 @@ use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, not_ok_offline_json_response,
     ok_ok_json_response,
 };
-use git2::{Repository, build::RepoBuilder, FetchOptions, AutotagOption};
+use git2::{build::RepoBuilder, AutotagOption, FetchOptions, Repository};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{post, State};
-use std::path::{Components, PathBuf,Path};
+use std::path::{Components, Path, PathBuf};
 use std::sync::atomic::Ordering;
 
 /// POST /clone-repo/<repo_path>?<branch>
@@ -58,7 +58,7 @@ pub async fn clone_repo(
             repo = short_repo_string.as_str().to_owned();
         }
         let url = "https://".to_string() + &repo_path.display().to_string().replace("\\", "/");
-                let local_path_str = format!(
+        let local_path_str = format!(
             "{}{}{}{}{}{}{}",
             state.repo_dir.lock().unwrap().clone(),
             os_slash_str(),
@@ -78,17 +78,47 @@ pub async fn clone_repo(
             builder.fetch_options(fetch_opts);
             builder.branch(selected_branch);
 
-
             match builder.clone(&url, local_path) {
-                Ok(_) => ok_ok_json_response(),
+                Ok(new_repo) => {
+                    // Set up local user info
+                    let mut config = new_repo.config().unwrap();
+                    config
+                        .set_str("user.name", whoami::username().as_str())
+                        .unwrap();
+                    config
+                        .set_str(
+                            "user.email",
+                            format!("{}@localhost", whoami::username().as_str()).as_str(),
+                        )
+                        .unwrap();
+
+                    ok_ok_json_response()
+                }
                 Err(e) => not_ok_json_response(
                     Status::BadRequest,
-                    make_bad_json_data_response(format!("could not clone branch {}: {}", selected_branch, e)),
+                    make_bad_json_data_response(format!(
+                        "could not clone branch {}: {}",
+                        selected_branch, e
+                    )),
                 ),
             }
         } else {
             match Repository::clone(&url, local_path) {
-                Ok(_) => ok_ok_json_response(),
+                Ok(new_repo) => {
+                    // Set up local user info
+                    let mut config = new_repo.config().unwrap();
+                    config
+                        .set_str("user.name", whoami::username().as_str())
+                        .unwrap();
+                    config
+                        .set_str(
+                            "user.email",
+                            format!("{}@localhost", whoami::username().as_str()).as_str(),
+                        )
+                        .unwrap();
+
+                    ok_ok_json_response()
+                }
                 Err(e) => not_ok_json_response(
                     Status::BadRequest,
                     make_bad_json_data_response(format!("could not clone repo: {}", e)),
