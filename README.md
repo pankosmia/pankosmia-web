@@ -1,5 +1,12 @@
-# pankosmia_web
-A web server for pankosmia desktop applications
+# se-wiki
+
+Multi-tenant web server for collaborative scripture/translation projects.
+
+> Forked from [pankosmia/pankosmia-web](https://github.com/pankosmia/pankosmia-web).
+> See [LICENSE](./LICENSE) for original copyright. The fork diverges architecturally
+> (Supabase-backed auth, per-project isolation, Docker deployment) and does not
+> intend to send changes back upstream — upstream improvements may be cherry-picked
+> in selectively.
 
 ## Running in isolation
 ```
