@@ -1,19 +1,18 @@
 [package]
-name = "pankosmia_web"
-description = "A web server for pankosmia desktop applications"
-version = "0.14.12"
+name = "se_wiki_server"
+description = "Multi-tenant web server for collaborative scripture/translation projects, forked from pankosmia-web"
+version = "0.1.0"
 edition = "2021"
 license = "MIT"
-homepage = "https://xenizo.fr"
-repository = "https://github.com/pankosmia/pankosmia-web"
-readme = "Crate_README.md"
+repository = "https://github.com/larsgson/se-wiki"
+readme = "README.md"
 
 exclude = [
     "webfonts/*"
 ]
 
 [lib]
-name = "pankosmia_web"
+name = "se_wiki_server"
 crate-type = [
     "lib"
 ]
