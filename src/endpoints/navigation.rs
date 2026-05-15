@@ -11,7 +11,7 @@ use rocket::{get, post, State};
 ///
 /// Returns an object containing global BCV information
 ///
-/// `{"book_code":"TIT","chapter":1,"verse":1}`
+/// `{"book_code":"TIT","chapter":1,"verse":1, "to_verse": 1}`
 #[get("/bcv")]
 pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let bcv = state.bcv.lock().unwrap().clone();
@@ -24,9 +24,9 @@ pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, Strin
     }
 }
 
-/// *`POST /bcv/<book_code>/<chapter>/<verse>`*
+/// *`POST /bcv/<book_code>/<chapter>/<verse>[/<to_verse>]`*
 ///
-/// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>`**
+/// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>[/<to_verse>]`**
 ///
 /// Sets global BCV.
 #[post("/bcv/<book_code>/<chapter>/<verse>/<to_verse>")]
