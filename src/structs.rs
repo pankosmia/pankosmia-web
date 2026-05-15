@@ -25,6 +25,7 @@ pub struct Bcv {
     pub book_code: String,
     pub chapter: u16,
     pub verse: u16,
+    pub to_verse: u16
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

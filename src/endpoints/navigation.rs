@@ -29,17 +29,19 @@ pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, Strin
 /// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>`**
 ///
 /// Sets global BCV.
-#[post("/bcv/<book_code>/<chapter>/<verse>")]
+#[post("/bcv/<book_code>/<chapter>/<verse>/<to_verse>")]
 pub fn post_bcv(
     state: &State<AppSettings>,
     book_code: &str,
     chapter: u16,
     verse: u16,
+    to_verse: Option<u16>
 ) -> status::Custom<(ContentType, String)> {
     *state.bcv.lock().unwrap() = Bcv {
         book_code: book_code.to_string(),
         chapter,
-        verse,
+        verse: verse,
+        to_verse: to_verse.unwrap_or(verse)
     };
     ok_ok_json_response()
 }
