@@ -211,7 +211,8 @@ pub(crate) fn add_app_settings(
             _ => serde_json::from_value(json!({
             "book_code": "TIT",
             "chapter": 1,
-            "verse": 1
+            "verse": 1,
+            "to_verse": 1
             }))
             .unwrap(),
         },
