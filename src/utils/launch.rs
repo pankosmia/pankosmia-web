@@ -65,7 +65,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         )
         .mount("/navigation", routes![
             endpoints::navigation::get_bcv,
-            endpoints::navigation::post_bcv
+            endpoints::navigation::post_bcv,
+            endpoints::navigation::post_bcv_range
         ])
         .mount("/app-state", routes![
             endpoints::app_state::get_current_project,

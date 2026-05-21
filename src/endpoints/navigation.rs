@@ -28,20 +28,41 @@ pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, Strin
 ///
 /// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>[/<to_verse>]`**
 ///
-/// Sets global BCV.
+/// Sets global BCV with verse range.
 #[post("/bcv/<book_code>/<chapter>/<verse>/<to_verse>")]
-pub fn post_bcv(
+pub fn post_bcv_range(
     state: &State<AppSettings>,
     book_code: &str,
     chapter: u16,
     verse: u16,
-    to_verse: Option<u16>
+    to_verse: u16
 ) -> status::Custom<(ContentType, String)> {
     *state.bcv.lock().unwrap() = Bcv {
         book_code: book_code.to_string(),
         chapter,
         verse: verse,
-        to_verse: to_verse.unwrap_or(verse)
+        to_verse: to_verse
+    };
+    ok_ok_json_response()
+}
+
+/// *`POST /bcv/<book_code>/<chapter>/<verse>`*
+///
+/// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>`**
+///
+/// Sets global BCV without verse range.
+#[post("/bcv/<book_code>/<chapter>/<verse>")]
+pub fn post_bcv(
+    state: &State<AppSettings>,
+    book_code: &str,
+    chapter: u16,
+    verse: u16
+) -> status::Custom<(ContentType, String)> {
+    *state.bcv.lock().unwrap() = Bcv {
+        book_code: book_code.to_string(),
+        chapter,
+        verse: verse,
+        to_verse: verse
     };
     ok_ok_json_response()
 }
