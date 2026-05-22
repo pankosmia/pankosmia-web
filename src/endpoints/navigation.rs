@@ -1,6 +1,7 @@
 use crate::structs::{AppSettings, Bcv};
 use crate::utils::json_responses::{make_bad_json_data_response};
 use crate::utils::response::{not_ok_json_response, ok_json_response, ok_ok_json_response};
+use crate::utils::files::write_app_state;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, post, State};
@@ -37,12 +38,22 @@ pub fn post_bcv_range(
     verse: u16,
     to_verse: u16
 ) -> status::Custom<(ContentType, String)> {
-    *state.bcv.lock().unwrap() = Bcv {
+    let new_bcv = Bcv {
         book_code: book_code.to_string(),
         chapter,
         verse: verse,
         to_verse: to_verse
     };
+    match write_app_state(state, new_bcv.clone()) {
+        Ok(_) => {},
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!("Could not write app state: '{}'", &e)),
+            )
+        }
+    }
+    *state.bcv.lock().unwrap() = new_bcv;
     ok_ok_json_response()
 }
 
@@ -58,11 +69,21 @@ pub fn post_bcv(
     chapter: u16,
     verse: u16
 ) -> status::Custom<(ContentType, String)> {
-    *state.bcv.lock().unwrap() = Bcv {
+        let new_bcv = Bcv {
         book_code: book_code.to_string(),
         chapter,
         verse: verse,
         to_verse: verse
     };
+    match write_app_state(state, new_bcv.clone()) {
+        Ok(_) => {},
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!("Could not write app state: '{}'", &e)),
+            )
+        }
+    }
+    *state.bcv.lock().unwrap() = new_bcv;
     ok_ok_json_response()
 }

@@ -53,10 +53,10 @@ pub async fn notifications_stream<'a>(
             .id(format!("{}", count));
             count+=1;
             let new_bcv = state.bcv.lock().unwrap().clone();
-            if bcv.book_code != new_bcv.book_code || bcv.chapter != new_bcv.chapter || bcv.verse != new_bcv.verse || first_time  {
+            if bcv.book_code != new_bcv.book_code || bcv.chapter != new_bcv.chapter || bcv.verse != new_bcv.verse || bcv.to_verse != new_bcv.to_verse || first_time  {
                 bcv = new_bcv;
                 yield stream::Event::data(
-                    format!("{}--{}--{}", bcv.book_code, bcv.chapter, bcv.verse)
+                    format!("{}--{}--{}--{}", bcv.book_code, bcv.chapter, bcv.verse, bcv.to_verse)
                 )
                 .event("bcv")
                 .id(format!("{}", count));

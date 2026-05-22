@@ -176,6 +176,12 @@ pub(crate) fn add_app_settings(
     product_json: &Value,
     client_config: BTreeMap<String, Vec<ClientConfigSection>>
 ) -> Rocket<Build> {
+    let default_bcv_json = json!({
+            "book_code": "TIT",
+            "chapter": 1,
+            "verse": 1,
+            "to_verse": 1
+            });
     rocket_instance.manage(AppSettings {
         repo_dir: Mutex::new(repo_dir_path.clone()),
         app_resources_dir: app_resources_dir_path.clone(),
@@ -208,13 +214,12 @@ pub(crate) fn add_app_settings(
             }
         },
         bcv: match app_state_json["bcv"].clone() {
-            Value::Object(v) => serde_json::from_value(Value::Object(v)).unwrap(),
-            _ => serde_json::from_value(json!({
-            "book_code": "TIT",
-            "chapter": 1,
-            "verse": 1,
-            "to_verse": 1
-            }))
+            Value::Object(v) => match serde_json::from_value(Value::Object(v)) {
+                Ok(fv) => fv,
+                Err(_) => serde_json::from_value(default_bcv_json)
+            .unwrap()
+            },
+            _ => serde_json::from_value(default_bcv_json)
             .unwrap(),
         },
         current_project: match app_state_json["current_project"].clone() {

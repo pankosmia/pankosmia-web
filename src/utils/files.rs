@@ -3,8 +3,8 @@ use std::io::{Write};
 use std::fs;
 use std::path::Path;
 use rocket::State;
-use crate::utils::paths::{home_dir_string, maybe_os_quoted_path_str, os_slash_str, user_settings_path};
-use crate::structs::{PankosmiaError, AppSettings, UserSettings, TypographyFeature};
+use crate::utils::paths::{home_dir_string, maybe_os_quoted_path_str, os_slash_str, user_settings_path, app_state_path};
+use crate::structs::{PankosmiaError, AppSettings, UserSettings, TypographyFeature, Bcv};
 use crate::utils::client::Clients;
 
 pub(crate) fn customize_and_copy_template_file(from_path: &str, to_path: &String, working_dir: &String, app_resources_dir: &String, pankosmia_dir: &String) -> Result<(), std::io::Error> {
@@ -44,6 +44,14 @@ pub(crate) fn write_user_settings(state: &State<AppSettings>, clients: &State<Cl
     let to_path = user_settings_path(&working_dir);
     let file_handle = fs::File::create(&to_path)?;
     serde_json::to_writer_pretty(file_handle, &user_record)?;
+    Ok(())
+}
+
+pub(crate) fn write_app_state(state: &State<AppSettings>, new_bcv: Bcv) -> Result<(), std::io::Error> {
+    let working_dir = state.working_dir.clone();
+    let to_path = app_state_path(&working_dir);
+    let file_handle = fs::File::create(&to_path)?;
+    serde_json::to_writer_pretty(file_handle, &new_bcv)?;
     Ok(())
 }
 
