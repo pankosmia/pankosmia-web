@@ -19,20 +19,28 @@ use serde_json::json;
 /// Creates a new, local x-translationplan* repo. It requires the following fields as a JSON body:
 /// - content_name (string)
 /// - content_abbr (string)
+/// - copyright (string)
 /// - content_language_code
-/// - versification (string)
+/// - versification (null or string)
+/// - branch_name(null or string)
+/// - plan (null or string)
 
 #[derive(FromForm, Deserialize)]
 pub struct NewTranslationPlanContentForm {
     pub content_name: String,
     pub content_abbr: String,
+    pub copyright: String,
     pub content_language_code: String,
     pub versification: Option<String>,
-    pub branch_name: Option<String>
+    pub branch_name: Option<String>,
+    pub plan: Option<String>,
 }
 
 #[post(
-    "/new-translation-plan-resource", format = "json", data = "<json_form>")]
+    "/new-translation-plan-resource",
+    format = "json",
+    data = "<json_form>"
+)]
 pub fn new_translation_plan_resource_repo(
     state: &State<AppSettings>,
     json_form: Json<NewTranslationPlanContentForm>,
@@ -49,9 +57,7 @@ pub fn new_translation_plan_resource_repo(
     if !std::path::Path::new(&path_to_template).is_file() {
         return not_ok_json_response(
             Status::BadRequest,
-            make_bad_json_data_response(format!(
-                "Metadata template not found"
-            )),
+            make_bad_json_data_response(format!("Metadata template not found")),
         );
     }
     // Build path for new repo and parent
@@ -160,6 +166,69 @@ pub fn new_translation_plan_resource_repo(
         }
     }
 
+    // Copy supplied or default plan
+    let path_to_repo_plan = format!(
+        "{}{}ingredients{}plan.json",
+        path_to_new_repo,
+        os_slash_str(),
+        os_slash_str()
+    );
+    match json_form.plan.clone() {
+        Some(p) => match std::fs::write(path_to_repo_plan, &p) {
+            Ok(_) => (),
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(format!(
+                        "Could not write supplied plan to repo: {}",
+                        e
+                    )),
+                )
+            }
+        },
+        None => {
+            let path_to_plan_template = format!(
+                "{}{}templates{}content_templates{}x-translationplan{}plan.json",
+                &state.app_resources_dir,
+                os_slash_str(),
+                os_slash_str(),
+                os_slash_str(),
+                os_slash_str(),
+            );
+            let mut plan_template_string = match std::fs::read_to_string(&path_to_plan_template) {
+                Ok(v) => v,
+                Err(e) => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not load translation plan template as string: {}",
+                            e
+                        )),
+                    )
+                }
+            };
+            plan_template_string = plan_template_string
+                .replace("%%CONTENTNAME%%", json_form.content_name.as_str())
+                .replace("%%CONTENTDESCRIPTION%%", json_form.content_name.as_str())
+                .replace("%%COPYRIGHT%%", json_form.copyright.as_str())
+                .replace("%%CONTENTABBR%%", json_form.content_abbr.as_str())
+                .replace("%%CONTENTVERSIFICATION%%", json_form.versification.clone().unwrap_or("org".to_string()).as_str())
+                .replace("%%VERSION%%", "0.0.1");
+            match std::fs::write(path_to_repo_plan, &plan_template_string) {
+                Ok(_) => (),
+                Err(e) => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not write translation plan template to repo: {}",
+                            e
+                        )),
+                    )
+                }
+            }
+        }
+    }
+
     // Read language lookup
     let path_to_language_lookup = format!(
         "{}{}app_resources{}lookups{}bcp47-language_codes.json",
@@ -217,6 +286,7 @@ pub fn new_translation_plan_resource_repo(
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
+        .replace("%%COPYRIGHT%%", json_form.copyright.as_str())
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str())
         .replace(
             "%%LANGUAGE%%",

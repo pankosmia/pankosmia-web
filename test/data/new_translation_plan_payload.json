@@ -1,6 +1,8 @@
 {
   "content_name": "My Translation Plan",
-  "content_abbr": "MTRPL",
+  "content_abbr": "MTRPLN",
   "content_language_code": "fr",
-  "versification": "org"
+  "versification": "org",
+  "copyright": "© Toto 1901",
+  "plan": "{}"
 }
