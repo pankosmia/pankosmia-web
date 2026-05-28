@@ -10,7 +10,8 @@ use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::serde::Deserialize;
 use rocket::{post, FromForm, State};
-use serde_json::json;
+use serde_json;
+use serde_json::{json, Value};
 
 /// *`POST /new-translation-plan-resource`*
 ///
@@ -166,26 +167,65 @@ pub fn new_translation_plan_resource_repo(
         }
     }
 
-    // Copy supplied or default plan
+    // Use default plan template or make supplied plan into a template
     let path_to_repo_plan = format!(
         "{}{}ingredients{}plan.json",
         path_to_new_repo,
         os_slash_str(),
         os_slash_str()
     );
-    match json_form.plan.clone() {
-        Some(p) => match std::fs::write(path_to_repo_plan, &p) {
-            Ok(_) => (),
-            Err(e) => {
-                return not_ok_json_response(
-                    Status::InternalServerError,
-                    make_bad_json_data_response(format!(
-                        "Could not write supplied plan to repo: {}",
-                        e
-                    )),
-                )
-            }
-        },
+    let mut plan_template_string = match json_form.plan.clone() {
+        Some(p) => {
+            let plan_value: Value = match serde_json::from_str(&p) {
+                Ok(pv) => pv,
+                Err(e) => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(format!(
+                            "Could not read supplied plan as JSON: {}",
+                            e
+                        )),
+                    )
+                }
+            };
+            let mut plan_value_object: serde_json::Map<String, Value> = match plan_value.as_object()
+            {
+                Some(pvo) => pvo.clone(),
+                None => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(
+                            "Could not treat supplied plan as map".to_string(),
+                        ),
+                    )
+                }
+            };
+            plan_value_object.insert(
+                "name".to_string(),
+                Value::String("%%CONTENTNAME%%".to_string()),
+            );
+            plan_value_object.insert(
+                "description".to_string(),
+                Value::String("%%CONTENTDESCRIPTION%%".to_string()),
+            );
+            plan_value_object.insert(
+                "copyright".to_string(),
+                Value::String("%%COPYRIGHT%%".to_string()),
+            );
+            plan_value_object.insert(
+                "short_name".to_string(),
+                Value::String("%%CONTENTABBR%%".to_string()),
+            );
+            plan_value_object.insert(
+                "versification".to_string(),
+                Value::String("%%CONTENTVERSIFICATION%%".to_string()),
+            );
+            plan_value_object.insert(
+                "version".to_string(),
+                Value::String("%%VERSION%%".to_string()),
+            );
+            serde_json::to_string(&plan_value_object).expect("plan map to string")
+        }
         None => {
             let path_to_plan_template = format!(
                 "{}{}templates{}content_templates{}x-translationplan{}plan.json",
@@ -195,7 +235,7 @@ pub fn new_translation_plan_resource_repo(
                 os_slash_str(),
                 os_slash_str(),
             );
-            let mut plan_template_string = match std::fs::read_to_string(&path_to_plan_template) {
+            match std::fs::read_to_string(&path_to_plan_template) {
                 Ok(v) => v,
                 Err(e) => {
                     return not_ok_json_response(
@@ -206,26 +246,34 @@ pub fn new_translation_plan_resource_repo(
                         )),
                     )
                 }
-            };
-            plan_template_string = plan_template_string
-                .replace("%%CONTENTNAME%%", json_form.content_name.as_str())
-                .replace("%%CONTENTDESCRIPTION%%", json_form.content_name.as_str())
-                .replace("%%COPYRIGHT%%", json_form.copyright.as_str())
-                .replace("%%CONTENTABBR%%", json_form.content_abbr.as_str())
-                .replace("%%CONTENTVERSIFICATION%%", json_form.versification.clone().unwrap_or("org".to_string()).as_str())
-                .replace("%%VERSION%%", "0.0.1");
-            match std::fs::write(path_to_repo_plan, &plan_template_string) {
-                Ok(_) => (),
-                Err(e) => {
-                    return not_ok_json_response(
-                        Status::InternalServerError,
-                        make_bad_json_data_response(format!(
-                            "Could not write translation plan template to repo: {}",
-                            e
-                        )),
-                    )
-                }
             }
+        }
+    };
+    // Substitute into plan template
+    plan_template_string = plan_template_string
+        .replace("%%CONTENTNAME%%", json_form.content_name.as_str())
+        .replace("%%CONTENTDESCRIPTION%%", json_form.content_name.as_str())
+        .replace("%%COPYRIGHT%%", json_form.copyright.as_str())
+        .replace("%%CONTENTABBR%%", json_form.content_abbr.as_str())
+        .replace(
+            "%%CONTENTVERSIFICATION%%",
+            json_form
+                .versification
+                .clone()
+                .unwrap_or("org".to_string())
+                .as_str(),
+        )
+        .replace("%%VERSION%%", "0.0.1");
+    match std::fs::write(path_to_repo_plan, &plan_template_string) {
+        Ok(_) => (),
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "Could not write translation plan template to repo: {}",
+                    e
+                )),
+            )
         }
     }
 
