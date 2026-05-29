@@ -10,7 +10,7 @@ use std::sync::Mutex;
 pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
     rocket_instance
         .mount(
-            "/",
+            "/api",
             routes![
                 endpoints::clients::redirect_root,
                 endpoints::clients::serve_root_favicon,
@@ -20,11 +20,11 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::clients::client_config
             ],
         )
-        .mount("/notifications", routes![
+        .mount("/api/notifications", routes![
             endpoints::sse::notifications_stream
         ])
         .mount(
-            "/settings",
+            "/api/settings",
             routes![
                 endpoints::settings2::get_languages::get_languages,
                 endpoints::settings2::post_languages::post_languages,
@@ -34,26 +34,26 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::settings2::post_typography_feature::post_typography_feature,
             ],
         )
-        .mount("/net", routes![
+        .mount("/api/net", routes![
             endpoints::atomics::net::net_status,
             endpoints::atomics::net::net_enable,
             endpoints::atomics::net::net_disable
         ])
-        .mount("/debug", routes![
+        .mount("/api/debug", routes![
             endpoints::atomics::debug::debug_status,
             endpoints::atomics::debug::debug_enable,
             endpoints::atomics::debug::debug_disable
         ])
-        .mount("/temp", routes![
+        .mount("/api/temp", routes![
             endpoints::temp_file::read_temp_file::read_temp_file,
             endpoints::temp_file::write_temp_file::write_temp_file
         ])
-        .mount("/llm", routes![
+        .mount("/api/llm", routes![
             endpoints::llm::list_llm_models::list_llm_models,
             endpoints::llm::post_rag_prompt::post_rag_prompt
         ])
         .mount(
-            "/i18n",
+            "/api/i18n",
             routes![
                 endpoints::i18n2::post_i18n::post_i18n,
                 endpoints::i18n2::raw_i18n::raw_i18n,
@@ -63,17 +63,17 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::i18n2::used_languages::used_languages
             ],
         )
-        .mount("/navigation", routes![
+        .mount("/api/navigation", routes![
             endpoints::navigation::get_bcv,
             endpoints::navigation::post_bcv,
             endpoints::navigation::post_bcv_range
         ])
-        .mount("/app-state", routes![
+        .mount("/api/app-state", routes![
             endpoints::app_state::get_current_project,
             endpoints::app_state::post_current_project,
             endpoints::app_state::post_empty_current_project,
         ])
-        .mount("/gitea", routes![
+        .mount("/api/gitea", routes![
             endpoints::gitea2::gitea_remote_repos::gitea_remote_repos,
             endpoints::gitea2::gitea_user_remote_repos::gitea_user_remote_repos,
             endpoints::gitea2::get_gitea_endpoints::get_gitea_endpoints,
@@ -82,7 +82,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::gitea2::get_my_collaborators::get_my_collaborators,
         ])
         .mount(
-            "/git",
+            "/api/git",
             routes![
                 endpoints::git2::new_text_translation::new_text_translation_repo,
                 endpoints::git2::new_bcv_resource::new_bcv_resource_repo,
@@ -110,7 +110,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             ],
         )
         .mount(
-            "/content-utils",
+            "/api/content-utils",
             routes![
                 endpoints::content_utils2::list_content_templates::list_content_templates,
                 endpoints::content_utils2::content_metadata_template::content_metadata_template,
@@ -122,7 +122,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             ]
         )
         .mount(
-            "/burrito",
+            "/api/burrito",
             routes![
                 endpoints::burrito2::raw_text_ingredient::raw_text_ingredient,
                 endpoints::burrito2::raw_text_ingredients::raw_text_ingredients,
@@ -148,7 +148,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             ],
         )
     .mount(
-        "/video",
+        "/api/video",
         routes![
             endpoints::video::obs_para::obs_para_video,
             endpoints::video::obs_story::obs_story_video
@@ -247,9 +247,9 @@ pub(crate) fn add_static_routes(
     webfonts_dir_path: &String,
 ) -> Rocket<Build> {
     let mut my_rocket =
-        rocket_instance.mount("/webfonts", FileServer::from(webfonts_dir_path.clone()));
+        rocket_instance.mount("/api/webfonts", FileServer::from(webfonts_dir_path.clone()));
     let app_resources_path = source_app_resources_path(&app_resources_path);
-    my_rocket = my_rocket.mount("/app-resources", FileServer::from(app_resources_path));
+    my_rocket = my_rocket.mount("/api/app-resources", FileServer::from(app_resources_path));
     for client_record in client_vec {
         my_rocket = my_rocket.mount(
             client_record.url.clone(),
