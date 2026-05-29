@@ -9,10 +9,16 @@ use std::sync::Mutex;
 
 pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
     rocket_instance
+    .mount(
+        "/",
+        routes![
+                endpoints::clients::redirect_root,
+
+        ]
+    )
         .mount(
             "/api",
             routes![
-                endpoints::clients::redirect_root,
                 endpoints::clients::serve_root_favicon,
                 endpoints::clients::list_clients,
                 endpoints::clients::client_interfaces,
