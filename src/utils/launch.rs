@@ -91,6 +91,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             "/api/git",
             routes![
                 endpoints::git2::new_text_translation::new_text_translation_repo,
+                endpoints::git2::new_audio_translation::new_audio_translation_repo,
                 endpoints::git2::new_bcv_resource::new_bcv_resource_repo,
                 endpoints::git2::new_obs_resource::new_obs_resource_repo,
                 endpoints::git2::clone_repo::clone_repo,
