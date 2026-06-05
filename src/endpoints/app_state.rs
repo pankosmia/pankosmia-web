@@ -45,7 +45,11 @@ pub fn post_current_project(
     let new_state_json = json!(
         {
             "bcv": state.bcv.lock().unwrap().clone(),
-            "current_project": project
+            "current_project": {
+                "source": source,
+                "organization": organization,
+                "project": project
+            }
         }
     );
     match write_app_state(state, new_state_json) {
