@@ -1,10 +1,11 @@
 use crate::structs::{AppSettings, Bcv};
-use crate::utils::json_responses::{make_bad_json_data_response};
-use crate::utils::response::{not_ok_json_response, ok_json_response, ok_ok_json_response};
 use crate::utils::files::write_app_state;
+use crate::utils::json_responses::make_bad_json_data_response;
+use crate::utils::response::{not_ok_json_response, ok_json_response, ok_ok_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, post, State};
+use serde_json::json;
 
 /// *`GET /bcv`*
 ///
@@ -36,16 +37,22 @@ pub fn post_bcv_range(
     book_code: &str,
     chapter: u16,
     verse: u16,
-    to_verse: u16
+    to_verse: u16,
 ) -> status::Custom<(ContentType, String)> {
     let new_bcv = Bcv {
         book_code: book_code.to_string(),
         chapter,
         verse: verse,
-        to_verse: to_verse
+        to_verse: to_verse,
     };
-    match write_app_state(state, new_bcv.clone()) {
-        Ok(_) => {},
+    let new_state_json = json!(
+        {
+            "bcv": new_bcv.clone(),
+            "current_project": state.current_project.lock().unwrap().clone()
+        }
+    );
+    match write_app_state(state, new_state_json) {
+        Ok(_) => {}
         Err(e) => {
             return not_ok_json_response(
                 Status::InternalServerError,
@@ -67,16 +74,22 @@ pub fn post_bcv(
     state: &State<AppSettings>,
     book_code: &str,
     chapter: u16,
-    verse: u16
+    verse: u16,
 ) -> status::Custom<(ContentType, String)> {
-        let new_bcv = Bcv {
+    let new_bcv = Bcv {
         book_code: book_code.to_string(),
         chapter,
         verse: verse,
-        to_verse: verse
+        to_verse: verse,
     };
-    match write_app_state(state, new_bcv.clone()) {
-        Ok(_) => {},
+    let new_state_json = json!(
+        {
+            "bcv": new_bcv.clone(),
+            "current_project": state.current_project.lock().unwrap().clone()
+        }
+    );
+    match write_app_state(state, new_state_json) {
+        Ok(_) => {}
         Err(e) => {
             return not_ok_json_response(
                 Status::InternalServerError,

@@ -1,8 +1,12 @@
 use crate::structs::{AppSettings, ProjectIdentifier};
-use crate::utils::response::{ok_json_response, ok_ok_json_response};
+use crate::utils::response::{ok_json_response, ok_ok_json_response, not_ok_json_response};
+use crate::utils::json_responses::make_bad_json_data_response;
+use crate::utils::files::write_app_state;
 use rocket::http::ContentType;
 use rocket::response::status;
+use rocket::http::Status;
 use rocket::{get, post, State};
+use serde_json::json;
 
 /// *`GET /current-project`*
 ///
@@ -38,7 +42,21 @@ pub fn post_current_project(
     organization: &str,
     project: &str,
 ) -> status::Custom<(ContentType, String)> {
-    let mut current_project_inner = state.current_project.lock().unwrap();
+    let new_state_json = json!(
+        {
+            "bcv": state.bcv.lock().unwrap().clone(),
+            "current_project": project
+        }
+    );
+    match write_app_state(state, new_state_json) {
+        Ok(_) => {}
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!("Could not write app state: '{}'", &e)),
+            )
+        }
+    }    let mut current_project_inner = state.current_project.lock().unwrap();
     *current_project_inner = Some(ProjectIdentifier {
         source: source.to_string(),
         organization: organization.to_string(),
