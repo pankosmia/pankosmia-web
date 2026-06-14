@@ -21,7 +21,10 @@ pub(crate) fn customize_and_copy_template_file(from_path: &str, to_path: &String
 }
 
 pub(crate) fn load_json(from_path: &str) -> Result<Value, std::io::Error> {
-    let json_string = fs::read_to_string(&from_path)?;
+    let json_string = match fs::read_to_string(&from_path) {
+        Ok(s) => s,
+        Err(e) => return Err(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Could not load JSON from '{}': {}", from_path, e)))
+    };
     Ok(serde_json::from_str(json_string.as_str())?)
 }
 

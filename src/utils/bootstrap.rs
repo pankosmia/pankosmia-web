@@ -163,19 +163,19 @@ pub(crate) fn copy_and_customize_webfonts(template_path: &String, target_path: &
 
 pub(crate) fn merged_clients(app_setup_json: &Value, user_settings_json: &Value) -> Vec<Value> {
     let mut client_records_merged_array: Vec<Value> = Vec::new();
-    let app_client_records = app_setup_json["clients"].as_array().unwrap();
+    let app_client_records = app_setup_json["clients"].as_array().expect("app client record");
     for app_client_record in app_client_records.iter() {
         let mut record2 = app_client_record.clone();
-        let mut_record = record2.as_object_mut().unwrap();
+        let mut_record = record2.as_object_mut().expect("app client record as object");
         let src_key = "src".to_string();
         let src_value = Value::from("App");
         mut_record.insert(src_key, src_value);
         client_records_merged_array.push(Value::Object(mut_record.clone()));
     }
-    let my_client_records = user_settings_json["my_clients"].as_array().unwrap();
+    let my_client_records = user_settings_json["my_clients"].as_array().expect("myclient records as array");
     for my_client_record in my_client_records.iter() {
         let mut record2 = my_client_record.clone();
-        let mut_record = record2.as_object_mut().unwrap();
+        let mut_record = record2.as_object_mut().expect("my client record as object");
         let src_key = "src".to_string();
         let src_value = Value::from("User");
         mut_record.insert(src_key, src_value);
@@ -252,7 +252,7 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
     if min_server_version.is_some() || max_server_version.is_some() {
         let crate_version = make_version(env!("CARGO_PKG_VERSION"));
         if min_server_version.is_some() {
-            let min_version = make_version(min_server_version.unwrap());
+            let min_version = make_version(min_server_version.expect("min version"));
             if compare_versions(&crate_version, &min_version) == VersionComparison::LT {
                 println!(
                     "\n\nServer v{} but client {} requires at >= v{}\n\n",
@@ -269,7 +269,7 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
             }
         }
         if max_server_version.is_some() {
-            let max_version = make_version(max_server_version.unwrap());
+            let max_version = make_version(max_server_version.expect("max version"));
             if compare_versions(&crate_version, &max_version) == VersionComparison::GT {
                 println!(
                     "\n\nServer v{} but client {} requires at <= v{}\n\n",
