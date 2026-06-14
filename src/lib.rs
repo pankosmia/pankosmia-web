@@ -34,7 +34,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("OS = '{}'", env::consts::OS);
 
     // Get product JSON
-    let binary_path = env::current_exe().unwrap();
+    let binary_path = env::current_exe().expect("binary path from env");
     let binary_parent_dir_path = binary_path
         .parent()
         .unwrap()
@@ -57,7 +57,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             product_path, e
         ),
     };
-    let product_short_name = product_json["short_name"].as_str().unwrap().to_string();
+    let product_short_name = product_json["short_name"].as_str().expect("product short name").to_string();
     println!("Product = {}", &product_short_name);
 
     // Maybe get client_config JSON
@@ -106,7 +106,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     if !Path::new(&working_dir_path).is_dir() {
         let app_resources_dir = get_string_value_by_key(&launch_config, "app_resources_path");
         let local_setup_json =
-            load_json(source_local_setup_path(app_resources_dir).as_str()).unwrap();
+            load_json(source_local_setup_path(app_resources_dir).as_str()).expect("local setup json");
         initialize_working_dir(
             &local_setup_json["local_pankosmia_path"]
                 .as_str()
