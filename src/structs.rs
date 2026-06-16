@@ -62,6 +62,13 @@ pub struct ProjectIdentifier {
     pub project: String
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SelectedWord {
+    pub target: Option<String>,
+    pub source: Option<String>,
+    pub lemma: Option<String>
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct AppSettings {
     pub working_dir: String,
@@ -72,6 +79,8 @@ pub struct AppSettings {
     pub auth_tokens: Mutex<BTreeMap<String, String>>,
     pub auth_requests: Mutex<BTreeMap<String, AuthRequest>>,
     pub bcv: Mutex<Bcv>,
+    pub snippet: Mutex<Option<Vec<String>>>,
+    pub word: Mutex<Option<SelectedWord>>,
     pub typography: Mutex<Typography>,
     pub current_project: Mutex<Option<ProjectIdentifier>>,
     pub product: ProductSpec,

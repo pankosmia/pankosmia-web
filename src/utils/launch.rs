@@ -1,5 +1,5 @@
 use crate::endpoints;
-use crate::structs::{AppSettings, Client, ClientConfigSection, ProductSpec, ProjectIdentifier};
+use crate::structs::{AppSettings, Client, ClientConfigSection, ProductSpec, ProjectIdentifier, SelectedWord};
 use crate::utils::paths::{os_slash_str, source_app_resources_path};
 use rocket::fs::FileServer;
 use rocket::{catchers, routes, Build, Rocket};
@@ -238,6 +238,35 @@ pub(crate) fn add_app_settings(
             })),
             _ => Mutex::new(None),
         },
+        snippet: match app_state_json["snippet"].clone() {
+            Value::Array(s) => {
+                let mut nv : Vec<String> = Vec::new();
+                for sv in s {
+                    nv.push(sv.as_str().unwrap().to_string());
+                }
+                Mutex::new(Some(nv))
+            },
+            _ => Mutex::new(None),
+        },
+        word: match app_state_json["word"].clone() {
+            Value::Object(w) => 
+            Mutex::new(Some(SelectedWord {
+                target: match w["target"].as_str() {
+                    Some(t) => Some(t.to_string()),
+                    None => None
+                },
+                source: match w["source"].as_str() {
+                    Some(s) => Some(s.to_string()),
+                    None => None
+                },
+                lemma: match w["target"].as_str() {
+                    Some(l) => Some(l.to_string()),
+                    None => None
+                }
+            })),
+            _ => Mutex::new(None),
+        },
+
         product: ProductSpec {
             name: product_json["name"].as_str().unwrap().to_string(),
             short_name: product_json["short_name"].as_str().unwrap().to_string(),

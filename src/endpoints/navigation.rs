@@ -48,7 +48,9 @@ pub fn post_bcv_range(
     let new_state_json = json!(
         {
             "bcv": new_bcv.clone(),
-            "current_project": state.current_project.lock().unwrap().clone()
+            "current_project": state.current_project.lock().unwrap().clone(),
+            "snippet": state.snippet.lock().unwrap().clone(),
+            "word": state.word.lock().unwrap().clone(),
         }
     );
     match write_app_state(state, new_state_json) {
@@ -85,7 +87,9 @@ pub fn post_bcv(
     let new_state_json = json!(
         {
             "bcv": new_bcv.clone(),
-            "current_project": state.current_project.lock().unwrap().clone()
+            "current_project": state.current_project.lock().unwrap().clone(),
+            "snippet": state.snippet.lock().unwrap().clone(),
+            "word": state.word.lock().unwrap().clone(),
         }
     );
     match write_app_state(state, new_state_json) {

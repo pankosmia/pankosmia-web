@@ -49,7 +49,9 @@ pub fn post_current_project(
                 "source": source,
                 "organization": organization,
                 "project": project
-            }
+            },
+            "snippet": state.snippet.lock().unwrap().clone(),
+            "word": state.word.lock().unwrap().clone(),
         }
     );
     match write_app_state(state, new_state_json) {
@@ -60,7 +62,8 @@ pub fn post_current_project(
                 make_bad_json_data_response(format!("Could not write app state: '{}'", &e)),
             )
         }
-    }    let mut current_project_inner = state.current_project.lock().unwrap();
+    }
+    let mut current_project_inner = state.current_project.lock().unwrap();
     *current_project_inner = Some(ProjectIdentifier {
         source: source.to_string(),
         organization: organization.to_string(),
@@ -80,5 +83,22 @@ pub fn post_empty_current_project(
 ) -> status::Custom<(ContentType, String)> {
     let mut current_project_inner = state.current_project.lock().unwrap();
     *current_project_inner = None;
+    let new_state_json = json!(
+        {
+            "bcv": state.bcv.lock().unwrap().clone(),
+            "current_project": null,
+            "snippet": state.snippet.lock().unwrap().clone(),
+            "word": state.word.lock().unwrap().clone(),
+        }
+    );
+        match write_app_state(state, new_state_json) {
+        Ok(_) => {}
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!("Could not write app state: '{}'", &e)),
+            )
+        }
+    }
     ok_ok_json_response()
 }
