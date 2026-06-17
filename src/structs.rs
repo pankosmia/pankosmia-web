@@ -79,7 +79,7 @@ pub struct AppSettings {
     pub auth_tokens: Mutex<BTreeMap<String, String>>,
     pub auth_requests: Mutex<BTreeMap<String, AuthRequest>>,
     pub bcv: Mutex<Bcv>,
-    pub snippet: Mutex<Option<Vec<String>>>,
+    pub snippet: Mutex<Option<String>>,
     pub word: Mutex<Option<SelectedWord>>,
     pub typography: Mutex<Typography>,
     pub current_project: Mutex<Option<ProjectIdentifier>>,

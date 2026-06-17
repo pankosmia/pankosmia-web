@@ -78,6 +78,9 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::app_state::get_current_project,
             endpoints::app_state::post_current_project,
             endpoints::app_state::post_empty_current_project,
+            endpoints::app_state::post_snippet,
+            endpoints::app_state::post_word,
+            endpoints::app_state::post_empty_alignment,
         ])
         .mount("/api/gitea", routes![
             endpoints::gitea2::gitea_remote_repos::gitea_remote_repos,
@@ -239,12 +242,8 @@ pub(crate) fn add_app_settings(
             _ => Mutex::new(None),
         },
         snippet: match app_state_json["snippet"].clone() {
-            Value::Array(s) => {
-                let mut nv : Vec<String> = Vec::new();
-                for sv in s {
-                    nv.push(sv.as_str().unwrap().to_string());
-                }
-                Mutex::new(Some(nv))
+            Value::String(s) => {
+                Mutex::new(Some(s.as_str().to_string()))
             },
             _ => Mutex::new(None),
         },
