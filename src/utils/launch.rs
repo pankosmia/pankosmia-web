@@ -78,6 +78,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::app_state::get_current_project,
             endpoints::app_state::post_current_project,
             endpoints::app_state::post_empty_current_project,
+            endpoints::app_state::get_alignment,
             endpoints::app_state::post_snippet,
             endpoints::app_state::post_word,
             endpoints::app_state::post_empty_alignment,

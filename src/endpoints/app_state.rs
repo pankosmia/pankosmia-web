@@ -104,6 +104,37 @@ pub fn post_empty_current_project(
     ok_ok_json_response()
 }
 
+/// *`GET /alignment`*
+///
+/// Typically mounted as **`/app-state/alignment`**
+///
+/// Returns a JSON description of the current alignment.
+///
+/// ```text
+/// {
+///   "snippet": null,
+///   "word": null
+/// }
+/// ```
+#[get("/alignment")]
+pub fn get_alignment(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+    let snippet_inner = state.snippet.lock().unwrap().clone();
+    let snippet = match snippet_inner {
+        Some(s) => Some(s),
+        None => None,
+    };
+    let word_inner = state.word.lock().unwrap().clone();
+    let word = match word_inner {
+        Some(w) => Some(w),
+        None => None,
+    };
+    let alignment_json = json!({
+        "snippet": snippet,
+        "word": word
+    });
+    ok_json_response(serde_json::to_string_pretty(&alignment_json).unwrap())
+}
+
 /// *`POST /snippet/<snippet>`*
 ///
 /// Typically mounted as **`/app-state/snippet/<snippet>`**
