@@ -162,6 +162,12 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::video::obs_story::obs_story_video
         ]
     )
+    .mount(
+        "/api/audio",
+        routes![
+            endpoints::audio::compile_audio::compile_audio
+        ]
+    )
 }
 
 pub(crate) fn add_catchers(rocket_instance: Rocket<Build>) -> Rocket<Build> {
