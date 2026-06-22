@@ -9,6 +9,7 @@ pub mod post_bytes_ingredient;
 pub mod post_delete_ingredient;
 pub mod post_delete_ingredients;
 pub mod get_repo_file_paths;
+pub mod get_repo_file_info;
 pub mod post_revert_ingredient;
 pub mod post_copy_ingredient;
 pub mod audit;
