@@ -42,7 +42,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         .unwrap()
         .to_str()
         .unwrap();
-    let product_path = format!(
+    let mut product_path = format!(
         "{}{}lib{}app_resources{}product{}product.json",
         binary_parent_dir_path,
         os_slash_str(),
@@ -50,6 +50,15 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         os_slash_str(),
         os_slash_str(),
     );
+    if !std::fs::exists(&product_path).expect("product exists") {
+        let app_resources_path = get_string_value_by_key(&launch_config, "app_resources_path");
+        product_path = format!(
+        "{}{}product{}product.json",
+        app_resources_path,
+        os_slash_str(),
+        os_slash_str(),
+    );
+    };
     let product_json = match load_json(product_path.as_str()) {
         Ok(j) => j,
         Err(e) => panic!(
@@ -164,7 +173,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Construct clients as Values
     let mut clients_merged_array: Vec<Value> = Vec::new();
     for client_record in client_records_merged_array.iter() {
-        clients_merged_array.push(build_client_record(&client_record));
+        clients_merged_array.push(build_client_record(&app_resources_dir_path, &client_record));
     }
     // Build complete clients with i18n
     let clients = build_clients_and_i18n(

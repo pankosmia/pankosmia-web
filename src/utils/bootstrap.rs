@@ -1,23 +1,20 @@
-use copy_dir::copy_dir;
-use std::{fmt, fs};
-use std::io::Write;
-use std::path::Path;
-use serde_json::{json, Map, Value};
 use crate::utils::client::Clients;
 use crate::utils::files::{copy_and_customize_webfont_css, customize_and_copy_template_file};
-use crate::utils::paths::{
-    user_settings_path,
-    app_state_path,
-    app_setup_path,
-    maybe_os_quoted_path_str,
-    os_slash_str,
-};
-use crate::utils::files::{
-    load_json,
-    load_and_substitute_json,
-};
+use crate::utils::files::{load_and_substitute_json, load_json};
 use crate::utils::json::get_string_value_by_key;
-pub(crate) fn initialize_working_dir(pankosmia_dir_path: &String, app_resources_dir_path: &String, working_dir_path: &String) -> () {
+use crate::utils::paths::{
+    app_setup_path, app_state_path, maybe_os_quoted_path_str, os_slash_str, user_settings_path,
+};
+use copy_dir::copy_dir;
+use serde_json::{json, Map, Value};
+use std::io::Write;
+use std::path::Path;
+use std::{fmt, fs};
+pub(crate) fn initialize_working_dir(
+    pankosmia_dir_path: &String,
+    app_resources_dir_path: &String,
+    working_dir_path: &String,
+) -> () {
     // Make working dir
     match fs::create_dir_all(working_dir_path) {
         Ok(_) => {}
@@ -30,7 +27,10 @@ pub(crate) fn initialize_working_dir(pankosmia_dir_path: &String, app_resources_
     match fs::create_dir_all(temp_dir_path) {
         Ok(_) => {}
         Err(e) => {
-            panic!("Could not create temp dir in working dir '{}': {}", working_dir_path, e);
+            panic!(
+                "Could not create temp dir in working dir '{}': {}",
+                working_dir_path, e
+            );
         }
     };
     // Make blob dir
@@ -38,30 +38,55 @@ pub(crate) fn initialize_working_dir(pankosmia_dir_path: &String, app_resources_
     match fs::create_dir_all(blob_dir_path) {
         Ok(_) => {}
         Err(e) => {
-            panic!("Could not create blob dir in working dir '{}': {}", working_dir_path, e);
+            panic!(
+                "Could not create blob dir in working dir '{}': {}",
+                working_dir_path, e
+            );
         }
     };
     // Copy user_settings file to working dir
-    let user_settings_template_path = format!("{}/templates/user_settings.json", &app_resources_dir_path);
+    let user_settings_template_path =
+        format!("{}/templates/user_settings.json", &app_resources_dir_path);
     let user_settings = user_settings_path(working_dir_path);
-    match customize_and_copy_template_file(&user_settings_template_path, &user_settings, &working_dir_path, &app_resources_dir_path, &pankosmia_dir_path, ) {
+    match customize_and_copy_template_file(
+        &user_settings_template_path,
+        &user_settings,
+        &working_dir_path,
+        &app_resources_dir_path,
+        &pankosmia_dir_path,
+    ) {
         Ok(_) => {}
         Err(e) => {
-            panic!("Error while copying user settings template file {} to {}: {}", user_settings_template_path, user_settings, e);
+            panic!(
+                "Error while copying user settings template file {} to {}: {}",
+                user_settings_template_path, user_settings, e
+            );
         }
     }
     // Copy app_state file to working dir
     let app_state_template_path = format!("{}templates/app_state.json", &app_resources_dir_path);
     let app_state = app_state_path(working_dir_path);
-    match customize_and_copy_template_file(&app_state_template_path, &app_state, &working_dir_path, &app_resources_dir_path, &pankosmia_dir_path) {
+    match customize_and_copy_template_file(
+        &app_state_template_path,
+        &app_state,
+        &working_dir_path,
+        &app_resources_dir_path,
+        &pankosmia_dir_path,
+    ) {
         Ok(_) => {}
         Err(e) => {
-            panic!("Error while copying app state template file {} to {}: {}", app_state_template_path, app_state, e);
+            panic!(
+                "Error while copying app state template file {} to {}: {}",
+                app_state_template_path, app_state, e
+            );
         }
     }
 }
 
-pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> (Value, Value, Value) {
+pub(crate) fn load_configs(
+    working_dir_path: &String,
+    launch_config: &Value,
+) -> (Value, Value, Value) {
     // Load local setup JSON
     let local_setup_path = get_string_value_by_key(&launch_config, "local_setup_path");
     let local_setup_json = match load_json(local_setup_path.as_str()) {
@@ -69,8 +94,7 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
         Err(e) => {
             panic!(
                 "Could not read and parse local_json JSON file '{}': {}",
-                local_setup_path,
-                e
+                local_setup_path, e
             );
         }
     };
@@ -78,13 +102,16 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
     // Load app_setup JSON, substituting pankosmia path
     let app_setup_path = get_string_value_by_key(&launch_config, "app_setup_path");
     let pankosmia_dir = maybe_os_quoted_path_str(local_pankosmia_path.to_string());
-    let app_setup_json = match load_and_substitute_json(app_setup_path, "%%PANKOSMIADIR%%", pankosmia_dir.as_str()) {
+    let app_setup_json = match load_and_substitute_json(
+        app_setup_path,
+        "%%PANKOSMIADIR%%",
+        pankosmia_dir.as_str(),
+    ) {
         Ok(json) => json,
         Err(e) => {
             panic!(
                 "Could not read and parse substituted app setup JSON file '{}': {}",
-                app_setup_path,
-                e
+                app_setup_path, e
             );
         }
     };
@@ -95,8 +122,7 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
         Err(e) => {
             panic!(
                 "Could not read and parse app state JSON file '{}': {}",
-                app_setup_path,
-                e
+                app_setup_path, e
             );
         }
     };
@@ -107,8 +133,7 @@ pub(crate) fn load_configs(working_dir_path: &String, launch_config: &Value) -> 
         Err(e) => {
             panic!(
                 "Could not read and parse user settings JSON file '{}': {}",
-                user_settings,
-                e
+                user_settings, e
             );
         }
     };
@@ -130,7 +155,11 @@ pub(crate) fn maybe_make_repo_dir(repo_dir_path: &String) -> () {
     }
 }
 
-pub(crate) fn copy_and_customize_webfonts(template_path: &String, target_path: &String, user_settings: &Value) -> () {
+pub(crate) fn copy_and_customize_webfonts(
+    template_path: &String,
+    target_path: &String,
+    user_settings: &Value,
+) -> () {
     if !Path::new(&target_path).is_dir() {
         match copy_dir(template_path, target_path.clone()) {
             Ok(_) => {}
@@ -143,18 +172,34 @@ pub(crate) fn copy_and_customize_webfonts(template_path: &String, target_path: &
         }
         let typography_json = match user_settings["typography"].as_object() {
             Some(json) => json,
-            None => { panic!("Could not read typography from user_settings as object") }
+            None => {
+                panic!("Could not read typography from user_settings as object")
+            }
         };
         let features_json = match typography_json["features"].as_object() {
             Some(json) => json,
-            None => { panic!("Could not read features from user_settings as object") }
+            None => {
+                panic!("Could not read features from user_settings as object")
+            }
         };
         for font_name in features_json.keys() {
-            let font_filename = format!("{}{}pankosmia-{}.css", &target_path, os_slash_str(), font_name);
+            let font_filename = format!(
+                "{}{}pankosmia-{}.css",
+                &target_path,
+                os_slash_str(),
+                font_name
+            );
             if Path::new(&font_filename).is_file() {
-                match copy_and_customize_webfont_css(template_path, target_path, user_settings, font_name) {
-                    Ok(_) => {},
-                    Err(e) => { panic!("Could not customize webfont {}: {}", font_name, e) }
+                match copy_and_customize_webfont_css(
+                    template_path,
+                    target_path,
+                    user_settings,
+                    font_name,
+                ) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        panic!("Could not customize webfont {}: {}", font_name, e)
+                    }
                 }
             }
         }
@@ -163,16 +208,22 @@ pub(crate) fn copy_and_customize_webfonts(template_path: &String, target_path: &
 
 pub(crate) fn merged_clients(app_setup_json: &Value, user_settings_json: &Value) -> Vec<Value> {
     let mut client_records_merged_array: Vec<Value> = Vec::new();
-    let app_client_records = app_setup_json["clients"].as_array().expect("app client record");
+    let app_client_records = app_setup_json["clients"]
+        .as_array()
+        .expect("app client record");
     for app_client_record in app_client_records.iter() {
         let mut record2 = app_client_record.clone();
-        let mut_record = record2.as_object_mut().expect("app client record as object");
+        let mut_record = record2
+            .as_object_mut()
+            .expect("app client record as object");
         let src_key = "src".to_string();
         let src_value = Value::from("App");
         mut_record.insert(src_key, src_value);
         client_records_merged_array.push(Value::Object(mut_record.clone()));
     }
-    let my_client_records = user_settings_json["my_clients"].as_array().expect("myclient records as array");
+    let my_client_records = user_settings_json["my_clients"]
+        .as_array()
+        .expect("myclient records as array");
     for my_client_record in my_client_records.iter() {
         let mut record2 = my_client_record.clone();
         let mut_record = record2.as_object_mut().expect("my client record as object");
@@ -202,50 +253,61 @@ fn make_version(sem_ver_string: &str) -> Version {
     let crate_bits: Vec<_> = sem_ver_string.split(".").collect();
     Version(
         crate_bits[0]
-            .parse::<i32>().expect("crateVersion[0] as int"),
+            .parse::<i32>()
+            .expect("crateVersion[0] as int"),
         crate_bits[1]
-            .parse::<i32>().expect("crateVersion[0] as int"),
+            .parse::<i32>()
+            .expect("crateVersion[0] as int"),
         crate_bits[2]
-            .parse::<i32>().expect("crateVersion[0] as int")
+            .parse::<i32>()
+            .expect("crateVersion[0] as int"),
     )
 }
 
 fn compare_versions(v1: &Version, v2: &Version) -> VersionComparison {
     if v1.0 > v2.0 {
-        return VersionComparison::GT
+        return VersionComparison::GT;
     }
     if v1.0 < v2.0 {
-        return VersionComparison::LT
+        return VersionComparison::LT;
     }
     if v1.1 > v2.1 {
-        return VersionComparison::GT
+        return VersionComparison::GT;
     }
     if v1.1 < v2.1 {
-        return VersionComparison::LT
+        return VersionComparison::LT;
     }
     if v1.2 > v2.2 {
-        return VersionComparison::GT
+        return VersionComparison::GT;
     }
     if v1.2 < v2.2 {
-        return VersionComparison::LT
+        return VersionComparison::LT;
     }
     VersionComparison::EQ
 }
 
-pub(crate) fn build_client_record(client_record: &Value) -> Value {
+pub(crate) fn build_client_record(app_resources_path: &String, client_record: &Value) -> Value {
     // Get requires from metadata
-    let client_path = get_string_value_by_key(&client_record, "path");
+    let mut client_path = get_string_value_by_key(&client_record, "path").to_string();
+    if !std::fs::exists(&client_path).unwrap() {
+        client_path = format!(
+                "{}{}clients{}{}",
+                app_resources_path,
+                os_slash_str(),
+                os_slash_str(),
+                client_path
+            );
+    };
     let client_metadata_path = format!("{}{}pankosmia_metadata.json", client_path, os_slash_str());
     let metadata_json = match load_json(client_metadata_path.as_str()) {
         Ok(json) => json,
         Err(e) => {
-            panic!(
+                    panic!(
                 "Could not read and parse metadata JSON file for '{}': {}",
-                client_record,
+                client_path,
                 e
-            );
-        }
-    };
+                )}
+            };
     // Check that server and client versions are compatible
     let min_server_version: Option<&str> = metadata_json["minServerVersion"].as_str();
     let max_server_version: Option<&str> = metadata_json["maxServerVersion"].as_str();
@@ -292,41 +354,49 @@ pub(crate) fn build_client_record(client_record: &Value) -> Value {
         debug_flag = md_require.clone()["debug"].as_bool().unwrap();
     }
     let requires = json!({
-            "net": md_require.clone()["net"].as_bool().unwrap(),
-            "debug": debug_flag
-        });
+        "net": md_require.clone()["net"].as_bool().unwrap(),
+        "debug": debug_flag
+    });
     // Get url from package.json
-    let package_json_path = format!("{}{}package.json", get_string_value_by_key(&client_record, "path"), os_slash_str());
+    let package_json_path = format!(
+        "{}{}package.json",
+        &client_path,
+        os_slash_str()
+    );
     let package_json = match load_json(package_json_path.as_str()) {
         Ok(json) => json,
         Err(e) => {
             panic!(
                 "Could not read and parse package.json file for '{}': {}",
-                client_record,
-                e
+                &client_path, e
             );
         }
     };
     // Build client record
     json!({
-            "id": metadata_json["id"].as_str().unwrap(),
-            "path": client_record["path"].as_str().unwrap(),
-            "url": package_json["homepage"].as_str().unwrap(),
-            "requires": requires,
-            "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
-            "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false),
-            "src": client_record["src"].as_str().unwrap(),
-        })
+        "id": metadata_json["id"].as_str().unwrap(),
+        "path": client_path,
+        "url": package_json["homepage"].as_str().unwrap(),
+        "requires": requires,
+        "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
+        "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false),
+        "src": client_record["src"].as_str().unwrap(),
+    })
 }
 
-pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, app_resources_path: &String, working_dir_path: &String) -> Clients {
+pub(crate) fn build_clients_and_i18n(
+    clients_merged_array: Vec<Value>,
+    app_resources_path: &String,
+    working_dir_path: &String,
+) -> Clients {
     let clients_value = serde_json::to_value(clients_merged_array).unwrap();
     let clients: Clients = match serde_json::from_value(clients_value) {
         Ok(v) => v,
         Err(e) => {
             panic!(
                 "Could not parse clients array in settings file '{}' as client records: {}",
-                app_setup_path(&working_dir_path), e
+                app_setup_path(&working_dir_path),
+                e
             );
         }
     };
@@ -354,7 +424,8 @@ pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, app_resou
         if !Path::new(&client_record.path.clone()).is_dir() {
             panic!(
                 "Client path {} from app_setup file {} is not a directory",
-                client_record.path, app_setup_path(&working_dir_path)
+                client_record.path,
+                app_setup_path(&working_dir_path)
             );
         }
         let build_path = format!("{}/build", client_record.path.clone());
@@ -366,14 +437,17 @@ pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, app_resou
                 client_record.id
             );
         }
-        let client_metadata_path = format!("{}{}pankosmia_metadata.json", &client_record.path, os_slash_str());
+        let client_metadata_path = format!(
+            "{}{}pankosmia_metadata.json",
+            &client_record.path,
+            os_slash_str()
+        );
         let metadata_json = match load_json(client_metadata_path.as_str()) {
             Ok(json) => json,
             Err(e) => {
                 panic!(
                     "Could not read and parse pankosmia metadata file for '{}': {}",
-                    client_record.id,
-                    e
+                    client_record.id, e
                 );
             }
         };
@@ -384,13 +458,11 @@ pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, app_resou
             found_main = true;
         }
     }
-    i18n_json_map.insert(
-        "pages".to_string(),
-        Value::Object(i18n_pages_map),
-    );
+    i18n_json_map.insert("pages".to_string(), Value::Object(i18n_pages_map));
     let i18n_target_path = format!("{}{}i18n.json", &working_dir_path, os_slash_str());
     let i18n_file_exists = Path::new(&i18n_target_path).is_file();
-    if !i18n_file_exists { // Do not overwrite for now
+    if !i18n_file_exists {
+        // Do not overwrite for now
         let mut i18n_file_handle = match fs::File::create(&i18n_target_path) {
             Ok(h) => h,
             Err(e) => {
@@ -400,11 +472,7 @@ pub(crate) fn build_clients_and_i18n(clients_merged_array: Vec<Value>, app_resou
                 );
             }
         };
-        match i18n_file_handle.write_all(
-            Value::Object(i18n_json_map)
-                .to_string()
-                .as_bytes(),
-        ) {
+        match i18n_file_handle.write_all(Value::Object(i18n_json_map).to_string().as_bytes()) {
             Ok(_) => {}
             Err(e) => {
                 panic!(
