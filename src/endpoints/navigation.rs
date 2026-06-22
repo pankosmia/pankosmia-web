@@ -1,3 +1,4 @@
+use crate::static_vars::ALIGNMENT_UPDATE_COUNT;
 use crate::structs::{AppSettings, Bcv};
 use crate::utils::files::write_app_state;
 use crate::utils::json_responses::make_bad_json_data_response;
@@ -6,6 +7,7 @@ use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{get, post, State};
 use serde_json::json;
+use std::sync::atomic::Ordering;
 
 /// *`GET /bcv`*
 ///
@@ -63,6 +65,8 @@ pub fn post_bcv_range(
         }
     }
     *state.bcv.lock().unwrap() = new_bcv;
+    let current_alignment_count = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
+    ALIGNMENT_UPDATE_COUNT.store(current_alignment_count + 1, Ordering::Relaxed);
     ok_ok_json_response()
 }
 
@@ -106,5 +110,7 @@ pub fn post_bcv(
     *snippet_inner = None;
     let mut word_inner = state.word.lock().unwrap();
     *word_inner = None;
+    let current_alignment_count = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
+    ALIGNMENT_UPDATE_COUNT.store(current_alignment_count + 1, Ordering::Relaxed);
     ok_ok_json_response()
 }

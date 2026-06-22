@@ -8,6 +8,8 @@ use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::{get, post, State};
 use serde_json::json;
+use crate::static_vars::ALIGNMENT_UPDATE_COUNT;
+use std::sync::atomic::Ordering;
 
 /// *`GET /current-project`*
 ///
@@ -166,6 +168,8 @@ pub fn post_snippet(
             )
         }
     };
+    let current_alignment_count = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
+    ALIGNMENT_UPDATE_COUNT.store(current_alignment_count + 1, Ordering::Relaxed);
     ok_ok_json_response()
 }
 
@@ -182,7 +186,9 @@ pub fn post_word(
     if json_form.target.is_none() && json_form.source.is_none() && json_form.lemma.is_none() {
         return not_ok_json_response(
             Status::InternalServerError,
-            make_bad_json_data_response(format!("At least one of target, source and lemma must be provided")),
+            make_bad_json_data_response(format!(
+                "At least one of target, source and lemma must be provided"
+            )),
         );
     };
     let word_json = json!({
@@ -211,6 +217,8 @@ pub fn post_word(
             )
         }
     };
+    let current_alignment_count = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
+    ALIGNMENT_UPDATE_COUNT.store(current_alignment_count + 1, Ordering::Relaxed);
     ok_ok_json_response()
 }
 
@@ -220,9 +228,7 @@ pub fn post_word(
 ///
 /// Unsets current word and snippet.
 #[post("/empty-alignment")]
-pub fn post_empty_alignment(
-    state: &State<AppSettings>,
-) -> status::Custom<(ContentType, String)> {
+pub fn post_empty_alignment(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
     let mut snippet_inner = state.snippet.lock().unwrap();
     *snippet_inner = None;
     let mut word_inner = state.word.lock().unwrap();
@@ -244,5 +250,7 @@ pub fn post_empty_alignment(
             )
         }
     };
+    let current_alignment_count = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
+    ALIGNMENT_UPDATE_COUNT.store(current_alignment_count + 1, Ordering::Relaxed);
     ok_ok_json_response()
 }

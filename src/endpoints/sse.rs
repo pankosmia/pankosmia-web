@@ -1,4 +1,4 @@
-use crate::static_vars::{DEBUG_IS_ENABLED, I18N_UPDATE_COUNT, NET_IS_ENABLED};
+use crate::static_vars::{DEBUG_IS_ENABLED, I18N_UPDATE_COUNT, ALIGNMENT_UPDATE_COUNT, NET_IS_ENABLED};
 use crate::structs::AppSettings;
 use crate::MsgQueue;
 use rocket::response::stream;
@@ -23,6 +23,7 @@ pub async fn notifications_stream<'a>(
         yield stream::Event::retry(Duration::from_secs(1));
         let mut languages = state.languages.lock().unwrap().clone().join("/");
         let mut i18n_update_count = I18N_UPDATE_COUNT.load(Ordering::Relaxed);
+        let mut alignment_update_count = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
         let mut typography = state.typography.lock().unwrap().clone();
         let mut bcv = state.bcv.lock().unwrap().clone();
         let gitea_endpoints = state.gitea_endpoints.clone();
@@ -145,6 +146,20 @@ pub async fn notifications_stream<'a>(
                     format!("{}", languages.clone())
                 )
                 .event("languages")
+                .id(format!("{}", count));
+                count+=1;
+            }
+            let mut alignment_updated = false;
+            let new_alignment_update = ALIGNMENT_UPDATE_COUNT.load(Ordering::Relaxed);
+            if new_alignment_update > alignment_update_count {
+                alignment_updated = true;
+                alignment_update_count = new_alignment_update;
+            }
+            if first_time || alignment_updated {
+                yield stream::Event::data(
+                    "update"
+                )
+                .event("alignment")
                 .id(format!("{}", count));
                 count+=1;
             }
