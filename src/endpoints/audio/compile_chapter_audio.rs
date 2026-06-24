@@ -139,7 +139,18 @@ pub fn compile_chapter_audio(
     }
     let list_path_str = list_path.to_string_lossy().to_string();
 
-    let output_path = format!("{}/{}.mp3", scan_dir, cc);
+    let book_name = match &json_form.book {
+        Some(b) if !b.is_empty() => b.clone(),
+        _ => "".to_string(),
+    };
+    let cc_num: u32 = cc.trim().parse().unwrap();
+
+    let output_name = if book_name.trim().is_empty() {
+        format!("{:02}", cc_num)
+    } else {
+        format!("{}_{:03}", book_name.trim(), cc_num)
+    };
+    let output_path = format!("{}/{}.mp3", scan_dir, output_name);
 
     let mut cmd = FfmpegCommand::new();
     cmd.overwrite()
