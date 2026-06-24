@@ -143,7 +143,7 @@ pub fn compile_chapter_audio(
         Some(b) if !b.is_empty() => b.clone(),
         _ => "".to_string(),
     };
-    let cc_num: u32 = cc.trim().parse().unwrap();
+    let cc_num: u32 = cc.trim().parse().expect("Chapter number must be a number");
 
     let output_name = if book_name.trim().is_empty() {
         format!("{:02}", cc_num)
