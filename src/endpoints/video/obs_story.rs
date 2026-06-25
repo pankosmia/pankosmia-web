@@ -28,6 +28,7 @@ pub struct ObsStoryForm {
     story_n: i32,
     from_para_n: Option<i32>,
     to_para_n: Option<i32>,
+    ffmpeg_path: Option<String>,
 }
 
 #[post("/obs-story/<repo_path..>", format = "json", data = "<json_form>")]
@@ -36,15 +37,22 @@ pub fn obs_story_video(
     repo_path: PathBuf,
     json_form: Json<ObsStoryForm>,
 ) -> status::Custom<(ContentType, String)> {
-    match ffmpeg_version() {
-        Ok(_) => {}
-        Err(_) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response("ffmpeg not found".to_string()),
-            )
-        }
-    }
+    
+    let ffmpeg_path = json_form
+        .ffmpeg_path
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or("");
+    let mut cmd = if ffmpeg_version().is_ok() {
+        FfmpegCommand::new()
+    } else if !ffmpeg_path.is_empty() {
+        FfmpegCommand::new_with_path(ffmpeg_path)
+    } else {
+        return not_ok_json_response(
+            Status::InternalServerError,
+            make_bad_json_data_response("ffmpeg not found".to_string()),
+        );
+    };
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
         let repo_dir = state.repo_dir.lock().unwrap().clone();
@@ -123,7 +131,7 @@ pub fn obs_story_video(
 
         // // Créer la vidéo finale
         let video_path = format!("{}/obs-story-{}.mp4", video_content_path, json_form.story_n);
-        let video_writer = FfmpegCommand::new()
+        let video_writer = cmd
             .overwrite()
 			.args(args_refs)
             .codec_video("libx264")

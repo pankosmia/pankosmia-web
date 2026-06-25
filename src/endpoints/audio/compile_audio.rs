@@ -42,6 +42,7 @@ pub struct CompileAudioForm {
     chapter: u32,
     paragraph: u32,
     book: Option<String>,
+    ffmpeg_path: Option<String>,
 }
 
 #[post("/compile/<repo_path..>", format = "json", data = "<json_form>")]
@@ -50,12 +51,22 @@ pub fn compile_audio(
     repo_path: PathBuf,
     json_form: Json<CompileAudioForm>,
 ) -> status::Custom<(ContentType, String)> {
-    if ffmpeg_version().is_err() {
+    
+    let ffmpeg_path = json_form
+        .ffmpeg_path
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or("");
+    let mut cmd = if ffmpeg_version().is_ok() {
+        FfmpegCommand::new()
+    } else if !ffmpeg_path.is_empty() {
+        FfmpegCommand::new_with_path(ffmpeg_path)
+    } else {
         return not_ok_json_response(
             Status::InternalServerError,
             make_bad_json_data_response("ffmpeg not found".to_string()),
         );
-    }
+    };
 
     let path_components: Components<'_> = repo_path.components();
     if !check_path_components(&mut path_components.clone()) {
@@ -214,7 +225,6 @@ pub fn compile_audio(
 
     let output_path = format!("{}/{}-{}.mp3", dir, cc, pp);
 
-    let mut cmd = FfmpegCommand::new();
     cmd.overwrite();
     for p in &input_paths {
         cmd.input(p);
