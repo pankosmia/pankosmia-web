@@ -18,15 +18,26 @@ use std::path::{Components, PathBuf};
 ///
 /// Typically mounted as **`/video/obs-para/<repo_path>`**
 ///
+/// Construit la vidéo d'un paragraphe (image OBS + audio).
+///
+/// L'audio utilisé est, par défaut, le mp3 compilé par l'endpoint audio
+/// (`compile_audio`), à savoir :
+///   - `audio_content/[{book}/]{CC}-{PP}/{CC}-{PP}.mp3`
+///
+/// `audio_path` (optionnel, relatif à `ingredients/`) permet de surcharger ce
+/// chemin si besoin.
+///
 /// Example body:
 ///
-/// `{"story_n": 1, "para_n": 1, "audio_path": "audio_content/01-01/01-01_0_1.mp3"}`
+/// `{"story_n": 1, "para_n": 1}`  ou  `{"story_n": 1, "para_n": 1, "audio_path": "audio_content/01-01/01-01.mp3"}`
 
 #[derive(Deserialize)]
 pub struct ObsParaForm {
     story_n: i32,
     para_n: i32,
-    audio_path: String,
+    audio_path: Option<String>,
+    book: Option<String>,
+    ffmpeg_path: Option<String>,
 }
 
 #[post("/obs-para/<repo_path..>", format = "json", data = "<json_form>")]
@@ -35,15 +46,22 @@ pub fn obs_para_video(
     repo_path: PathBuf,
     json_form: Json<ObsParaForm>,
 ) -> status::Custom<(ContentType, String)> {
-    match ffmpeg_version() {
-        Ok(_) => {}
-        Err(_) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response("ffmpeg not found".to_string()),
-            )
-        }
-    }
+    
+    let ffmpeg_path = json_form
+        .ffmpeg_path
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or("");
+    let mut cmd = if ffmpeg_version().is_ok() {
+        FfmpegCommand::new()
+    } else if !ffmpeg_path.is_empty() {
+        FfmpegCommand::new_with_path(ffmpeg_path)
+    } else {
+        return not_ok_json_response(
+            Status::InternalServerError,
+            make_bad_json_data_response("ffmpeg not found".to_string()),
+        );
+    };
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
         let repo_dir = state.repo_dir.lock().unwrap().clone();
@@ -74,9 +92,20 @@ pub fn obs_para_video(
             json_form.para_n.to_string()
         };
 
-        // Chemin du fichier video
-        let audio_path = format!("{}/ingredients/{}", repo_path, json_form.audio_path);
-        // Vérifier si le fichier video existe
+        let rel_audio_path = match &json_form.audio_path {
+            Some(p) if !p.trim().is_empty() => p.clone(),
+            _ => {
+                let dir_name = format!("{}-{}", story_string, para_string);
+                match &json_form.book {
+                    Some(b) if !b.is_empty() => {
+                        format!("audio_content/{}/{}/{}.mp3", b, dir_name, dir_name)
+                    }
+                    _ => format!("audio_content/{}/{}.mp3", dir_name, dir_name),
+                }
+            }
+        };
+        let audio_path = format!("{}/ingredients/{}", repo_path, rel_audio_path);
+
         if !Path::new(&audio_path).exists() {
             return not_ok_json_response(
                 Status::NotFound,
@@ -109,7 +138,7 @@ pub fn obs_para_video(
 
         // println!("Video path: {}", video_path);
         // Créer la vidéo et attendre la fin du traitement
-        let iter = FfmpegCommand::new()
+        let iter = cmd
             .overwrite()
             .args(&["-loop", "1"])
             .args(&["-framerate", "25"])
