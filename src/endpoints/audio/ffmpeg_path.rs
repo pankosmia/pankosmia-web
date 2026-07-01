@@ -9,12 +9,12 @@ use serde_json::json;
 ///
 /// Typically mounted as **`/audio/ffmpeg-path`**
 ///
-/// Renvoie le chemin du binaire ffmpeg téléchargé localement par l'app desktop
-/// (`~/pankosmia/_assets/ffmpeg/**`), que le client peut ensuite transmettre
-/// aux endpoints de compilation via le champ `ffmpeg_path`.
+/// Returns the path to the ffmpeg binary downloaded locally by the desktop app
+/// (`~/pankosmia/_assets/ffmpeg/**`), which the client can then forward to the
+/// compilation endpoints via the `ffmpeg_path` field.
 ///
-/// `payload.path` vaut `null` si aucun ffmpeg téléchargé n'est trouvé (le
-/// client s'appuiera alors sur le ffmpeg système).
+/// `payload.path` is `null` when no downloaded ffmpeg is found (the client then
+/// falls back to the system ffmpeg).
 #[get("/ffmpeg-path")]
 pub fn ffmpeg_path() -> status::Custom<(ContentType, String)> {
     json_payload_response(Status::Ok, json!({ "path": find_bundled_ffmpeg() }))

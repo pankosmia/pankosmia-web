@@ -2,7 +2,6 @@ use std::env;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
-/// Nom de l'exécutable ffmpeg selon l'OS.
 fn ffmpeg_executable_name() -> &'static str {
     match env::consts::OS {
         "windows" => "ffmpeg.exe",
@@ -10,16 +9,17 @@ fn ffmpeg_executable_name() -> &'static str {
     }
 }
 
-/// Dossier où l'app desktop télécharge ffmpeg : `~/pankosmia/_assets/ffmpeg`.
-/// Renvoie `None` si le home dir est introuvable.
+/// Directory where the desktop app downloads ffmpeg: `~/pankosmia/_assets/ffmpeg`.
+/// Returns `None` if the home directory cannot be found.
 fn bundled_ffmpeg_base_dir() -> Option<PathBuf> {
     home::home_dir().map(|h| h.join("pankosmia").join("_assets").join("ffmpeg"))
 }
 
-/// Cherche récursivement le binaire ffmpeg téléchargé localement par l'app
-/// desktop dans `~/pankosmia/_assets/ffmpeg/**`. Renvoie son chemin absolu s'il
-/// existe. La recherche est récursive car selon l'OS/le build le binaire est
-/// niché dans un sous-dossier (ex. `.../7.1.1/bin/ffmpeg.exe` sur Windows).
+/// Recursively searches `~/pankosmia/_assets/ffmpeg/**` for the ffmpeg binary
+/// downloaded locally by the desktop app and returns its absolute path if
+/// present. The search is recursive because, depending on the OS/build, the
+/// binary is nested in a subdirectory (e.g. `.../7.1.1/bin/ffmpeg.exe` on
+/// Windows).
 pub(crate) fn find_bundled_ffmpeg() -> Option<String> {
     let base = bundled_ffmpeg_base_dir()?;
     if !base.is_dir() {
