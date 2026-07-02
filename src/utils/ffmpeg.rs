@@ -9,11 +9,12 @@ fn ffmpeg_executable_name() -> &'static str {
     }
 }
 
-/// Directory where the desktop app downloads ffmpeg: `~/<working_dir>/_assets/ffmpeg`.
+/// Directory where the desktop app downloads ffmpeg: `~/<working_dir>/../_assets/ffmpeg`.
 /// Returns `None` if the home directory cannot be found.
 fn bundled_ffmpeg_base_dir(working_dir: String) -> Option<PathBuf> {
     let working_path_buf = PathBuf::from(working_dir);
-    Some(working_path_buf.join("_assets").join("ffmpeg"))
+    let working_path_parent_buf = working_path_buf.parent().expect("working path parent");
+    Some(working_path_parent_buf.join("_assets").join("ffmpeg"))
 }
 
 /// Recursively searches `~/pankosmia/_assets/ffmpeg/**` for the ffmpeg binary
