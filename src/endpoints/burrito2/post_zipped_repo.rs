@@ -34,6 +34,7 @@ fn check_burrito_zip(path: &NamedTempFile) -> bool {
             None => continue,
         };
         let out_path_string = format!("{:?}", out_path);
+        println!("zip content <{}>", &out_path_string);
         if file.is_file() {
             if out_path_string == "\"metadata.json\"" {
                 metadata_found = true;
