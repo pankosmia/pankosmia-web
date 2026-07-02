@@ -13,7 +13,7 @@ fn ffmpeg_executable_name() -> &'static str {
 /// Returns `None` if the home directory cannot be found.
 fn bundled_ffmpeg_base_dir(working_dir: String) -> Option<PathBuf> {
     let working_path_buf = PathBuf::from(working_dir);
-    Some(working_path_buf.join("pankosmia").join("_assets").join("ffmpeg"))
+    Some(working_path_buf.join("_assets").join("ffmpeg"))
 }
 
 /// Recursively searches `~/pankosmia/_assets/ffmpeg/**` for the ffmpeg binary
