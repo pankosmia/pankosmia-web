@@ -1,6 +1,7 @@
+use crate::structs::AppSettings;
 use crate::utils::ffmpeg::find_bundled_ffmpeg;
 use crate::utils::response::json_payload_response;
-use rocket::get;
+use rocket::{get, State};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use serde_json::json;
@@ -16,6 +17,7 @@ use serde_json::json;
 /// `payload.path` is `null` when no downloaded ffmpeg is found (the client then
 /// falls back to the system ffmpeg).
 #[get("/ffmpeg-path")]
-pub fn ffmpeg_path() -> status::Custom<(ContentType, String)> {
-    json_payload_response(Status::Ok, json!({ "path": find_bundled_ffmpeg() }))
+pub fn ffmpeg_path(state: &State<AppSettings>) -> status::Custom<(ContentType, String)> {
+    let working_dir = state.working_dir.clone();
+    json_payload_response(Status::Ok, json!({ "path": find_bundled_ffmpeg(working_dir) }))
 }

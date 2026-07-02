@@ -9,10 +9,11 @@ fn ffmpeg_executable_name() -> &'static str {
     }
 }
 
-/// Directory where the desktop app downloads ffmpeg: `~/pankosmia/_assets/ffmpeg`.
+/// Directory where the desktop app downloads ffmpeg: `~/<working_dir>/_assets/ffmpeg`.
 /// Returns `None` if the home directory cannot be found.
-fn bundled_ffmpeg_base_dir() -> Option<PathBuf> {
-    home::home_dir().map(|h| h.join("pankosmia").join("_assets").join("ffmpeg"))
+fn bundled_ffmpeg_base_dir(working_dir: String) -> Option<PathBuf> {
+    let working_path_buf = PathBuf::from(working_dir);
+    Some(working_path_buf.join("pankosmia").join("_assets").join("ffmpeg"))
 }
 
 /// Recursively searches `~/pankosmia/_assets/ffmpeg/**` for the ffmpeg binary
@@ -20,8 +21,8 @@ fn bundled_ffmpeg_base_dir() -> Option<PathBuf> {
 /// present. The search is recursive because, depending on the OS/build, the
 /// binary is nested in a subdirectory (e.g. `.../7.1.1/bin/ffmpeg.exe` on
 /// Windows).
-pub(crate) fn find_bundled_ffmpeg() -> Option<String> {
-    let base = bundled_ffmpeg_base_dir()?;
+pub(crate) fn find_bundled_ffmpeg(working_dir: String) -> Option<String> {
+    let base = bundled_ffmpeg_base_dir(working_dir)?;
     if !base.is_dir() {
         return None;
     }
