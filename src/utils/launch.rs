@@ -171,7 +171,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         "/api/audio",
         routes![
             endpoints::audio::compile_audio::compile_audio,
-            endpoints::audio::compile_chapter_audio::compile_chapter_audio
+            endpoints::audio::compile_chapter_audio::compile_chapter_audio,
+            endpoints::audio::ffmpeg_path::ffmpeg_path
         ]
     )
 }
