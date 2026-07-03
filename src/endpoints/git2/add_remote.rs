@@ -44,11 +44,16 @@ pub async fn add_remote_to_repo(
             if !check_path_string_components(remote_url.clone()) {
                 return not_ok_bad_repo_json_response();
             }
-            remote_url = format!(
-                "file://{}{}{}",
+            let path = format!(
+                "{}{}{}",
                 &repo_dir,
                 os_slash_str(),
                 &remote_url
+            );
+
+            remote_url = format!(
+                "file:///{}",
+                path.replace('\\', "/")
             );
         }
         match Repository::open(repo_path_string) {
