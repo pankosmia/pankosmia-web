@@ -186,7 +186,7 @@ pub fn new_print_spec_resource_repo(
         }
         None => {
             let path_to_spec_template = format!(
-                "{}{}templates{}content_templates{}x-printspec{}spec.json",
+                "{}{}templates{}content_templates{}x-printspec{}metadata.json",
                 &state.app_resources_dir,
                 os_slash_str(),
                 os_slash_str(),
