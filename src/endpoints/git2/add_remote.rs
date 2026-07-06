@@ -10,6 +10,7 @@ use rocket::response::status;
 use rocket::{post, State};
 use std::path::{Components, PathBuf};
 use regex::Regex;
+use std::env;
 
 /// *`POST /remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`*
 ///
@@ -25,7 +26,8 @@ pub async fn add_remote_to_repo(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
-        let repo_dir = state.repo_dir.lock().unwrap().clone();
+        let mut repo_dir = state.repo_dir.lock().unwrap().clone();
+       
         let repo_path_string = format!(
             "{}{}{}", 
             &repo_dir,
@@ -44,11 +46,20 @@ pub async fn add_remote_to_repo(
             if !check_path_string_components(remote_url.clone()) {
                 return not_ok_bad_repo_json_response();
             }
-            remote_url = format!(
-                "file://{}{}{}",
+             if env::consts::OS == "windows" {
+            repo_dir = format!("{}{}","/", repo_dir);
+            }
+
+            let path = format!(
+                "{}{}{}",
                 &repo_dir,
                 os_slash_str(),
                 &remote_url
+            );
+
+            remote_url = format!(
+                "file://{}",
+                path.replace('\\', "/")
             );
         }
         match Repository::open(repo_path_string) {
