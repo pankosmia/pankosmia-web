@@ -52,7 +52,7 @@ pub async fn add_remote_to_repo(
             );
 
             remote_url = format!(
-                "file:///{}",
+                "file://{}",
                 path.replace('\\', "/")
             );
         }
