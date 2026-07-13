@@ -72,13 +72,19 @@ pub async fn post_raw_ingredient(
                 }
             }
         }
-        match std::fs::write(destination, json_form["payload"].as_str().unwrap()) {
+        match json_form["payload"].as_str() {
+        Some(p) => match std::fs::write(destination, p) {
             Ok(_) => {},
             Err(e) => return not_ok_json_response(
                 Status::InternalServerError,
                 make_bad_json_data_response(format!("Could not write to {}: {}", ipath, e)),
             ),
-        };
+        },
+        None => return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!("Could not find payload in {:?}", json_form)),
+            )
+    };
         if update_ingredients.is_some() {
             // Get metadata as struct
             let app_resources_dir = format!("{}", &state.app_resources_dir);

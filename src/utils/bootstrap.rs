@@ -374,13 +374,13 @@ pub(crate) fn build_client_record(app_resources_path: &String, client_record: &V
     };
     // Build client record
     json!({
-        "id": metadata_json["id"].as_str().unwrap(),
+        "id": metadata_json["id"].as_str().expect("metadata id"),
         "path": client_path,
-        "url": package_json["homepage"].as_str().unwrap(),
+        "url": package_json["homepage"].as_str().expect("homepage"),
         "requires": requires,
         "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
         "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false),
-        "src": client_record["src"].as_str().unwrap(),
+        "src": client_record["src"].as_str().expect("src"),
     })
 }
 
