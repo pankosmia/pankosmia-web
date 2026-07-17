@@ -10,6 +10,8 @@ use serde_json::{json, Map, Value};
 use std::io::Write;
 use std::path::Path;
 use std::{fmt, fs};
+use json_value_merge::Merge;
+
 pub(crate) fn initialize_working_dir(
     pankosmia_dir_path: &String,
     app_resources_dir_path: &String,
@@ -388,6 +390,7 @@ pub(crate) fn build_clients_and_i18n(
     clients_merged_array: Vec<Value>,
     app_resources_path: &String,
     working_dir_path: &String,
+    i18n_overrides_json: &Value,
 ) -> Clients {
     let clients_value = serde_json::to_value(clients_merged_array).unwrap();
     let clients: Clients = match serde_json::from_value(clients_value) {
@@ -458,11 +461,15 @@ pub(crate) fn build_clients_and_i18n(
             found_main = true;
         }
     }
+
+    // Maybe write i18n
     i18n_json_map.insert("pages".to_string(), Value::Object(i18n_pages_map));
     let i18n_target_path = format!("{}{}i18n.json", &working_dir_path, os_slash_str());
     let i18n_file_exists = Path::new(&i18n_target_path).is_file();
     if !i18n_file_exists {
         // Do not overwrite for now
+        let mut merged_i18n = Value::Object(i18n_json_map);
+        merged_i18n.merge(i18n_overrides_json); 
         let mut i18n_file_handle = match fs::File::create(&i18n_target_path) {
             Ok(h) => h,
             Err(e) => {
@@ -472,7 +479,7 @@ pub(crate) fn build_clients_and_i18n(
                 );
             }
         };
-        match i18n_file_handle.write_all(Value::Object(i18n_json_map).to_string().as_bytes()) {
+        match i18n_file_handle.write_all(merged_i18n.to_string().as_bytes()) {
             Ok(_) => {}
             Err(e) => {
                 panic!(

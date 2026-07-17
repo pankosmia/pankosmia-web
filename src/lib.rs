@@ -53,20 +53,23 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     if !std::fs::exists(&product_path).expect("product exists") {
         let app_resources_path = get_string_value_by_key(&launch_config, "app_resources_path");
         product_path = format!(
-        "{}{}product{}product.json",
-        app_resources_path,
-        os_slash_str(),
-        os_slash_str(),
-    );
+            "{}{}product{}product.json",
+            app_resources_path,
+            os_slash_str(),
+            os_slash_str(),
+        );
     };
     let product_json = match load_json(product_path.as_str()) {
         Ok(j) => j,
         Err(e) => panic!(
-            "Could not read and parse product json as {}: {}",
+            "Could not read and parse product as json from {}: {}",
             product_path, e
         ),
     };
-    let product_short_name = product_json["short_name"].as_str().expect("product short name").to_string();
+    let product_short_name = product_json["short_name"]
+        .as_str()
+        .expect("product short name")
+        .to_string();
     println!("Product = {}", &product_short_name);
 
     // Maybe get client_config JSON
@@ -114,8 +117,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     // Make new working dir if necessary, otherwise clear temp dir
     if !Path::new(&working_dir_path).is_dir() {
         let app_resources_dir = get_string_value_by_key(&launch_config, "app_resources_path");
-        let local_setup_json =
-            load_json(source_local_setup_path(app_resources_dir).as_str()).expect("local setup json");
+        let local_setup_json = load_json(source_local_setup_path(app_resources_dir).as_str())
+            .expect("local setup json");
         initialize_working_dir(
             &local_setup_json["local_pankosmia_path"]
                 .as_str()
@@ -175,11 +178,44 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     for client_record in client_records_merged_array.iter() {
         clients_merged_array.push(build_client_record(&app_resources_dir_path, &client_record));
     }
+
+    // Get i18n overrides
+    let mut i18n_overrides_path = format!(
+        "{}{}lib{}app_resources{}product{}i18n-overrides.json",
+        binary_parent_dir_path,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+    );
+    let i18n_overrides_json: Value;
+    if !std::fs::exists(&i18n_overrides_path).expect("i18n_overrides_path exists test") {
+        let app_resources_path = get_string_value_by_key(&launch_config, "app_resources_path");
+        i18n_overrides_path = format!(
+            "{}{}app_resources{}product{}i18n-overrides.json",
+            app_resources_path,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+        );
+    }
+    i18n_overrides_json = match load_json(i18n_overrides_path.as_str()) {
+        Ok(j) => j,
+        Err(e) => {
+            println!(
+                "Warning: Could not read and parse i18n_overrides as json from {}: {}",
+                i18n_overrides_path, e
+            );
+            json!({})
+        }
+    };
+
     // Build complete clients with i18n
     let clients = build_clients_and_i18n(
         clients_merged_array,
         &app_resources_dir_path,
         &working_dir_path,
+        &i18n_overrides_json,
     );
 
     // *** LAUNCH ROCKET ***
