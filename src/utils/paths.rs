@@ -46,8 +46,12 @@ pub(crate) fn forbidden_path_strings() -> Vec<String> {
 }
 
 pub(crate) fn check_path_components(path_components: &mut Components<'_>) -> bool {
+    check_path_components1(path_components, 3)
+}
+
+pub(crate) fn check_path_components1(path_components: &mut Components<'_>, min_length: usize) -> bool {
     let mut ret = true;
-    if path_components.clone().collect::<Vec<_>>().len() < 3 {
+    if path_components.clone().collect::<Vec<_>>().len() < min_length {
         return false;
     }
     for path_component in path_components {

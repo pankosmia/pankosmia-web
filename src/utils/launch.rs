@@ -169,6 +169,12 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         ]
     )
     .mount(
+        "/api/html",
+        routes![
+            endpoints::html::framed_client::framed_client,
+        ]
+    )
+    .mount(
         "/api/audio",
         routes![
             endpoints::audio::compile_audio::compile_audio,
