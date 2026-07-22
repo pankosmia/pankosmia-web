@@ -210,7 +210,8 @@ pub struct ProductSpec {
     pub name: String,
     pub short_name: String,
     pub version: String,
-    pub date_time: String
+    pub date_time: String,
+    pub homepage: Option<String>
 }
 
 #[derive(Responder)]

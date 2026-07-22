@@ -8,6 +8,7 @@ use rocket::response::status;
 use rocket::{get, State};
 use serde_json::json;
 use walkdir::WalkDir;
+use std::env::consts;
 
 /// *`GET /version`*
 ///
@@ -44,12 +45,17 @@ pub fn get_version(state: &State<AppSettings>) -> status::Custom<(ContentType, S
         }
     }
     let json_value = json!({
+        "os": consts::OS,
         "pkg_version": crate_version,
         "product_name": product.name,
         "product_short_name": product.short_name,
         "product_version": product.version,
         "product_date_time": product.date_time,
-        "product_resources": product_resources
+        "product_homepage": match product.homepage.clone() {
+            Some(h) => h,
+            None => "core-client-dashboard".to_string()
+        },
+        "product_resources": product_resources,
     })
     .to_string();
     ok_json_response(json_value)
