@@ -116,11 +116,16 @@ pub fn client_config(state: &State<AppSettings>) -> status::Custom<(ContentType,
 }
 
 #[get("/favicon.ico")]
-pub(crate) async fn serve_root_favicon() -> Redirect {
-    Redirect::to("/clients/main/favicon.ico")
+pub(crate) async fn serve_root_favicon(state: &State<AppSettings>) -> Redirect {
+    Redirect::to(format!("/clients/{}/favicon.ico", state.product.homepage.clone().unwrap_or("dashboard".to_string())))
 }
 
 #[get("/")]
-pub(crate) fn redirect_root() -> Redirect {
-    Redirect::to("/clients/main")
+pub(crate) fn redirect_root(state: &State<AppSettings>) -> Redirect {
+    Redirect::to(format!("/clients/{}", state.product.homepage.clone().unwrap_or("dashboard".to_string())))
+}
+
+#[get("/clients/main")]
+pub(crate) fn redirect_main(state: &State<AppSettings>) -> Redirect {
+    Redirect::to(format!("/clients/{}", state.product.homepage.clone().unwrap_or("dashboard".to_string())))
 }

@@ -13,7 +13,7 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
         "/",
         routes![
                 endpoints::clients::redirect_root,
-
+                endpoints::clients::redirect_main,
         ]
     )
         .mount(

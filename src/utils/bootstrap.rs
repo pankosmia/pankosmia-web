@@ -391,6 +391,7 @@ pub(crate) fn build_clients_and_i18n(
     app_resources_path: &String,
     working_dir_path: &String,
     i18n_overrides_json: &Value,
+    product_homepage: String
 ) -> Clients {
     let clients_value = serde_json::to_value(clients_merged_array).unwrap();
     let clients: Clients = match serde_json::from_value(clients_value) {
@@ -419,7 +420,8 @@ pub(crate) fn build_clients_and_i18n(
         }
     };
     let mut i18n_pages_map = Map::new();
-    let mut found_main = false;
+    let mut found_homepage = false;
+    let homepage_target = format!("/clients/{}", &product_homepage);
     let mut locked_clients = clients.lock().unwrap().clone();
     let inner_clients = &mut *locked_clients;
     // Iterate over clients to build i18n
@@ -457,8 +459,8 @@ pub(crate) fn build_clients_and_i18n(
         let metadata_id = get_string_value_by_key(&metadata_json, "id");
         let metadata_i18n = metadata_json["i18n"].clone();
         i18n_pages_map.insert(metadata_id.clone(), metadata_i18n);
-        if client_record.url.clone() == "/clients/main".to_string() {
-            found_main = true;
+        if client_record.url.clone() == homepage_target {
+            found_homepage = true;
         }
     }
 
@@ -490,8 +492,8 @@ pub(crate) fn build_clients_and_i18n(
         }
     }
     // Throw if no main found
-    if !found_main {
-        panic!("Could not find a client registered at /main among clients in settings file");
+    if !found_homepage {
+        panic!("Could not find the declared homepage client {} among clients in settings file", product_homepage);
     };
     clients
 }

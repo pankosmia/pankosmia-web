@@ -72,6 +72,11 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         .to_string();
     println!("Product = {}", &product_short_name);
 
+    let product_homepage = match product_json["homepage"].clone() {
+            Value::String(h) => h.to_string(),
+            _ => "dashboard".to_string()
+        };
+
     // Maybe get client_config JSON
     let client_config_path = format!(
         "{}{}lib{}app_resources{}product{}client_config.json",
@@ -216,6 +221,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         &app_resources_dir_path,
         &working_dir_path,
         &i18n_overrides_json,
+        product_homepage
     );
 
     // *** LAUNCH ROCKET ***
