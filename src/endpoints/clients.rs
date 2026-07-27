@@ -117,15 +117,15 @@ pub fn client_config(state: &State<AppSettings>) -> status::Custom<(ContentType,
 
 #[get("/favicon.ico")]
 pub(crate) async fn serve_root_favicon(state: &State<AppSettings>) -> Redirect {
-    Redirect::to(format!("/clients/{}/favicon.ico", state.product.homepage.clone().unwrap_or("dashboard".to_string())))
+    Redirect::to(format!("/clients/{}/favicon.ico", state.product.homepage.clone()))
 }
 
 #[get("/")]
 pub(crate) fn redirect_root(state: &State<AppSettings>) -> Redirect {
-    Redirect::to(format!("/clients/{}", state.product.homepage.clone().unwrap_or("dashboard".to_string())))
+    Redirect::to(format!("/clients/{}", state.product.homepage.clone()))
 }
 
 #[get("/clients/main")]
 pub(crate) fn redirect_main(state: &State<AppSettings>) -> Redirect {
-    Redirect::to(format!("/clients/{}", state.product.homepage.clone().unwrap_or("dashboard".to_string())))
+    Redirect::to(format!("/clients/{}", state.product.homepage.clone()))
 }

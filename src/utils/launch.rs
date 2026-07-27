@@ -288,10 +288,7 @@ pub(crate) fn add_app_settings(
             short_name: product_json["short_name"].as_str().unwrap().to_string(),
             version: product_json["version"].as_str().unwrap().to_string(),
             date_time: product_json["datetime"].as_str().unwrap().to_string(),
-            homepage: match product_json["homepage"].as_str() {
-                Some(h) => Some(h.to_string()),
-                None => None
-            }
+            homepage: product_json["homepage"].as_str().unwrap().to_string(),
         },
         client_config
     })

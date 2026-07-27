@@ -51,10 +51,7 @@ pub fn get_version(state: &State<AppSettings>) -> status::Custom<(ContentType, S
         "product_short_name": product.short_name,
         "product_version": product.version,
         "product_date_time": product.date_time,
-        "product_homepage": match product.homepage.clone() {
-            Some(h) => h,
-            None => "dashboard".to_string()
-        },
+        "product_homepage": product.homepage.clone(),
         "product_resources": product_resources,
     })
     .to_string();

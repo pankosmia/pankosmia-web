@@ -211,7 +211,7 @@ pub struct ProductSpec {
     pub short_name: String,
     pub version: String,
     pub date_time: String,
-    pub homepage: Option<String>
+    pub homepage: String
 }
 
 #[derive(Responder)]
