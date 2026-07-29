@@ -378,8 +378,17 @@ pub fn new_translation_plan_resource_repo(
         }
     }
 
-    // No ingredients
-    metadata_string = metadata_string.replace("%%SCOPE%%", "");
+    // Ingredients from plan
+    let mut plan_books = std::collections::BTreeSet::new();
+    let translation_plan_value = serde_json::from_str::<Value>(&plan_template_string).expect("plan from str");
+    let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
+    let translation_plan_sections = translation_plan_object["sections"].as_array().expect("plan sections as array").to_vec();
+    for section in translation_plan_sections.iter() {
+        let book_code = section["bookCode"].as_str().expect("bookCode as string").to_string();
+        plan_books.insert(book_code);
+    };
+    let scope_string = plan_books.iter().map(|b| {format!("\"{}\": {{}}", b)} ).collect::<Vec<_>>().join(", ");
+     metadata_string = metadata_string.replace("%%SCOPE%%", &scope_string);
     // Write metadata
     let path_to_repo_metadata = format!("{}{}metadata.json", &path_to_new_repo, os_slash_str());
     match std::fs::write(path_to_repo_metadata, metadata_string) {

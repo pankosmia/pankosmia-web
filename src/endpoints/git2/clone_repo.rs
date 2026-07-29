@@ -13,9 +13,6 @@ use rocket::{post, State};
 use std::path::{Components, Path, PathBuf};
 use std::sync::atomic::Ordering;
 
-#[cfg(target_os = "android")]
-use crate::git2::opts::set_ssl_cert_dir;
-
 /// POST /clone-repo/<repo_path>?<branch>
 ///
 /// Typically mounted as /git/clone-repo/<repo_path>?<branch>
@@ -72,11 +69,6 @@ pub async fn clone_repo(
             repo.as_str(),
         );
         let local_path = Path::new(&local_path_str);
-
-        #[cfg(target_os = "android")]
-        unsafe {
-            set_ssl_cert_dir("/system/etc/security/cacerts").expect("set ssl");
-        }
 
         if let Some(selected_branch) = &branch {
             let mut fetch_opts = FetchOptions::new();
