@@ -156,6 +156,10 @@ pub(crate) fn app_state_path (working_dir: &String) -> String {
     format!("{}/app_state.json", working_dir)
 }
 
+pub(crate) fn client_settings_dir_path (working_dir: &String) -> String {
+    format!("{}/client_settings", working_dir)
+}
+
 pub(crate) fn user_settings_path (working_dir: &String) -> String {
     format!("{}/user_settings.json", working_dir)
 }

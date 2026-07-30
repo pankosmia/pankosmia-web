@@ -1,13 +1,15 @@
-use std::collections::BTreeMap;
+use crate::structs::{AppSettings, Client};
 use crate::utils::client::{public_serialize_clients, Clients};
+use crate::utils::json_responses::{make_bad_json_data_response, make_good_json_data_response};
+use crate::utils::paths::{client_settings_dir_path, os_slash_str};
 use crate::utils::response::{not_ok_json_response, ok_json_response};
 use rocket::http::{ContentType, Status};
 use rocket::response::{status, Redirect};
-use rocket::{get, State};
+use rocket::serde::json::Json;
+use rocket::{get, post, State};
 use serde_json::{json, Value};
-use crate::structs::AppSettings;
-use crate::utils::json_responses::make_bad_json_data_response;
-use crate::utils::paths::os_slash_str;
+use std::collections::BTreeMap;
+use std::fs;
 
 /// *`GET /list-clients`*
 ///
@@ -42,8 +44,6 @@ pub fn list_clients(clients: &State<Clients>) -> status::Custom<(ContentType, St
 ///
 /// Returns a JSON object of public URL interfaces offered by clients.
 ///
-/// ```text
-
 #[get("/client-interfaces")]
 pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentType, String)> {
     let clients = clients.lock().unwrap().clone();
@@ -60,8 +60,7 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
                     Status::InternalServerError,
                     make_bad_json_data_response(format!(
                         "Could not load pankosmia metadata as string for {}: {}",
-                        client_path,
-                        e
+                        client_path, e
                     )),
                 )
             }
@@ -74,8 +73,7 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
                     Status::InternalServerError,
                     make_bad_json_data_response(format!(
                         "Could not parse pankosmia metadata as json for {}: {}",
-                        client_path,
-                        e
+                        client_path, e
                     )),
                 )
             }
@@ -97,7 +95,7 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
             "endpoints": endpoints_map
         });
         summaries.insert(id, summary);
-    };
+    }
     ok_json_response(serde_json::to_string(&summaries).unwrap())
 }
 
@@ -117,7 +115,10 @@ pub fn client_config(state: &State<AppSettings>) -> status::Custom<(ContentType,
 
 #[get("/favicon.ico")]
 pub(crate) async fn serve_root_favicon(state: &State<AppSettings>) -> Redirect {
-    Redirect::to(format!("/clients/{}/favicon.ico", state.product.homepage.clone()))
+    Redirect::to(format!(
+        "/clients/{}/favicon.ico",
+        state.product.homepage.clone()
+    ))
 }
 
 #[get("/")]
@@ -128,4 +129,99 @@ pub(crate) fn redirect_root(state: &State<AppSettings>) -> Redirect {
 #[get("/clients/main")]
 pub(crate) fn redirect_main(state: &State<AppSettings>) -> Redirect {
     Redirect::to(format!("/clients/{}", state.product.homepage.clone()))
+}
+
+/// Returns optional client matching a storage_id
+fn find_client_by_storage_id(clients: Vec<Client>, storage_id: String) -> Option<Client> {
+    let mut matching_client = None;
+    for client in clients.iter() {
+        if client.storage_id == Some(storage_id.clone()) {
+            matching_client = Some(client.clone());
+        }
+    }
+    matching_client
+}
+
+/// *`GET /client-settings/<storage_id>`*
+///
+/// Typically mounted as **`/client-settings/<storage_id>`**
+///
+/// Returns a JSON object of client settings via the client's storage id.
+/// 
+/// It is an error for the storage_id to not resolve to a client. If the client has no data an empty object is returned.
+///
+/// curl -X GET http://localhost:19119/api/client-settings/<storage_id>
+#[get("/client-settings/<storage_id>")]
+pub fn get_client_settings(
+    state: &State<AppSettings>,
+    clients: &State<Clients>,
+    storage_id: String,
+) -> status::Custom<(ContentType, String)> {
+    let clients = clients.lock().unwrap().clone();
+    let matching_client = find_client_by_storage_id(clients, storage_id);
+    match matching_client {
+        Some(c) => {
+            let working_dir = state.working_dir.clone();
+            let client_settings_path = format!(
+                "{}{}{}.json",
+                client_settings_dir_path(&working_dir),
+                os_slash_str(),
+                c.id.clone()
+            );
+            ok_json_response(fs::read_to_string(&client_settings_path).unwrap_or("{}".to_string()))
+        }
+        None => {
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response("No client found with this storage id".to_string()),
+            )
+        }
+    }
+}
+
+/// *`POST /client-settings/<storage_id>`*
+///
+/// Typically mounted as **`/client-settings/<storage_id>`**
+///
+/// Sets settings JSON for a client via the storage_id. The JSON must be an object.
+///
+/// curl -X POST http://localhost:19119/api/client-settings/<storage_id> -H "Content-Type: application/json" -d '{"settings": {"foo": "baa"}}'
+#[post("/client-settings/<storage_id>", format = "json", data = "<json_form>")]
+pub async fn post_client_settings(
+    state: &State<AppSettings>,
+    clients: &State<Clients>,
+    storage_id: String,
+    json_form: Json<Value>,
+) -> status::Custom<(ContentType, String)> {
+    let clients = clients.lock().unwrap().clone();
+    let matching_client = find_client_by_storage_id(clients, storage_id);
+    match matching_client {
+        Some(c) => {
+            let settings_json = match json_form["settings"].as_object() {
+            Some(j) => j,
+                None => {
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response("JSON form does not have settings key or the settings value is not an object".to_string()),
+            )
+        }
+            };
+            let working_dir = state.working_dir.clone();
+            let settings_dir = client_settings_dir_path(&working_dir);
+            if !fs::exists(&settings_dir).expect("fs exists") {
+                fs::create_dir_all(&settings_dir).expect("mkdir client settings");
+            }
+            let client_settings_path =
+                format!("{}{}{}.json", &settings_dir, os_slash_str(), c.id.clone());
+            let file_handle = fs::File::create(&client_settings_path).expect("create file handle");
+            serde_json::to_writer_pretty(file_handle, &settings_json).expect("write json");
+            ok_json_response(make_good_json_data_response("Settings written".to_string()))
+        }
+        None => {
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response("No client found with this storage id".to_string()),
+            )
+        }
+    }
 }

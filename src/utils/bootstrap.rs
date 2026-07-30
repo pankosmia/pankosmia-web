@@ -310,6 +310,16 @@ pub(crate) fn build_client_record(app_resources_path: &String, client_record: &V
                 e
                 )}
             };
+    // Get storage_id
+    let client_storage_id_path = format!("{}{}storage_id.json", client_path, os_slash_str());
+    let storage_id_string = match load_json(client_storage_id_path.as_str()) {
+        Ok(json) => {
+            let storage_id = json["id"].as_str().expect("storage_id as str");
+            Some(format!("{}", &storage_id))
+        },
+        Err(_) => None
+            };
+
     // Check that server and client versions are compatible
     let min_server_version: Option<&str> = metadata_json["minServerVersion"].as_str();
     let max_server_version: Option<&str> = metadata_json["maxServerVersion"].as_str();
@@ -383,6 +393,7 @@ pub(crate) fn build_client_record(app_resources_path: &String, client_record: &V
         "exclude_from_menu": metadata_json["exclude_from_menu"].as_bool().unwrap_or_else(|| false),
         "exclude_from_dashboard": metadata_json["exclude_from_dashboard"].as_bool().unwrap_or_else(|| false),
         "src": client_record["src"].as_str().expect("src"),
+        "storage_id": storage_id_string
     })
 }
 

@@ -96,6 +96,7 @@ pub struct Client {
     pub exclude_from_dashboard: bool,
     pub path: String,
     pub url: String,
+    pub storage_id: Option<String>
 }
 
 #[derive(Serialize)]

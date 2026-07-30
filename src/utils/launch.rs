@@ -23,7 +23,9 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::clients::list_clients,
                 endpoints::clients::client_interfaces,
                 endpoints::version::get_version,
-                endpoints::clients::client_config
+                endpoints::clients::client_config,
+                endpoints::clients::get_client_settings,
+                endpoints::clients::post_client_settings,
             ],
         )
         .mount("/api/notifications", routes![
