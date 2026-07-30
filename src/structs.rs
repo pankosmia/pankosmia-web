@@ -177,9 +177,11 @@ pub struct NewBcvResourceBookForm {
 pub struct BurritoMetadataIngredient {
     pub checksum: Value,
     pub mimeType: String,
+    pub size: usize,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scope: Option<Value>,
-    pub size: usize
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>
 }
 
 #[allow(non_snake_case)]
@@ -187,6 +189,8 @@ pub struct BurritoMetadataIngredient {
 pub struct BurritoMetadata {
     pub format : String,
     pub meta: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relationships: Option<Value>,
     pub idAuthorities: Value,
     pub identification: Value,
     pub languages: Vec<BurritoMetadataLanguage>,

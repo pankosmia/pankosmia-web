@@ -145,7 +145,9 @@ pub fn ingredients_metadata_from_files(
                         checksum: json!({"md5": ingredient_md5}),
                         mimeType: ingredient_mime_type.to_string(),
                         size: ingredient_size as usize,
-                        scope: ingredient_scope
+                        scope: ingredient_scope,
+                        role: None
+
                     };
                     ingredients.insert(
                         truncated_entry_string
