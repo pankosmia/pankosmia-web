@@ -4,3 +4,4 @@ pub mod get_typography;
 pub mod post_typography;
 pub mod post_typography_feature;
 pub mod get_new_auth_token;
+pub mod post_dev_setting;

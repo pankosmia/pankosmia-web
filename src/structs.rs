@@ -1,18 +1,17 @@
-use serde::{Deserialize, Serialize};
-use std::sync::{Mutex};
-use std::collections::{BTreeMap};
-use std::fmt;
-use rocket::{Responder, FromForm};
 use rocket::fs::TempFile;
-use rocket::http::{ContentType};
+use rocket::http::ContentType;
 use rocket::response::{status, Redirect};
+use rocket::{FromForm, Responder};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::BTreeMap;
+use std::fmt;
+use std::sync::Mutex;
 
 #[derive(Debug)]
 pub struct PankosmiaError(pub String);
 
 impl fmt::Display for PankosmiaError {
-
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "PankosmiaError: {}", self.0)
     }
@@ -25,13 +24,13 @@ pub struct Bcv {
     pub book_code: String,
     pub chapter: u16,
     pub verse: u16,
-    pub to_verse: u16
+    pub to_verse: u16,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypographyFeature {
     pub key: String,
-    pub value: u8
+    pub value: u8,
 }
 
 impl fmt::Display for TypographyFeature {
@@ -45,7 +44,7 @@ pub struct Typography {
     pub font_set: String,
     pub size: String,
     pub direction: String,
-    pub features: BTreeMap<String, Vec<TypographyFeature>>
+    pub features: BTreeMap<String, Vec<TypographyFeature>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -59,14 +58,14 @@ pub struct AuthRequest {
 pub struct ProjectIdentifier {
     pub source: String,
     pub organization: String,
-    pub project: String
+    pub project: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SelectedWord {
     pub target: Option<String>,
     pub source: Option<String>,
-    pub lemma: Option<String>
+    pub lemma: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -84,7 +83,8 @@ pub struct AppSettings {
     pub typography: Mutex<Typography>,
     pub current_project: Mutex<Option<ProjectIdentifier>>,
     pub product: ProductSpec,
-    pub client_config: BTreeMap<String, Vec<ClientConfigSection>>
+    pub client_config: BTreeMap<String, Vec<ClientConfigSection>>,
+    pub dev_settings: Mutex<Value>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -96,7 +96,7 @@ pub struct Client {
     pub exclude_from_dashboard: bool,
     pub path: String,
     pub url: String,
-    pub storage_id: Option<String>
+    pub storage_id: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -161,7 +161,7 @@ pub struct NewScriptureBookForm {
     pub book_title: String,
     pub book_abbr: String,
     pub add_cv: bool,
-    pub vrs_name: Option<String>
+    pub vrs_name: Option<String>,
 }
 
 #[derive(FromForm, Deserialize, Serialize, Debug)]
@@ -169,7 +169,7 @@ pub struct NewBcvResourceBookForm {
     pub book_code: String,
     pub book_title: String,
     pub book_abbr: String,
-    pub vrs_name: Option<String>
+    pub vrs_name: Option<String>,
 }
 
 #[allow(non_snake_case)]
@@ -181,13 +181,13 @@ pub struct BurritoMetadataIngredient {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scope: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub role: Option<String>
+    pub role: Option<String>,
 }
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BurritoMetadata {
-    pub format : String,
+    pub format: String,
     pub meta: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relationships: Option<Value>,
@@ -207,7 +207,7 @@ pub struct BurritoMetadataLanguage {
     pub tag: String,
     pub name: Mutex<BTreeMap<String, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scriptDirection: Option<String>
+    pub scriptDirection: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -216,7 +216,7 @@ pub struct ProductSpec {
     pub short_name: String,
     pub version: String,
     pub date_time: String,
-    pub homepage: String
+    pub homepage: String,
 }
 
 #[derive(Responder)]
@@ -228,7 +228,7 @@ pub enum BytesOrError {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ServerDependencies {
     pub resources: String,
-    pub webfonts: String
+    pub webfonts: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -239,7 +239,7 @@ pub struct ClientConfigString {
     min_length: Option<i32>,
     max_length: Option<i32>,
     options: Option<Vec<String>>,
-    regex_string: Option<String>
+    regex_string: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -249,14 +249,14 @@ pub struct ClientConfigInteger {
     value: i32,
     min: Option<i32>,
     max: Option<i32>,
-    options: Option<Vec<i32>>
+    options: Option<Vec<i32>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ClientConfigBool {
     pub id: String,
     pub i18n: String,
-    value: bool
+    value: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -264,14 +264,14 @@ pub struct ClientConfigBool {
 pub enum ClientConfigField {
     String(ClientConfigString),
     Integer(ClientConfigInteger),
-    Bool(ClientConfigBool)
+    Bool(ClientConfigBool),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ClientConfigSection {
     pub id: String,
     pub i18n: String,
-    fields: Vec<ClientConfigField>
+    fields: Vec<ClientConfigField>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -292,9 +292,8 @@ pub struct RemoteRepoRecord {
     pub metadata_types: String,
     pub topics: Vec<String>,
     pub book_codes: Vec<String>,
-    pub parent_clone_url: String
+    pub parent_clone_url: String,
 }
-
 
 #[derive(FromForm)]
 pub struct Upload<'f> {

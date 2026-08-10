@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::env;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use std::sync::atomic::Ordering;
 
 mod structs;
 mod utils;
@@ -73,9 +74,14 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     println!("Product = {}", &product_short_name);
 
     let product_homepage = match product_json["homepage"].clone() {
-            Value::String(h) => h.to_string(),
-            _ => "dashboard".to_string()
-        };
+        Value::String(h) => h.to_string(),
+        _ => "dashboard".to_string(),
+    };
+
+    // Maybe enable net according to start_online setting
+    if !product_json["start_offline"].as_bool().unwrap_or(false) {
+        NET_IS_ENABLED.store(true, Ordering::Relaxed);
+    }
 
     // Maybe get client_config JSON
     let client_config_path = format!(
@@ -221,7 +227,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         &app_resources_dir_path,
         &working_dir_path,
         &i18n_overrides_json,
-        product_homepage
+        product_homepage,
     );
 
     // *** LAUNCH ROCKET ***

@@ -44,8 +44,9 @@ pub fn get_version(state: &State<AppSettings>) -> status::Custom<(ContentType, S
             }
         }
     }
+    let dev_settings = state.dev_settings.lock().expect("lock dev server");
     let json_value = json!({
-        "os": consts::OS,
+        "os": dev_settings["force_os"].as_str().unwrap_or(consts::OS),
         "pkg_version": crate_version,
         "product_name": product.name,
         "product_short_name": product.short_name,

@@ -40,6 +40,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
                 endpoints::settings2::get_typography::get_typography,
                 endpoints::settings2::post_typography::post_typography,
                 endpoints::settings2::post_typography_feature::post_typography_feature,
+                endpoints::settings2::post_dev_setting::post_dev_setting,
+                endpoints::settings2::post_dev_setting::post_clear_dev_setting
             ],
         )
         .mount("/api/net", routes![
@@ -290,9 +292,10 @@ pub(crate) fn add_app_settings(
             short_name: product_json["short_name"].as_str().unwrap().to_string(),
             version: product_json["version"].as_str().unwrap().to_string(),
             date_time: product_json["datetime"].as_str().unwrap().to_string(),
-            homepage: product_json["homepage"].as_str().unwrap().to_string(),
+            homepage: product_json["homepage"].as_str().unwrap().to_string()
         },
-        client_config
+        client_config,
+        dev_settings: Mutex::new(json!({"force_os": null}))
     })
 }
 
