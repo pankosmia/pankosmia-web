@@ -79,7 +79,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     };
 
     // Maybe enable net according to start_online setting
-    if !product_json["start_offline"].as_bool().unwrap_or(false) {
+    if !product_json["start_offline"].as_bool().unwrap_or(true) {
         NET_IS_ENABLED.store(true, Ordering::Relaxed);
     }
 
