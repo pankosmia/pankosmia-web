@@ -16,3 +16,4 @@ pub mod audio;
 pub mod temp_file;
 pub mod llm;
 pub mod html;
+pub mod system;

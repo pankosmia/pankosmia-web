@@ -1,5 +1,7 @@
 use crate::endpoints;
-use crate::structs::{AppSettings, Client, ClientConfigSection, ProductSpec, ProjectIdentifier, SelectedWord};
+use crate::structs::{
+    AppSettings, Client, ClientConfigSection, ProductSpec, ProjectIdentifier, SelectedWord,
+};
 use crate::utils::paths::{os_slash_str, source_app_resources_path};
 use rocket::fs::FileServer;
 use rocket::{catchers, routes, Build, Rocket};
@@ -186,6 +188,12 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::audio::ffmpeg_path::ffmpeg_path
         ]
     )
+    .mount(
+        "/api/system",
+        routes![
+            endpoints::system::shutdown::shutdown
+        ]
+    )
 }
 
 pub(crate) fn add_catchers(rocket_instance: Rocket<Build>) -> Rocket<Build> {
@@ -206,14 +214,14 @@ pub(crate) fn add_app_settings(
     user_settings_json: &Value,
     app_state_json: &Value,
     product_json: &Value,
-    client_config: BTreeMap<String, Vec<ClientConfigSection>>
+    client_config: BTreeMap<String, Vec<ClientConfigSection>>,
 ) -> Rocket<Build> {
     let default_bcv_json = json!({
-            "book_code": "TIT",
-            "chapter": 1,
-            "verse": 1,
-            "to_verse": 1
-            });
+    "book_code": "TIT",
+    "chapter": 1,
+    "verse": 1,
+    "to_verse": 1
+    });
     rocket_instance.manage(AppSettings {
         repo_dir: Mutex::new(repo_dir_path.clone()),
         app_resources_dir: app_resources_dir_path.clone(),
@@ -248,11 +256,9 @@ pub(crate) fn add_app_settings(
         bcv: match app_state_json["bcv"].clone() {
             Value::Object(v) => match serde_json::from_value(Value::Object(v)) {
                 Ok(fv) => fv,
-                Err(_) => serde_json::from_value(default_bcv_json)
-            .unwrap()
+                Err(_) => serde_json::from_value(default_bcv_json).unwrap(),
             },
-            _ => serde_json::from_value(default_bcv_json)
-            .unwrap(),
+            _ => serde_json::from_value(default_bcv_json).unwrap(),
         },
         current_project: match app_state_json["current_project"].clone() {
             Value::Object(p) => Mutex::new(Some(ProjectIdentifier {
@@ -263,26 +269,23 @@ pub(crate) fn add_app_settings(
             _ => Mutex::new(None),
         },
         snippet: match app_state_json["snippet"].clone() {
-            Value::String(s) => {
-                Mutex::new(Some(s.as_str().to_string()))
-            },
+            Value::String(s) => Mutex::new(Some(s.as_str().to_string())),
             _ => Mutex::new(None),
         },
         word: match app_state_json["word"].clone() {
-            Value::Object(w) => 
-            Mutex::new(Some(SelectedWord {
+            Value::Object(w) => Mutex::new(Some(SelectedWord {
                 target: match w["target"].as_str() {
                     Some(t) => Some(t.to_string()),
-                    None => None
+                    None => None,
                 },
                 source: match w["source"].as_str() {
                     Some(s) => Some(s.to_string()),
-                    None => None
+                    None => None,
                 },
                 lemma: match w["target"].as_str() {
                     Some(l) => Some(l.to_string()),
-                    None => None
-                }
+                    None => None,
+                },
             })),
             _ => Mutex::new(None),
         },
@@ -292,10 +295,10 @@ pub(crate) fn add_app_settings(
             short_name: product_json["short_name"].as_str().unwrap().to_string(),
             version: product_json["version"].as_str().unwrap().to_string(),
             date_time: product_json["datetime"].as_str().unwrap().to_string(),
-            homepage: product_json["homepage"].as_str().unwrap().to_string()
+            homepage: product_json["homepage"].as_str().unwrap().to_string(),
         },
         client_config,
-        dev_settings: Mutex::new(json!({"force_os": null}))
+        dev_settings: Mutex::new(json!({"force_os": null})),
     })
 }
 
