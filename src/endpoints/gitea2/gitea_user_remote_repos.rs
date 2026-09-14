@@ -44,7 +44,7 @@ pub fn gitea_user_remote_repos(
     if !NET_IS_ENABLED.load(Ordering::Relaxed) {
         return not_ok_offline_json_response();
     }
-    let gitea_path = format!("https://{}/api/v1/users/{}/repos", gitea_server, gitea_user);
+    let gitea_path = format!("https://{}/api/v1/users/{}/repos?limit=300", gitea_server, gitea_user);
     match ureq::get(gitea_path.as_str()).call() {
         Ok(r) => match r.into_json::<Value>() {
             Ok(j) => {
