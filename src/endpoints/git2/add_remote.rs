@@ -68,7 +68,7 @@ pub async fn add_remote_to_repo(
                     Ok(_) => ok_ok_json_response(),
                     Err(e) => {
                         not_ok_json_response(
-                            Status::InternalServerError,
+                            Status::BadRequest,
                             make_bad_json_data_response(format!("Could not add remote to repo: {}", e))
                         )
                     }
