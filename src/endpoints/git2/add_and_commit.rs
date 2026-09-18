@@ -11,8 +11,8 @@ use rocket::response::status;
 use rocket::serde::json::Json;
 use rocket::serde::Deserialize;
 use rocket::{post, State};
-use std::path::{Components, PathBuf};
 use serde_json::{Map, Value};
+use std::path::{Components, PathBuf};
 
 /// *`POST /add-and-commit/<repo_path>`*
 ///
@@ -61,28 +61,72 @@ pub async fn add_and_commit(
                     Status::InternalServerError,
                     make_bad_json_data_response(format!("Could not parse metadata: {}", e)),
                 );
-            }        // Write metadata
-
+            } // Write metadata
         };
         // Update timestamps & revision
         let now_time = utc_now_timestamp_string();
-        let mut meta_obj: Map<String, Value> = metadata_struct.meta.as_object().expect("meta object").clone();
-        meta_obj.insert("dateCreated".to_string(), Value::String(now_time));
+        // - meta timestamp
+        let mut meta_obj: Map<String, Value> = metadata_struct
+            .meta
+            .as_object()
+            .expect("meta object")
+            .clone();
+        meta_obj.insert("dateCreated".to_string(), Value::String(now_time.clone()));
         metadata_struct.meta = serde_json::to_value(meta_obj).expect("meta map to value");
+        // - find identification abbr object
+        let mut identification_obj: Map<String, Value> = metadata_struct
+            .identification
+            .as_object()
+            .expect("identification as object")
+            .clone();
+        let mut primary_obj = identification_obj["primary"]
+            .as_object()
+            .expect("primary as object")
+            .clone();
+        let first_primary_org_tuple = primary_obj
+            .iter()
+            .next()
+            .expect("first org");
+        let first_primary_org_key = first_primary_org_tuple.0;
+        let mut first_primary_org = first_primary_org_tuple.1.as_object().expect("org object").clone();
+        let first_primary_abbr_tuple = first_primary_org
+            .iter()
+            .next()
+            .expect("first abbr");
+        let first_primary_abbr_key = first_primary_abbr_tuple.0;
+        let mut first_primary_abbr = first_primary_abbr_tuple.1.as_object().expect("abbr object").clone();
+        let revision = first_primary_abbr["revision"]
+            .as_str()
+            .expect("revision string");
+        let mut revision_no: i32 = revision.parse().expect("revision int");
+        revision_no += 1;
+        let new_revision = format!("{}", &revision_no);
+        first_primary_abbr.insert("revision".to_string(), Value::String(new_revision));
+        // - identification timestamp
+        first_primary_abbr.insert("timestamp".to_string(), Value::String(now_time));
+        // Update primary in identification
+        first_primary_org.insert(first_primary_abbr_key.clone(), serde_json::to_value(first_primary_abbr).expect("abbr value"));
+        primary_obj.insert(first_primary_org_key.clone(), serde_json::to_value(first_primary_org).expect("org value"));
+        // Update metadata struct
+        identification_obj.insert("primary".to_string(), Value::Object(primary_obj));
+        metadata_struct.identification =
+            serde_json::to_value(identification_obj).expect("new identification");
         // Write metadata
-        let new_metadata_string = serde_json::to_string(&metadata_struct).expect("new metadata string");
+        let new_metadata_string =
+            serde_json::to_string(&metadata_struct).expect("new metadata string");
         match std::fs::write(path_to_repo_metadata, new_metadata_string) {
-        Ok(_) => (),
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not write updated metadata to repo: {}",
-                    e
-                )),
-            )
+            Ok(_) => (),
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(format!(
+                        "Could not write updated metadata to repo: {}",
+                        e
+                    )),
+                )
+            }
         }
-    }
+;
         // Git - open, add and commit repo
         let result = match Repository::open(repo_path_string) {
             Ok(repo) => {
