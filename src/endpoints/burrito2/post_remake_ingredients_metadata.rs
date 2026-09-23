@@ -27,7 +27,7 @@ pub async fn remake_ingredients_metadata(
     let path_components: Components<'_> = repo_path.components();
     let full_repo_path = format!(
         "{}{}{}",
-        state.repo_dir.lock().unwrap(),
+        state.repo_dir.lock().expect("repo dir lock"),
         os_slash_str(),
         &repo_path.display().to_string()
     );
@@ -60,18 +60,18 @@ pub async fn remake_ingredients_metadata(
             }
         };
         // Add ingredient record and currentScope value for USFM
-        if let mut ingredients = metadata_struct.ingredients.lock().unwrap() {
+        if let mut ingredients = metadata_struct.ingredients.lock().expect("ingredients lock") {
             let new_ingredients =
                 ingredients_metadata_from_files(app_resources_dir.clone(), full_repo_path.clone());
             *ingredients = new_ingredients;
         }
         if let type_info = metadata_struct.r#type {
-            let mut type_ob = type_info.as_object().unwrap().clone();
-            let flavor_type_ob = type_ob["flavorType"].as_object_mut().unwrap();
+            let mut type_ob = type_info.as_object().expect("type object").clone();
+            let flavor_type_ob = type_ob["flavorType"].as_object_mut().expect("flavorType mutable object");
             let new_current_scope =
                 ingredients_scopes_from_files(app_resources_dir, full_repo_path.clone());
             flavor_type_ob["currentScope"] =
-                serde_json::from_str(serde_json::to_string(&new_current_scope).unwrap().as_str())
+                serde_json::from_str(serde_json::to_string(&new_current_scope).expect("currentScope string").as_str())
                     .unwrap();
             metadata_struct.r#type =
                 serde_json::from_str(serde_json::to_string(&type_ob).unwrap().as_str()).unwrap();

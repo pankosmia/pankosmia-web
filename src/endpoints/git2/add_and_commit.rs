@@ -1,4 +1,5 @@
 use crate::structs::{AppSettings, BurritoMetadata};
+use crate::utils::burrito::ingredients_metadata_from_files;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
 use crate::utils::response::{
@@ -13,6 +14,7 @@ use rocket::serde::Deserialize;
 use rocket::{post, State};
 use serde_json::{Map, Value};
 use std::path::{Components, PathBuf};
+use uuid::Uuid;
 
 /// *`POST /add-and-commit/<repo_path>`*
 ///
@@ -35,7 +37,7 @@ pub async fn add_and_commit(
     if check_path_components(&mut path_components.clone()) {
         let repo_path_string = format!(
             "{}{}{}",
-            state.repo_dir.lock().unwrap().clone(),
+            state.repo_dir.lock().expect("repo dir lock").clone(),
             os_slash_str(),
             &repo_path.display().to_string().clone()
         );
@@ -83,34 +85,47 @@ pub async fn add_and_commit(
             .as_object()
             .expect("primary as object")
             .clone();
-        let first_primary_org_tuple = primary_obj
-            .iter()
-            .next()
-            .expect("first org");
+        let first_primary_org_tuple = primary_obj.iter().next().expect("first org");
         let first_primary_org_key = first_primary_org_tuple.0;
-        let mut first_primary_org = first_primary_org_tuple.1.as_object().expect("org object").clone();
-        let first_primary_abbr_tuple = first_primary_org
-            .iter()
-            .next()
-            .expect("first abbr");
+        let mut first_primary_org = first_primary_org_tuple
+            .1
+            .as_object()
+            .expect("org object")
+            .clone();
+        let first_primary_abbr_tuple = first_primary_org.iter().next().expect("first abbr");
         let first_primary_abbr_key = first_primary_abbr_tuple.0;
-        let mut first_primary_abbr = first_primary_abbr_tuple.1.as_object().expect("abbr object").clone();
-        let revision = first_primary_abbr["revision"]
-            .as_str()
-            .expect("revision string");
-        let mut revision_no: i32 = revision.parse().expect("revision int");
-        revision_no += 1;
-        let new_revision = format!("{}", &revision_no);
+        let mut first_primary_abbr = first_primary_abbr_tuple
+            .1
+            .as_object()
+            .expect("abbr object")
+            .clone();
+        let new_revision = Uuid::new_v4().to_string();
         first_primary_abbr.insert("revision".to_string(), Value::String(new_revision));
         // - identification timestamp
         first_primary_abbr.insert("timestamp".to_string(), Value::String(now_time));
         // Update primary in identification
-        first_primary_org.insert(first_primary_abbr_key.clone(), serde_json::to_value(first_primary_abbr).expect("abbr value"));
-        primary_obj.insert(first_primary_org_key.clone(), serde_json::to_value(first_primary_org).expect("org value"));
+        first_primary_org.insert(
+            first_primary_abbr_key.clone(),
+            serde_json::to_value(first_primary_abbr).expect("abbr value"),
+        );
+        primary_obj.insert(
+            first_primary_org_key.clone(),
+            serde_json::to_value(first_primary_org).expect("org value"),
+        );
         // Update metadata struct
         identification_obj.insert("primary".to_string(), Value::Object(primary_obj));
         metadata_struct.identification =
             serde_json::to_value(identification_obj).expect("new identification");
+        // Remake ingredients metadata
+        let app_resources_dir = format!("{}", &state.app_resources_dir);
+        #[allow(irrefutable_let_patterns)]
+        if let mut ingredients = metadata_struct.ingredients.lock().expect("ingredients lock") {
+            let new_ingredients = ingredients_metadata_from_files(
+                app_resources_dir.clone(),
+                repo_path_string.clone(),
+            );
+            *ingredients = new_ingredients;
+        }
         // Write metadata
         let new_metadata_string =
             serde_json::to_string(&metadata_struct).expect("new metadata string");
@@ -125,8 +140,7 @@ pub async fn add_and_commit(
                     )),
                 )
             }
-        }
-;
+        };
         // Git - open, add and commit repo
         let result = match Repository::open(repo_path_string) {
             Ok(repo) => {
