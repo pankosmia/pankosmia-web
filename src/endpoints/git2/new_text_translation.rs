@@ -11,6 +11,7 @@ use rocket::serde::json::Json;
 use rocket::{post, FromForm, State};
 use rocket::serde::Deserialize;
 use serde_json::{json, Value};
+use regex::Regex;
 
 #[derive(FromForm, Deserialize)]
 pub struct NewTextTranslationContentForm {
@@ -63,6 +64,78 @@ pub fn new_text_translation_repo(
             make_bad_json_data_response("Metadata template for text_translation not found".to_string()),
         );
     }
+
+    // Custom language begins with x- and name must be provided
+    // Non-custom language must be in lookup, provided name is ignored
+    // First regex validate the bcp47 string
+    let bcp_regex = Regex::new("^(((en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang))|((([A-Za-z]{2,3}(-([A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4}|[A-Za-z]{5,8})(-([A-Za-z]{4}))?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-([0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(x(-[A-Za-z0-9]{1,8})+))?)|(x(-[A-Za-z0-9]{1,8})+))$").unwrap();
+    if !bcp_regex.is_match(&json_form.content_language_code) {
+        return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "Language code '{}' is not Scripture Burrito schema valid",
+                    &json_form.content_language_code
+                )),
+            )
+    }
+    // To x- or not to x-
+    let mut language_name;
+    if json_form.content_language_code.starts_with("x-") {
+        language_name = match json_form.content_language_name.clone() {
+            Some(n) => n,
+            None => return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "Language code '{}' is custom ('x-') but no language name has been provided",
+                    &json_form.content_language_code
+                )),
+            )
+        }
+    } else {
+        // Read language lookup
+        let path_to_language_lookup = format!(
+            "{}{}app_resources{}lookups{}bcp47-language_codes.json",
+            &state.app_resources_dir,
+            os_slash_str(),
+            os_slash_str(),
+            os_slash_str(),
+        );
+
+        let language_lookup_json = match load_json(&path_to_language_lookup) {
+            Ok(v) => v,
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(format!(
+                        "Could not load and parse language lookup: {}",
+                        e
+                    )),
+                )
+            }
+        };
+
+        // Split non-x- name on first dash to get iso 639-[13] code for lookup
+        let language_code = json_form.content_language_code.clone();
+        let mut language_code_bits = language_code.split("-").collect::<std::collections::VecDeque<&str>>();
+        // Attempt to lookup that language code
+        language_name = match language_lookup_json[language_code_bits[0]].as_object() {
+            Some(r) => r["en"].as_str().expect("English language name").to_string(),
+            None => return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "Language code '{}' is not custom (no 'x-') but has not been found in the BCP47 lookup table",
+                    &json_form.content_language_code
+                ))
+            ),
+        };
+        // Add any bcp47 qualifiers to name if necessary
+        if language_code_bits.len() > 1 {
+            language_code_bits.pop_front();
+            let language_code_bits_vec = Into::<Vec<&str>>::into(language_code_bits);
+            language_name = format!("{} ({})", &language_name, language_code_bits_vec.join(" "));
+        }
+    }
+
     // Build path for new repo and parent
     let path_to_new_repo_parent = format!(
         "{}{}_local_{}_local_",
@@ -174,55 +247,6 @@ pub fn new_text_translation_repo(
                 )),
             )
         }
-    }
-
-    // Custom language begins with x- and name must be provided
-    // Non-custom language must be in lookup, provided name is ignored
-    let language_name;
-    if json_form.content_language_code.starts_with("x-") {
-        language_name = match json_form.content_language_name.clone() {
-            Some(n) => n,
-            None => return not_ok_json_response(
-                Status::BadRequest,
-                make_bad_json_data_response(format!(
-                    "Language code '{}' is custom ('x-') but no language name has been provided",
-                    &json_form.content_language_code
-                )),
-            )
-        }
-    } else {
-        // Read language lookup
-        let path_to_language_lookup = format!(
-            "{}{}app_resources{}lookups{}bcp47-language_codes.json",
-            &state.app_resources_dir,
-            os_slash_str(),
-            os_slash_str(),
-            os_slash_str(),
-        );
-
-        let language_lookup_json = match load_json(&path_to_language_lookup) {
-            Ok(v) => v,
-            Err(e) => {
-                return not_ok_json_response(
-                    Status::InternalServerError,
-                    make_bad_json_data_response(format!(
-                        "Could not load and parse language lookup: {}",
-                        e
-                    )),
-                )
-            }
-        };
-
-        language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
-            Some(r) => r["en"].as_str().expect("English language name").to_string(),
-            None => return not_ok_json_response(
-                Status::BadRequest,
-                make_bad_json_data_response(format!(
-                    "Language code '{}' is not custom (no 'x-') but has not been found in the BCP47 lookup table",
-                    &json_form.content_language_code
-                ))
-            ),
-        };
     }
 
     // Read and customize metadata
