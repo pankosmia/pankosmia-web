@@ -1,16 +1,16 @@
-use std::collections::BTreeMap;
 use crate::structs::{BurritoMetadataIngredient, MetadataSummary};
 use crate::utils::bcv_ref::canonical_book_codes;
+use crate::utils::paths::os_slash_str;
+use chksum_md5::chksum;
+use mime_infer;
+use regex::Regex;
 use serde_json::{json, Map, Value};
+use std::collections::BTreeMap;
 use std::fs;
 use std::fs::File;
 use std::io;
 use std::path::Path;
 use walkdir::WalkDir;
-use crate::utils::paths::os_slash_str;
-use regex::Regex;
-use chksum_md5::chksum;
-use mime_infer;
 
 pub(crate) fn summary_metadata_from_file(
     repo_metadata_path: String,
@@ -75,13 +75,31 @@ pub(crate) fn summary_metadata_from_file(
             _ => "?".to_string(),
         },
         book_codes: book_codes,
-        timestamp: fs::metadata(&repo_metadata_path)
-            .expect("Could not read fs metadata")
-            .modified()
-            .expect("Could not get modified for fs")
-            .duration_since(std::time::SystemTime::UNIX_EPOCH)
-            .expect("Could not get elapsed")
-            .as_secs(),
+        timestamp: raw_metadata_struct["identification"]["primary"]
+            .as_object()
+            .and_then(|primary| {
+                primary.values().find_map(|value| {
+                    value.as_object().and_then(|inner| {
+                        inner.values().find_map(|value| value["timestamp"].as_str())
+                    })
+                })
+            })
+            .and_then(|timestamp| {
+                let dt = chrono::DateTime::parse_from_rfc3339(timestamp).ok()?;
+                std::time::SystemTime::from(dt)
+                    .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                    .ok()
+                    .map(|elapsed| elapsed.as_secs())
+            })
+            .unwrap_or_else(|| {
+                fs::metadata(&repo_metadata_path)
+                    .expect("Could not read fs metadata")
+                    .modified()
+                    .expect("Could not get modified for fs")
+                    .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                    .expect("Could not get elapsed")
+                    .as_secs()
+            }),
     })
 }
 
@@ -99,77 +117,82 @@ pub fn ingredients_metadata_from_files(
     app_resources_dir: String,
     repo_path: String,
 ) -> BTreeMap<String, BurritoMetadataIngredient> {
-        let mut ingredients = BTreeMap::new();
-        for entry in WalkDir::new(&repo_path) {
-            let entry_string = entry.unwrap().path().display().to_string();
-            if Path::new(&entry_string).is_file() {
-                let truncated_entry_string = entry_string.replace(&repo_path, "");
-                if !truncated_entry_string.starts_with(".") && !truncated_entry_string.contains(format!("{}.", os_slash_str()).as_str()) {
-                    let mut ingredient_scope: Option<Value> = None;
-                    let entry_copy = truncated_entry_string.clone();
-                    let file_path_parts: Vec<_> = entry_copy.split(os_slash_str()).collect();
-                    let file_name_parts: Vec<_> = file_path_parts.last().unwrap().split(".").collect();
-                    if file_name_parts.len() < 2 {
-                        continue;
-                    }
-                    if file_name_parts[0] == "metadata" && file_name_parts[1] == "json" {
-                        continue;
-                    }
-                    if file_name_parts.len() == 3 && file_name_parts[2] == "bak" {
-                        continue;
-                    }
-                    let file_part1 = file_name_parts[0];
-                    // Scope
-                    let bible_regex = Regex::new("^[1-6A-Z]{3}$").unwrap();
-                    let book_string = file_part1.to_string();
-                    if bible_regex.is_match(&file_part1) && canonical_book_codes(app_resources_dir.clone()).contains(&book_string) {
-                        ingredient_scope = Some(json!({file_part1.to_string(): []}));
-                    }
-                    // Size
-                    let ingredient_size = fs::metadata(&entry_string).unwrap().len();
-                    // md5
-                    let chk_file = File::open(&entry_string).unwrap();
-                    let ingredient_md5 = chksum(chk_file).unwrap().to_string();
-                    // mimeType
-                    let ingredient_mime_type = match mime_infer::from_path(&entry_string).first() {
-                        Some(mime_type) => mime_type.to_string(),
-                        None => {
-                            if file_name_parts.len() == 2 && (file_name_parts[1] == "usfm" || file_name_parts[1] == "vrs") {
-                                "text/plain".to_string()
-                            } else {
-                                "application/octet-stream".to_string()
-                            }
-                        },
-                    };
-                    let ingredient_details = BurritoMetadataIngredient {
-                        checksum: json!({"md5": ingredient_md5}),
-                        mimeType: ingredient_mime_type.to_string(),
-                        size: ingredient_size as usize,
-                        scope: ingredient_scope,
-                        role: None
-
-                    };
-                    ingredients.insert(
-                        truncated_entry_string
-                            .replace("\\", "/")
-                            .replace("/ingredients/", "ingredients/"),
-                        ingredient_details
-                    );
+    let mut ingredients = BTreeMap::new();
+    for entry in WalkDir::new(&repo_path) {
+        let entry_string = entry.unwrap().path().display().to_string();
+        if Path::new(&entry_string).is_file() {
+            let truncated_entry_string = entry_string.replace(&repo_path, "");
+            if !truncated_entry_string.starts_with(".")
+                && !truncated_entry_string.contains(format!("{}.", os_slash_str()).as_str())
+            {
+                let mut ingredient_scope: Option<Value> = None;
+                let entry_copy = truncated_entry_string.clone();
+                let file_path_parts: Vec<_> = entry_copy.split(os_slash_str()).collect();
+                let file_name_parts: Vec<_> = file_path_parts.last().unwrap().split(".").collect();
+                if file_name_parts.len() < 2 {
+                    continue;
                 }
+                if file_name_parts[0] == "metadata" && file_name_parts[1] == "json" {
+                    continue;
+                }
+                if file_name_parts.len() == 3 && file_name_parts[2] == "bak" {
+                    continue;
+                }
+                let file_part1 = file_name_parts[0];
+                // Scope
+                let bible_regex = Regex::new("^[1-6A-Z]{3}$").unwrap();
+                let book_string = file_part1.to_string();
+                if bible_regex.is_match(&file_part1)
+                    && canonical_book_codes(app_resources_dir.clone()).contains(&book_string)
+                {
+                    ingredient_scope = Some(json!({file_part1.to_string(): []}));
+                }
+                // Size
+                let ingredient_size = fs::metadata(&entry_string).unwrap().len();
+                // md5
+                let chk_file = File::open(&entry_string).unwrap();
+                let ingredient_md5 = chksum(chk_file).unwrap().to_string();
+                // mimeType
+                let ingredient_mime_type = match mime_infer::from_path(&entry_string).first() {
+                    Some(mime_type) => mime_type.to_string(),
+                    None => {
+                        if file_name_parts.len() == 2
+                            && (file_name_parts[1] == "usfm" || file_name_parts[1] == "vrs")
+                        {
+                            "text/plain".to_string()
+                        } else {
+                            "application/octet-stream".to_string()
+                        }
+                    }
+                };
+                let ingredient_details = BurritoMetadataIngredient {
+                    checksum: json!({"md5": ingredient_md5}),
+                    mimeType: ingredient_mime_type.to_string(),
+                    size: ingredient_size as usize,
+                    scope: ingredient_scope,
+                    role: None,
+                };
+                ingredients.insert(
+                    truncated_entry_string
+                        .replace("\\", "/")
+                        .replace("/ingredients/", "ingredients/"),
+                    ingredient_details,
+                );
             }
         }
+    }
     ingredients
 }
 
 pub fn ingredients_scopes_from_files(
     app_resources_dir: String,
-    repo_path: String
+    repo_path: String,
 ) -> BTreeMap<String, Value> {
     let mut scopes = BTreeMap::new();
     let ingredients_map = ingredients_metadata_from_files(app_resources_dir, repo_path);
     for (_key, value) in ingredients_map.iter() {
         match value.clone().scope {
-            None => {},
+            None => {}
             Some(_) => {
                 let scope_object_value = value.clone().scope.unwrap();
                 let scope_object = scope_object_value.as_object().unwrap();
