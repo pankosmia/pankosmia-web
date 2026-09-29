@@ -1,4 +1,5 @@
 use crate::structs::AppSettings;
+use crate::utils::burrito::language_name_from_code;
 use crate::utils::files::load_json;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
@@ -61,6 +62,19 @@ pub fn new_translation_plan_resource_repo(
             make_bad_json_data_response(format!("Metadata template not found")),
         );
     }
+    let (was_found, payload) = language_name_from_code(
+        &state.app_resources_dir,
+        json_form.content_language_code.clone(),
+        None,
+    );
+    if !was_found {
+        return not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("Unable to find language name: {}", payload)),
+        );
+    }
+    let language_name = payload;
+
     // Build path for new repo and parent
     let path_to_new_repo_parent = format!(
         "{}{}_local_{}_local_",
@@ -277,38 +291,6 @@ pub fn new_translation_plan_resource_repo(
         }
     }
 
-    // Read language lookup
-    let path_to_language_lookup = format!(
-        "{}{}app_resources{}lookups{}bcp47-language_codes.json",
-        &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-    );
-
-    let language_lookup_json = match load_json(&path_to_language_lookup) {
-        Ok(v) => v,
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not load and parse language lookup: {}",
-                    e
-                )),
-            )
-        }
-    };
-
-    let language_tag = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(_) => json_form.content_language_code.clone(),
-        None => format!("x-{}", &json_form.content_language_code),
-    };
-
-    let language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(r) => r["en"].as_str().expect("English language name").to_string(),
-        None => json_form.content_language_code.clone(),
-    };
-
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -325,7 +307,7 @@ pub fn new_translation_plan_resource_repo(
     let now_time = utc_now_timestamp_string();
     let language_json = json!(
         {
-            "tag": &language_tag,
+            "tag": &json_form.content_language_code,
             "name": {
                 "en": &language_name,
         }
@@ -380,15 +362,26 @@ pub fn new_translation_plan_resource_repo(
 
     // Ingredients from plan
     let mut plan_books = std::collections::BTreeSet::new();
-    let translation_plan_value = serde_json::from_str::<Value>(&plan_template_string).expect("plan from str");
+    let translation_plan_value =
+        serde_json::from_str::<Value>(&plan_template_string).expect("plan from str");
     let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
-    let translation_plan_sections = translation_plan_object["sections"].as_array().expect("plan sections as array").to_vec();
+    let translation_plan_sections = translation_plan_object["sections"]
+        .as_array()
+        .expect("plan sections as array")
+        .to_vec();
     for section in translation_plan_sections.iter() {
-        let book_code = section["bookCode"].as_str().expect("bookCode as string").to_string();
+        let book_code = section["bookCode"]
+            .as_str()
+            .expect("bookCode as string")
+            .to_string();
         plan_books.insert(book_code);
-    };
-    let scope_string = plan_books.iter().map(|b| {format!("\"{}\": {{}}", b)} ).collect::<Vec<_>>().join(", ");
-     metadata_string = metadata_string.replace("%%SCOPE%%", &scope_string);
+    }
+    let scope_string = plan_books
+        .iter()
+        .map(|b| format!("\"{}\": {{}}", b))
+        .collect::<Vec<_>>()
+        .join(", ");
+    metadata_string = metadata_string.replace("%%SCOPE%%", &scope_string);
     // Write metadata
     let path_to_repo_metadata = format!("{}{}metadata.json", &path_to_new_repo, os_slash_str());
     match std::fs::write(path_to_repo_metadata, metadata_string) {

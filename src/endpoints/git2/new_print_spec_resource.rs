@@ -1,5 +1,5 @@
 use crate::structs::AppSettings;
-use crate::utils::files::load_json;
+use crate::utils::burrito::language_name_from_code;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
@@ -56,6 +56,20 @@ pub fn new_print_spec_resource_repo(
             make_bad_json_data_response(format!("Metadata template not found")),
         );
     }
+
+    let (was_found, payload) = language_name_from_code(
+        &state.app_resources_dir,
+        json_form.content_language_code.clone(),
+        None,
+    );
+    if !was_found {
+        return not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("Unable to find language name: {}", payload)),
+        );
+    }
+    let language_name = payload;
+
     // Build path for new repo and parent
     let path_to_new_repo_parent = format!(
         "{}{}_local_{}_local_",
@@ -170,20 +184,18 @@ pub fn new_print_spec_resource_repo(
         os_slash_str()
     );
     let spec_string = match json_form.spec.clone() {
-        Some(s) => {
-            match serde_json::from_str(&s) {
-                Ok(sv) => sv,
-                Err(e) => {
-                    return not_ok_json_response(
-                        Status::InternalServerError,
-                        make_bad_json_data_response(format!(
-                            "Could not read supplied spec as JSON: {}",
-                            e
-                        )),
-                    )
-                }
+        Some(s) => match serde_json::from_str(&s) {
+            Ok(sv) => sv,
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::InternalServerError,
+                    make_bad_json_data_response(format!(
+                        "Could not read supplied spec as JSON: {}",
+                        e
+                    )),
+                )
             }
-        }
+        },
         None => {
             let path_to_spec_template = format!(
                 "{}{}templates{}content_templates{}x-printspec{}spec.json",
@@ -218,38 +230,6 @@ pub fn new_print_spec_resource_repo(
         }
     }
 
-    // Read language lookup
-    let path_to_language_lookup = format!(
-        "{}{}app_resources{}lookups{}bcp47-language_codes.json",
-        &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-    );
-
-    let language_lookup_json = match load_json(&path_to_language_lookup) {
-        Ok(v) => v,
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not load and parse language lookup: {}",
-                    e
-                )),
-            )
-        }
-    };
-
-    let language_tag = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(_) => json_form.content_language_code.clone(),
-        None => format!("x-{}", &json_form.content_language_code),
-    };
-
-    let language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(r) => r["en"].as_str().expect("English language name").to_string(),
-        None => json_form.content_language_code.clone(),
-    };
-
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -266,7 +246,7 @@ pub fn new_print_spec_resource_repo(
     let now_time = utc_now_timestamp_string();
     let language_json = json!(
         {
-            "tag": &language_tag,
+            "tag": &&json_form.content_language_code,
             "name": {
                 "en": &language_name,
         }
@@ -297,7 +277,10 @@ pub fn new_print_spec_resource_repo(
         }
     );
 
-    metadata_string = metadata_string.replace("%%INGREDIENTS%%", serde_json::to_string(&ingredient_json).unwrap().as_str());
+    metadata_string = metadata_string.replace(
+        "%%INGREDIENTS%%",
+        serde_json::to_string(&ingredient_json).unwrap().as_str(),
+    );
     // Write metadata
     let path_to_repo_metadata = format!("{}{}metadata.json", &path_to_new_repo, os_slash_str());
     match std::fs::write(path_to_repo_metadata, metadata_string) {

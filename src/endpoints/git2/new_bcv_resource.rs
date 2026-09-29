@@ -1,16 +1,17 @@
 use crate::structs::AppSettings;
+use crate::utils::burrito::language_name_from_code;
 use crate::utils::files::load_json;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
+use crate::utils::time::utc_now_timestamp_string;
 use git2::{Repository, RepositoryInitOptions};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
-use rocket::{post, FromForm, State};
 use rocket::serde::Deserialize;
+use rocket::{post, FromForm, State};
 use serde_json::json;
-use crate::utils::time::utc_now_timestamp_string;
 
 /// *`POST /new-bcv-resource`*
 ///
@@ -39,7 +40,7 @@ pub struct NewBcvResourceContentForm {
     pub book_title: Option<String>,
     pub book_abbr: Option<String>,
     pub versification: Option<String>,
-    pub branch_name: Option<String>
+    pub branch_name: Option<String>,
 }
 
 #[post("/new-bcv-resource", format = "json", data = "<json_form>")]
@@ -109,6 +110,20 @@ pub fn new_bcv_resource_repo(
             )),
         );
     }
+
+    let (was_found, payload) = language_name_from_code(
+        &state.app_resources_dir,
+        json_form.content_language_code.clone(),
+        None,
+    );
+    if !was_found {
+        return not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("Unable to find language name: {}", payload)),
+        );
+    }
+    let language_name = payload;
+
     // Build path for new repo and parent
     let path_to_new_repo_parent = format!(
         "{}{}_local_{}_local_",
@@ -204,52 +219,16 @@ pub fn new_bcv_resource_repo(
             )
         }
     };
-    let path_to_repo_gitignore =
-        format!("{}{}.gitignore", path_to_new_repo, os_slash_str(),);
+    let path_to_repo_gitignore = format!("{}{}.gitignore", path_to_new_repo, os_slash_str(),);
     match std::fs::write(path_to_repo_gitignore, &gitignore_string) {
         Ok(_) => (),
         Err(e) => {
             return not_ok_json_response(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not write gitignore to repo: {}",
-                    e
-                )),
+                make_bad_json_data_response(format!("Could not write gitignore to repo: {}", e)),
             )
         }
     }
-
-    // Read language lookup
-    let path_to_language_lookup = format!(
-        "{}{}app_resources{}lookups{}bcp47-language_codes.json",
-        &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-    );
-
-    let language_lookup_json = match load_json(&path_to_language_lookup) {
-        Ok(v) => v,
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not load and parse language lookup: {}",
-                    e
-                )),
-            )
-        }
-    };
-
-    let language_tag = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(_) => json_form.content_language_code.clone(),
-        None => format!("x-{}", &json_form.content_language_code)
-    };
-
-    let language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
-        Some(r) => r["en"].as_str().expect("English language name").to_string(),
-        None => json_form.content_language_code.clone()
-    };
 
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
@@ -267,7 +246,7 @@ pub fn new_bcv_resource_repo(
     let now_time = utc_now_timestamp_string();
     let language_json = json!(
         {
-            "tag": &language_tag,
+            "tag": &json_form.content_language_code.clone(),
             "name": {
                 "en": &language_name,
         }

@@ -1,4 +1,5 @@
 use crate::structs::AppSettings;
+use crate::utils::burrito::language_name_from_code;
 use crate::utils::files::load_json;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
@@ -50,10 +51,26 @@ pub fn new_audio_translation_repo(
     if !std::path::Path::new(&path_to_template).is_file() {
         return not_ok_json_response(
             Status::BadRequest,
-            make_bad_json_data_response("Metadata template audio_translation not found".to_string())
-                .to_string(),
+            make_bad_json_data_response(
+                "Metadata template audio_translation not found".to_string(),
+            )
+            .to_string(),
         );
     }
+
+    let (was_found, payload) = language_name_from_code(
+        &state.app_resources_dir,
+        json_form.content_language_code.clone(),
+        json_form.content_language_name.clone(),
+    );
+    if !was_found {
+        return not_ok_json_response(
+            Status::BadRequest,
+            make_bad_json_data_response(format!("Unable to find language name: {}", payload)),
+        );
+    }
+    let language_name = payload;
+
     // Build path for new repo and parent
     let path_to_new_repo_parent = format!(
         "{}{}_local_{}_local_",
@@ -161,57 +178,6 @@ pub fn new_audio_translation_repo(
                 make_bad_json_data_response(format!("Could not write gitignore to repo: {}", e)),
             )
         }
-    }
-
-    // Custom language begins with x- and name must be provided
-    // Non-custom language must be in lookup, provided name is ignored
-    let language_name;
-    if json_form.content_language_code.starts_with("x-") {
-        language_name = match json_form.content_language_name.clone() {
-            Some(n) => n,
-            None => {
-                return not_ok_json_response(
-                    Status::BadRequest,
-                    make_bad_json_data_response(format!(
-                    "Language code '{}' is custom ('x-') but no language name has been provided",
-                    &json_form.content_language_code
-                )),
-                )
-            }
-        }
-    } else {
-        // Read language lookup
-        let path_to_language_lookup = format!(
-            "{}{}app_resources{}lookups{}bcp47-language_codes.json",
-            &state.app_resources_dir,
-            os_slash_str(),
-            os_slash_str(),
-            os_slash_str(),
-        );
-
-        let language_lookup_json = match load_json(&path_to_language_lookup) {
-            Ok(v) => v,
-            Err(e) => {
-                return not_ok_json_response(
-                    Status::InternalServerError,
-                    make_bad_json_data_response(format!(
-                        "Could not load and parse language lookup: {}",
-                        e
-                    )),
-                )
-            }
-        };
-
-        language_name = match language_lookup_json[&json_form.content_language_code].as_object() {
-            Some(r) => r["en"].as_str().expect("English language name").to_string(),
-            None => return not_ok_json_response(
-                Status::BadRequest,
-                make_bad_json_data_response(format!(
-                    "Language code '{}' is not custom (no 'x-') but has not been found in the BCP47 lookup table",
-                    &json_form.content_language_code
-                ))
-            ),
-        };
     }
 
     // Read and customize metadata
