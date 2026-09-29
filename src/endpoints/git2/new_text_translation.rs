@@ -1,5 +1,5 @@
 use crate::structs::AppSettings;
-use crate::utils::burrito::{copy_gitignore_template, language_name_from_code};
+use crate::utils::burrito::{copy_gitignore_template, copy_vrs_template, language_name_from_code};
 use crate::utils::files::{load_json, paths_to_new_burrito};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
@@ -97,7 +97,7 @@ pub fn new_text_translation_repo(
             }
         };
 
-        // Make parents?
+    // Make parents?
     match std::fs::create_dir_all(path_to_new_repo_parent) {
         Ok(_) => (),
         Err(e) => {
@@ -153,11 +153,13 @@ pub fn new_text_translation_repo(
     }
 
     match copy_gitignore_template(&state.app_resources_dir, &path_to_new_repo) {
-        Ok(_) => {},
-        Err(e) => return not_ok_json_response(
+        Ok(_) => {}
+        Err(e) => {
+            return not_ok_json_response(
                 Status::InternalServerError,
                 make_bad_json_data_response(format!("{}", e)),
             )
+        }
     };
 
     // Read and customize metadata
@@ -200,41 +202,21 @@ pub fn new_text_translation_repo(
                 .expect("language json")
                 .as_str(),
         );
-    // Get versification file as JSON
-    let path_to_versification = format!(
-        "{}{}templates{}content_templates{}vrs{}{}.json",
+
+    let versification_schema = match copy_vrs_template(
         &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-        json_form.versification.clone(),
-    );
-    let versification_schema = match load_json(&path_to_versification) {
-        Ok(j) => j,
+        &path_to_new_repo,
+        &json_form.versification,
+    ) {
+        Ok(v) => v,
         Err(e) => {
             return not_ok_json_response(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!("Could not load versification JSON: {}", e)),
+                make_bad_json_data_response(format!("{}", e)),
             )
         }
     };
-    // Write it out to new repo
-    let path_to_repo_versification =
-        format!("{}{}ingredients/vrs.json", path_to_new_repo, os_slash_str(),);
-    let versification_string = serde_json::to_string(&versification_schema).unwrap();
-    match std::fs::write(path_to_repo_versification, &versification_string) {
-        Ok(_) => (),
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not write versification to repo: {}",
-                    e
-                )),
-            )
-        }
-    }
+
     // Make new book if necessary:
     if json_form.add_book {
         let scope_string = format!("\"{}\": []", json_form.book_code.clone().unwrap().as_str());
@@ -331,6 +313,7 @@ pub fn new_text_translation_repo(
             usfm_string = usfm_string.replace("%%STUBCONTENT%%", "\\c 1\n\\p\n\\v 1\n___");
         }
         // - add ingredient to metadata
+        let versification_string = serde_json::to_string(&versification_schema).unwrap();
         let ingredient_json = json!(
             {
                 format!("ingredients/{}.usfm", json_form.book_code.clone().unwrap()): {

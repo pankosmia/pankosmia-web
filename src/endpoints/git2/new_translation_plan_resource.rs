@@ -1,6 +1,6 @@
 use crate::structs::AppSettings;
-use crate::utils::burrito::{language_name_from_code, copy_gitignore_template};
-use crate::utils::files::{load_json, paths_to_new_burrito};
+use crate::utils::burrito::{copy_gitignore_template, copy_vrs_template, language_name_from_code};
+use crate::utils::files::{paths_to_new_burrito};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
@@ -309,42 +309,20 @@ pub fn new_translation_plan_resource_repo(
                 .expect("language json")
                 .as_str(),
         );
-    // Get versification file as JSON
-    let path_to_versification = format!(
-        "{}{}templates{}content_templates{}vrs{}{}.json",
+    match copy_vrs_template(
         &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-        json_form.versification.clone().unwrap_or("eng".to_string()),
-    );
-    let versification_schema = match load_json(&path_to_versification) {
-        Ok(j) => j,
+        &path_to_new_repo,
+        &json_form.versification.clone().unwrap_or("eng".to_string()),
+    ) {
+        Ok(_) => {}
         Err(e) => {
             return not_ok_json_response(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!("Could not load versification JSON: {}", e)),
+                make_bad_json_data_response(format!("{}", e)),
             )
         }
     };
-    // Write it out to new repo
-    let path_to_repo_versification =
-        format!("{}{}ingredients/vrs.json", path_to_new_repo, os_slash_str(),);
-    let versification_string = serde_json::to_string(&versification_schema).unwrap();
-    match std::fs::write(path_to_repo_versification, &versification_string) {
-        Ok(_) => (),
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not write versification to repo: {}",
-                    e
-                )),
-            )
-        }
-    }
-
+    
     // Ingredients from plan
     let mut plan_books = std::collections::BTreeSet::new();
     let translation_plan_value =

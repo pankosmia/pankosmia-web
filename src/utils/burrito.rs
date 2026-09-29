@@ -13,7 +13,46 @@ use std::io;
 use std::path::Path;
 use walkdir::WalkDir;
 
-pub(crate) fn copy_gitignore_template(app_resources_dir: &String, repo_dir: &String) -> Result<(), PankosmiaError> {
+pub(crate) fn copy_vrs_template(
+    app_resources_dir: &String,
+    repo_dir: &String,
+    versification: &String,
+) -> Result<Value, PankosmiaError> {
+    // Get versification file as JSON
+    let path_to_versification = format!(
+        "{}{}templates{}content_templates{}vrs{}{}.json",
+        app_resources_dir,
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        os_slash_str(),
+        &versification,
+    );
+    let versification_schema = match load_json(&path_to_versification) {
+        Ok(j) => j,
+        Err(e) => {
+            return Err(PankosmiaError(format!(
+                "Could not load versification JSON: {}",
+                e
+            )))
+        }
+    };
+    // Write it out to new repo
+    let path_to_repo_versification = format!("{}{}ingredients/vrs.json", repo_dir, os_slash_str(),);
+    let versification_string = serde_json::to_string(&versification_schema).unwrap();
+    match std::fs::write(path_to_repo_versification, &versification_string) {
+        Ok(_) => Ok(versification_schema),
+        Err(e) => Err(PankosmiaError(format!(
+            "Could not write versification to repo: {}",
+            e
+        ))),
+    }
+}
+
+pub(crate) fn copy_gitignore_template(
+    app_resources_dir: &String,
+    repo_dir: &String,
+) -> Result<(), PankosmiaError> {
     // Copy gitignore file
     let path_to_gitignore_template = format!(
         "{}{}templates{}content_templates{}gitignore.txt",
@@ -24,17 +63,22 @@ pub(crate) fn copy_gitignore_template(app_resources_dir: &String, repo_dir: &Str
     );
     let gitignore_string = match std::fs::read_to_string(&path_to_gitignore_template) {
         Ok(v) => v,
-        Err(e) => return Err(PankosmiaError(format!(
-                    "Could not load gitignore template as string: {}",
-                    e
-                ))),
-        };
+        Err(e) => {
+            return Err(PankosmiaError(format!(
+                "Could not load gitignore template as string: {}",
+                e
+            )))
+        }
+    };
     let path_to_repo_gitignore = format!("{}{}.gitignore", repo_dir, os_slash_str(),);
     match std::fs::write(path_to_repo_gitignore, &gitignore_string) {
         Ok(_) => Ok(()),
-        Err(e) => Err(PankosmiaError(format!("Could not write gitignore to repo: {}", e)))
-        }
+        Err(e) => Err(PankosmiaError(format!(
+            "Could not write gitignore to repo: {}",
+            e
+        ))),
     }
+}
 
 pub(crate) fn language_name_from_code(
     app_resources_dir: &String,
