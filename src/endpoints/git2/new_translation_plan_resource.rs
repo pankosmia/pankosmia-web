@@ -1,5 +1,5 @@
 use crate::structs::AppSettings;
-use crate::utils::burrito::language_name_from_code;
+use crate::utils::burrito::{language_name_from_code, copy_gitignore_template};
 use crate::utils::files::{load_json, paths_to_new_burrito};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
@@ -144,36 +144,13 @@ pub fn new_translation_plan_resource_repo(
         }
     }
 
-    // Copy gitignore file
-    let path_to_gitignore_template = format!(
-        "{}{}templates{}content_templates{}gitignore.txt",
-        &state.app_resources_dir,
-        os_slash_str(),
-        os_slash_str(),
-        os_slash_str(),
-    );
-    let gitignore_string = match std::fs::read_to_string(&path_to_gitignore_template) {
-        Ok(v) => v,
-        Err(e) => {
-            return not_ok_json_response(
+    match copy_gitignore_template(&state.app_resources_dir, &path_to_new_repo) {
+        Ok(_) => {},
+        Err(e) => return not_ok_json_response(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "Could not load gitignore template as string: {}",
-                    e
-                )),
+                make_bad_json_data_response(format!("{}", e)),
             )
-        }
     };
-    let path_to_repo_gitignore = format!("{}{}.gitignore", path_to_new_repo, os_slash_str(),);
-    match std::fs::write(path_to_repo_gitignore, &gitignore_string) {
-        Ok(_) => (),
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!("Could not write gitignore to repo: {}", e)),
-            )
-        }
-    }
 
     // Use default plan template or make supplied plan into a template
     let path_to_repo_plan = format!(
