@@ -1,6 +1,6 @@
 use crate::structs::AppSettings;
 use crate::utils::burrito::language_name_from_code;
-use crate::utils::files::load_json;
+use crate::utils::files::{load_json, paths_to_new_burrito};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
@@ -17,6 +17,7 @@ use serde_json::{json, Value};
 pub struct NewTextTranslationContentForm {
     pub content_name: String,
     pub content_abbr: String,
+    pub copyright: Option<String>,
     pub content_language_code: String,
     pub content_language_name: Option<String>,
     pub add_book: bool,
@@ -35,6 +36,7 @@ pub struct NewTextTranslationContentForm {
 /// Creates a new, local textTranslation repo. It requires the following fields as a JSON body:
 /// - content_name (string)
 /// - content_abbr (string)
+/// - copyright (null or string)
 /// - content_language_code
 /// - content_language_name (optional)
 /// - versification (string)
@@ -67,46 +69,35 @@ pub fn new_text_translation_repo(
         );
     }
 
-    let (was_found, payload) = language_name_from_code(
+    let language_name = match language_name_from_code(
         &state.app_resources_dir,
         json_form.content_language_code.clone(),
         json_form.content_language_name.clone(),
-    );
-    if !was_found {
-        return not_ok_json_response(
-            Status::BadRequest,
-            make_bad_json_data_response(format!(
-                "Unable to find language name: {}",
-                payload
-            )),
-        );
-    }
-    let language_name = payload;
+    ) {
+        Ok(v) => v,
+        Err(e) => {
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "Unable to find language name: {}: {}",
+                    &json_form.content_language_code, e
+                )),
+            );
+        }
+    };
 
-    // Build path for new repo and parent
-    let path_to_new_repo_parent = format!(
-        "{}{}_local_{}_local_",
-        state.repo_dir.lock().unwrap().clone(),
-        os_slash_str(),
-        os_slash_str(),
-    );
-    let path_to_new_repo = format!(
-        "{}{}{}",
-        path_to_new_repo_parent.clone(),
-        os_slash_str(),
-        json_form.content_abbr.clone()
-    );
-    // Check path doesn't already exist
-    if std::path::Path::new(&path_to_new_repo).exists() {
-        return not_ok_json_response(
-            Status::BadRequest,
-            make_bad_json_data_response(format!(
-                "Local content called '{}' already exists",
-                json_form.content_abbr
-            )),
-        );
-    }
-    // Make parents?
+    let (path_to_new_repo_parent, path_to_new_repo) =
+        match paths_to_new_burrito(&state.repo_dir.lock().unwrap(), &json_form.content_abbr) {
+            Ok(tup) => tup,
+            Err(e) => {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!("Could not get new repo paths: {}", e)),
+                )
+            }
+        };
+
+        // Make parents?
     match std::fs::create_dir_all(path_to_new_repo_parent) {
         Ok(_) => (),
         Err(e) => {
@@ -217,6 +208,14 @@ pub fn new_text_translation_repo(
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
+        .replace(
+            "%%COPYRIGHT%%",
+            json_form
+                .copyright
+                .clone()
+                .unwrap_or("unspecified".to_string())
+                .as_str(),
+        )
         .replace("%%CREATED_TIMESTAMP%%", now_time.to_string().as_str())
         .replace(
             "%%LANGUAGE%%",

@@ -115,3 +115,27 @@ pub(crate) fn copy_and_customize_webfont_css2(template_path: &String, target_pat
         Err(PankosmiaError(format!("Could not find source font file '{}'", source_font_file_path)))
     }
 }
+
+pub(crate) fn paths_to_new_burrito(repo_dir: &String, repo_name: &String) -> Result<(String, String), PankosmiaError> {
+        // Build path for new repo and parent
+    let path_to_new_repo_parent = format!(
+        "{}{}_local_{}_local_",
+        repo_dir,
+        os_slash_str(),
+        os_slash_str(),
+    );
+    let path_to_new_repo = format!(
+        "{}{}{}",
+        path_to_new_repo_parent.clone(),
+        os_slash_str(),
+        repo_name
+    );
+    // Check path doesn't already exist
+    if std::path::Path::new(&path_to_new_repo).exists() {
+        return Err(PankosmiaError(format!(
+                "Local content called '{}' already exists",
+                repo_name
+            )));
+    };
+    Ok((path_to_new_repo_parent, path_to_new_repo))
+}

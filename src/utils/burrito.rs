@@ -1,4 +1,4 @@
-use crate::structs::{BurritoMetadataIngredient, MetadataSummary};
+use crate::structs::{BurritoMetadataIngredient, MetadataSummary, PankosmiaError};
 use crate::utils::bcv_ref::canonical_book_codes;
 use crate::utils::files::load_json;
 use crate::utils::paths::os_slash_str;
@@ -17,31 +17,29 @@ pub(crate) fn language_name_from_code(
     app_resources_dir: &String,
     language_code: String,
     supplied_language_name: Option<String>,
-) -> (bool, String) {
+) -> Result<String, PankosmiaError> {
     // Custom language begins with x- and name must be provided
     // Non-custom language must be in lookup, provided name is ignored
     // First regex validate the bcp47 string
     let bcp_regex = Regex::new("^(((en-GB-oed|i-ami|i-bnn|i-default|i-enochian|i-hak|i-klingon|i-lux|i-mingo|i-navajo|i-pwn|i-tao|i-tay|i-tsu|sgn-BE-FR|sgn-BE-NL|sgn-CH-DE)|(art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang))|((([A-Za-z]{2,3}(-([A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4}|[A-Za-z]{5,8})(-([A-Za-z]{4}))?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-([0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(x(-[A-Za-z0-9]{1,8})+))?)|(x(-[A-Za-z0-9]{1,8})+))$").unwrap();
     if !bcp_regex.is_match(&language_code) {
-        return (
-            false,
+        return Err(PankosmiaError(
             format!(
                 "Language code '{}' is not Scripture Burrito schema valid",
                 &language_code
             ),
-        );
+        ));
     }
     // To x- or not to x-
     if language_code.starts_with("x-") {
         match supplied_language_name {
-            Some(n) => (true, n),
-            None => (
-                false,
+            Some(n) => Ok(n),
+            None => Err(PankosmiaError(
                 format!(
                     "Language code '{}' is custom ('x-') but no language name has been provided",
                     &language_code
                 ),
-            ),
+            )),
         }
     } else {
         // Read language lookup
@@ -56,10 +54,9 @@ pub(crate) fn language_name_from_code(
         let language_lookup_json = match load_json(&path_to_language_lookup) {
             Ok(v) => v,
             Err(e) => {
-                return (
-                    false,
+                return Err(PankosmiaError(
                     format!("Could not load and parse language lookup: {}", e),
-                );
+                ));
             }
         };
 
@@ -70,10 +67,10 @@ pub(crate) fn language_name_from_code(
         // Attempt to lookup that language code
         let mut language_name = match language_lookup_json[language_code_bits[0]].as_object() {
             Some(r) => r["en"].as_str().expect("English language name").to_string(),
-            None => {return (false, format!(
+            None => {return Err(PankosmiaError(format!(
                     "Language code '{}' is not custom (no 'x-') but has not been found in the BCP47 lookup table",
                     &language_code
-                ))}
+                )))}
         };
         // Add any bcp47 qualifiers to name if necessary
         if language_code_bits.len() > 1 {
@@ -81,7 +78,7 @@ pub(crate) fn language_name_from_code(
             let language_code_bits_vec = Into::<Vec<&str>>::into(language_code_bits);
             language_name = format!("{} ({})", &language_name, language_code_bits_vec.join(" "));
         }
-        (true, language_name)
+        Ok(language_name)
     }
 }
 
