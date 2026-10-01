@@ -5,7 +5,7 @@ use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
 use crate::utils::time::utc_now_timestamp_string;
-use git2::{Repository, RepositoryInitOptions};
+use crate::utils::git::{init_repo, add_and_commit_repo};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
@@ -105,30 +105,21 @@ pub fn new_translation_plan_resource_repo(
             )
         }
     }
-    // Init repo
-    let final_new_branch_name = json_form.branch_name.clone().unwrap_or("main".to_string());
-    let mut repo_options = RepositoryInitOptions::new();
-    let repo_options2 = repo_options.initial_head(final_new_branch_name.as_str());
-    let new_repo = match Repository::init_opts(&path_to_new_repo, &repo_options2) {
-        Ok(repo) => repo,
+    let new_repo = match init_repo(&path_to_new_repo, json_form.branch_name.clone()) {
+        Ok(r) => r,
         Err(e) => {
-            return not_ok_json_response(
+            return status::Custom(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!("Could not create repo: {}", e)),
+                (
+                    ContentType::JSON,
+                    make_bad_json_data_response(format!(
+                        "{}",
+                        e
+                    )),
+                ),
             )
         }
     };
-    // Set up local user info
-    let mut config = new_repo.config().unwrap();
-    config
-        .set_str("user.name", whoami::username().as_str())
-        .unwrap();
-    config
-        .set_str(
-            "user.email",
-            format!("{}@localhost", whoami::username().as_str()).as_str(),
-        )
-        .unwrap();
     // Make ingredients dir
     let path_to_ingredients = format!("{}{}ingredients", path_to_new_repo, os_slash_str(),);
     match std::fs::create_dir(&path_to_ingredients) {
@@ -359,21 +350,17 @@ pub fn new_translation_plan_resource_repo(
             )
         }
     }
-    // Add and commit
-    new_repo
-        .index()
-        .unwrap()
-        .add_all(&["."], git2::IndexAddOption::DEFAULT, None)
-        .unwrap();
-    new_repo.index().unwrap().write().unwrap();
-    let sig = new_repo.signature().unwrap();
-    let tree_id = {
-        let mut index = new_repo.index().unwrap();
-        index.write_tree().unwrap()
+    match add_and_commit_repo(new_repo, &"Initial Commit".to_string()) {
+        Ok(_) => {},
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!(
+                    "{}",
+                    e
+                )),
+            )
+        }
     };
-    let tree = new_repo.find_tree(tree_id).unwrap();
-    new_repo
-        .commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])
-        .unwrap();
     ok_ok_json_response()
 }
