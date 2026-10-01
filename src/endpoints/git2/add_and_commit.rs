@@ -1,5 +1,6 @@
 use crate::structs::{AppSettings, BurritoMetadata};
 use crate::utils::burrito::ingredients_metadata_from_files;
+use crate::utils::git::add_and_commit_repo;
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
 use crate::utils::response::{
@@ -119,7 +120,11 @@ pub async fn add_and_commit(
         // Remake ingredients metadata
         let app_resources_dir = format!("{}", &state.app_resources_dir);
         #[allow(irrefutable_let_patterns)]
-        if let mut ingredients = metadata_struct.ingredients.lock().expect("ingredients lock") {
+        if let mut ingredients = metadata_struct
+            .ingredients
+            .lock()
+            .expect("ingredients lock")
+        {
             let new_ingredients = ingredients_metadata_from_files(
                 app_resources_dir.clone(),
                 repo_path_string.clone(),
@@ -143,35 +148,17 @@ pub async fn add_and_commit(
         };
         // Git - open, add and commit repo
         let result = match Repository::open(repo_path_string) {
-            Ok(repo) => {
-                repo.index()
-                    .expect("repo index")
-                    .add_all(&["."], git2::IndexAddOption::DEFAULT, None)
-                    .expect("add all");
-                repo.index()
-                    .expect("repo index 2")
-                    .write()
-                    .expect("repo index write");
-                let mut index = repo.index().expect("repo index 3");
-                let oid = index.write_tree().expect("write tree");
-                let signature = repo.signature().expect("signature");
-                let parent_commit = repo
-                    .head()
-                    .expect("repo head")
-                    .peel_to_commit()
-                    .expect("peel to commit");
-                let tree = repo.find_tree(oid).expect("find tree");
-                repo.commit(
-                    Some("HEAD"),
-                    &signature,
-                    &signature,
-                    json_form.commit_message.as_str(),
-                    &tree,
-                    &[&parent_commit],
-                )
-                .expect("commit");
-                ok_ok_json_response()
-            }
+            Ok(repo) => match add_and_commit_repo(repo, &json_form.commit_message) {
+                Ok(_) => ok_ok_json_response(),
+                Err(e) => {
+                    return not_ok_json_response(
+                        Status::InternalServerError,
+                        make_bad_json_data_response(
+                            format!("could not commit: {}", e).to_string(),
+                        ),
+                    )
+                }
+            },
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,
                 make_bad_json_data_response(format!("could not open repo: {}", e).to_string()),
