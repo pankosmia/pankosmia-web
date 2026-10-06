@@ -147,6 +147,7 @@ pub struct MetadataSummary {
     pub script_direction: String,
     pub book_codes: Vec<String>,
     pub timestamp: u64,
+    pub copyright: String
 }
 
 #[derive(Responder)]

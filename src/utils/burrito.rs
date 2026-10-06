@@ -208,6 +208,10 @@ pub(crate) fn summary_metadata_from_file(
             Value::String(v) => v.as_str().to_string(),
             _ => "?".to_string(),
         },
+        copyright: match raw_metadata_struct["copyright"]["shortStatements"][0]["statement"].clone() {
+            Value::String(v) => v.as_str().to_string(),
+            _ => "?".to_string(),
+        },
         book_codes: book_codes,
         timestamp: raw_metadata_struct["identification"]["primary"]
             .as_object()

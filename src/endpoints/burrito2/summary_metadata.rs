@@ -26,7 +26,8 @@ use crate::utils::burrito::summary_metadata_from_file;
 ///   "flavor": "textTranslation",
 ///   "language_code": "fr",
 ///   "language_name": "French",
-///   "script_direction": "ltr"
+///   "script_direction": "ltr",
+///   "copyright": "© My Copyright 1066"
 /// }
 /// ```
 #[get("/metadata/summary/<repo_path..>")]
@@ -54,7 +55,8 @@ pub async fn summary_metadata(
             language_name: "?".to_string(),
             script_direction: "?".to_string(),
             book_codes: vec![],
-            timestamp: 0
+            timestamp: 0,
+            copyright: "?".to_string()
         });
         match serde_json::to_string(&summary) {
             Ok(v) => ok_json_response(v),
