@@ -197,7 +197,8 @@ pub struct BurritoMetadata {
     pub languages: Vec<BurritoMetadataLanguage>,
     pub r#type: Value,
     pub confidential: bool,
-    pub localizedNames: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub localizedNames: Option<Value>,
     pub ingredients: Mutex<BTreeMap<String, BurritoMetadataIngredient>>,
     pub copyright: Value,
 }
