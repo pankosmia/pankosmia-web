@@ -1,4 +1,4 @@
-use crate::static_vars::{DEBUG_IS_ENABLED, I18N_UPDATE_COUNT, ALIGNMENT_UPDATE_COUNT, NET_IS_ENABLED};
+use crate::static_vars::{DEBUG_IS_ENABLED, I18N_UPDATE_COUNT, ALIGNMENT_UPDATE_COUNT, NET_IS_ENABLED, BETA_IS_ENABLED};
 use crate::structs::AppSettings;
 use crate::MsgQueue;
 use rocket::response::stream;
@@ -47,8 +47,12 @@ pub async fn notifications_stream<'a>(
                 true => "enabled",
                 false => "disabled"
             };
+            let beta_status = match BETA_IS_ENABLED.load(Ordering::Relaxed) {
+                true => "enabled",
+                false => "disabled"
+            };
             yield stream::Event::data(
-                format!("net--{}--debug--{}", net_status, debug_status)
+                format!("net--{}--debug--{}--beta--{}", net_status, debug_status, beta_status)
             )
             .event("status")
             .id(format!("{}", count));
