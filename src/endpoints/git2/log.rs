@@ -16,7 +16,7 @@ fn print_time(time: &Time) -> String {
     let (hours, minutes) = (offset / 60, offset % 60);
     let dt = time::OffsetDateTime::from_unix_timestamp(time.seconds()).unwrap();
     let dto = dt.to_offset(time::UtcOffset::from_hms(hours as i8, minutes as i8, 0).unwrap());
-    let format = time::format_description::parse("[weekday repr:short] [month repr:short] [day padding:space] [hour]:[minute]:[second] [year] [offset_hour sign:mandatory][offset_minute]")
+    let format = time::format_description::parse_borrowed::<1>("[weekday repr:short] [month repr:short] [day padding:space] [hour]:[minute]:[second] [year] [offset_hour sign:mandatory][offset_minute]")
         .unwrap();
     dto.format(&format).unwrap()
 }
