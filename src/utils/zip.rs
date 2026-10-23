@@ -45,6 +45,7 @@ pub fn make_zip_file(path_to_zip: &String) -> NamedTempFile {
 }
 
 /// Unpack the zip archive at the specified path to the specified destination. The destination directory's parent must exist.
+/// depth, if present, will ignore the first n levels of subdirectory
 pub async fn unpack_zip_file(archive_path: NamedTempFile, destination: String,only_depth: Option<usize>) -> Result<(), std::io::Error> {
     // Make zip struct
     let zip_file = File::open(archive_path).expect("open zip archive file");

@@ -20,13 +20,13 @@ pub struct Upload<'f> {
     file: TempFile<'f>,
 }
 
-/// Returns true if the zip looks a bit like a burrito
-fn check_burrito_zip(path: &NamedTempFile) -> bool {
+/// Returns a root depth if the zip looks a bit like a burrito
+fn check_burrito_zip(path: &NamedTempFile) -> Option<usize> {
     let zip_file = File::open(path).expect("open zip archive file to check");
     let mut archive = ZipArchive::new(zip_file).expect("new archive to check");
     // Iterate over archive files, looking for metadata and ingredients
-    let mut metadata_found = false;
-    let mut ingredients_found = false;
+    let mut metadata_found: Option<String> = None;
+    let mut ingredients_found: Option<String> = None;
     for i in 0..archive.len() {
         let file = archive.by_index(i).expect("file from zip to check");
         let out_path = match file.enclosed_name() {
@@ -35,20 +35,24 @@ fn check_burrito_zip(path: &NamedTempFile) -> bool {
         };
         let out_path_string = format!("{:?}", out_path);
         if file.is_file() {
-            if out_path_string == "\"metadata.json\"" {
-                metadata_found = true;
+            if out_path_string.ends_with("metadata.json\"") {
+                metadata_found = Some(out_path_string.replace("metadata.json\"", "").replace("\"", ""));
             }
-        } else {
-            if out_path_string == "\"ingredients/\"" {
-                ingredients_found = true;
-            }
-            if out_path_string == "\"ingredients\"" {
-                ingredients_found = true;
-            }
-
+        } else if out_path_string.ends_with("ingredients/\"")
+            || out_path_string.ends_with("ingredients\"")
+        {
+            ingredients_found = Some(out_path_string.replace("\"", ""));
+        }
+        if metadata_found.is_some() && ingredients_found.is_some() {
+            break;
         }
     }
-    metadata_found && ingredients_found
+    let found = metadata_found.is_some() && ingredients_found.is_some() && ingredients_found.clone().unwrap().starts_with(metadata_found.clone().unwrap().as_str());
+    if found {
+        Some(metadata_found.unwrap().chars().filter(|c| *c == '/' || *c == '\\').count())
+    } else {
+        None
+    }
 }
 
 /// *`POST /zipped/<repo_path>`*
@@ -85,18 +89,24 @@ pub async fn post_zipped_repo(
             if (path_n == 0) && (path_string != "_local_".to_string()) {
                 return not_ok_json_response(
                     Status::BadRequest,
-                    make_bad_json_data_response(format!("First repo path component must be '_local_' not '{}'", &path_string)),
+                    make_bad_json_data_response(format!(
+                        "First repo path component must be '_local_' not '{}'",
+                        &path_string
+                    )),
                 );
             }
             if (path_n == 1) && (path_string != "_sideloaded_".to_string()) {
                 return not_ok_json_response(
                     Status::BadRequest,
-                    make_bad_json_data_response(format!("Second repo path component must be '_sideloaded_' not '{}'", &path_string)),
+                    make_bad_json_data_response(format!(
+                        "Second repo path component must be '_sideloaded_' not '{}'",
+                        &path_string
+                    )),
                 );
             }
             path_n += 1;
-        };
-    if Path::new(&full_repo_path).exists() {
+        }
+        if Path::new(&full_repo_path).exists() {
             return not_ok_json_response(
                 Status::BadRequest,
                 make_bad_json_data_response(format!("Repo already exists")),
@@ -107,11 +117,12 @@ pub async fn post_zipped_repo(
         form.file.move_copy_to(&file_path).await.expect("copy zip");
 
         // Check burrito
-        if !check_burrito_zip(&file_path) {
+        let burrito_zip_depth = check_burrito_zip(&file_path);
+        if burrito_zip_depth.is_none() {
             return not_ok_json_response(
                 Status::BadRequest,
                 make_bad_json_data_response("Zip does not look like a burrito".to_string()),
-            )
+            );
         }
 
         match std::fs::create_dir_all(&full_repo_path) {
@@ -125,7 +136,7 @@ pub async fn post_zipped_repo(
         }
 
         // Unpack zip
-        match unpack_zip_file(file_path, full_repo_path,None).await {
+        match unpack_zip_file(file_path, full_repo_path, burrito_zip_depth).await {
             Ok(_) => ok_ok_json_response(),
             Err(e) => not_ok_json_response(
                 Status::InternalServerError,
