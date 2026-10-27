@@ -83,12 +83,12 @@ pub async fn clone_repo(
                     // Set up local user info
                     let mut config = new_repo.config().unwrap();
                     config
-                        .set_str("user.name", whoami::username().as_str())
+                        .set_str("user.name", whoami::username().expect("user name").as_str())
                         .unwrap();
                     config
                         .set_str(
                             "user.email",
-                            format!("{}@localhost", whoami::username().as_str()).as_str(),
+                            format!("{}@localhost", whoami::username().expect("user name 2").as_str()).as_str(),
                         )
                         .unwrap();
 
@@ -108,12 +108,12 @@ pub async fn clone_repo(
                     // Set up local user info
                     let mut config = new_repo.config().unwrap();
                     config
-                        .set_str("user.name", whoami::username().as_str())
+                        .set_str("user.name", whoami::username().expect("user name 3").as_str())
                         .unwrap();
                     config
                         .set_str(
                             "user.email",
-                            format!("{}@localhost", whoami::username().as_str()).as_str(),
+                            format!("{}@localhost", whoami::username().expect("user name 4").as_str()).as_str(),
                         )
                         .unwrap();
 

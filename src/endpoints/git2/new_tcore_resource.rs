@@ -154,12 +154,12 @@ pub fn new_tcore_resource_repo(
     // Set up local user info
     let mut config = new_repo.config().unwrap();
     config
-        .set_str("user.name", whoami::username().as_str())
+        .set_str("user.name", whoami::username().expect("user name 1").as_str())
         .unwrap();
     config
         .set_str(
             "user.email",
-            format!("{}@localhost", whoami::username().as_str()).as_str(),
+            format!("{}@localhost", whoami::username().expect("user name 2").as_str()).as_str(),
         )
         .unwrap();
 

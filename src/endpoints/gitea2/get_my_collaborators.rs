@@ -48,7 +48,7 @@ pub fn get_my_collaborators(
             code
         );
         match ureq::get(collab_url.as_str()).call() {
-            Ok(r) => ok_json_response(r.into_string().unwrap()),
+            Ok(r) => ok_json_response(r.into_body().read_to_string().unwrap()),
             Err(e) => not_ok_json_response(
                 Status::BadGateway,
                 make_bad_json_data_response(format!("Error from proxy {}: {}", proxy, e)),

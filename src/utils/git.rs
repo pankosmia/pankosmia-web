@@ -18,12 +18,12 @@ pub(crate) fn init_repo(
     // Set up local user info
     let mut config = new_repo.config().expect("new repo config");
     config
-        .set_str("user.name", whoami::username().as_str())
+        .set_str("user.name", whoami::username().expect("user name 1").as_str())
         .expect("config user name");
     config
         .set_str(
             "user.email",
-            format!("{}@localhost", whoami::username().as_str()).as_str(),
+            format!("{}@localhost", whoami::username().expect("user name 2").as_str()).as_str(),
         )
         .expect("config user email");
     Ok(new_repo)

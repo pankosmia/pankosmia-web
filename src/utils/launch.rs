@@ -5,7 +5,9 @@ use crate::structs::{
 use crate::utils::paths::{os_slash_str, source_app_resources_path};
 use rocket::fs::FileServer;
 use rocket::{catchers, routes, Build, Rocket};
+use rocket_slogger::{o, Drain, Logger, Slogger};
 use serde_json::{json, Value};
+use slog_term::{FullFormat, PlainSyncDecorator};
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
@@ -324,4 +326,11 @@ pub(crate) fn add_static_routes(
         );
     }
     my_rocket
+}
+
+pub(crate) fn add_logging(rocket_instance: Rocket<Build>) -> Rocket<Build> {
+    let plain = PlainSyncDecorator::new(std::io::stdout());
+    let logger = Logger::root(FullFormat::new(plain).build().fuse(), o!());
+    let fairing = Slogger::from_logger(logger);
+    rocket_instance.attach(fairing)
 }

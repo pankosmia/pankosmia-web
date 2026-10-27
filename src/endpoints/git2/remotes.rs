@@ -47,8 +47,10 @@ pub async fn list_remotes_for_repo(
                     .iter()
                     .map(
                         |r| -> Value {
-                            let remote = repo.find_remote(r.unwrap()).unwrap();
-                            return json!({"name": remote.name(), "url": remote.url()});
+                            let remote = repo.find_remote(r.expect("find remote 1").expect("find remote 2")).expect("find remote 3");
+                            let remote_name = remote.name().expect("remote name").expect("remote_name 2");
+                            let remote_url = remote.url().expect("remote_url");
+                            return json!({"name": remote_name, "url": remote_url});
                         }
                     )
                     .collect();

@@ -46,7 +46,7 @@ pub fn gitea_user_remote_repos(
     }
     let gitea_path = format!("https://{}/api/v1/users/{}/repos?limit=300", gitea_server, gitea_user);
     match ureq::get(gitea_path.as_str()).call() {
-        Ok(r) => match r.into_json::<Value>() {
+        Ok(r) => match r.into_body().read_json::<Value>() {
             Ok(j) => {
                 let mut records: Vec<RemoteRepoRecord> = Vec::new();
                 for json_record in j.as_array().unwrap() {
