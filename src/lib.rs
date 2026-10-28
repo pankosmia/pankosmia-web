@@ -261,7 +261,11 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
     my_rocket = my_rocket.manage(msg_queue).manage(clients);
 
     // Logging
-    my_rocket = add_logging(my_rocket);
+    let log_path = match launch_config["log_path"].as_str() {
+        Some(s) => if s == "" {None} else {Some(s)},
+        None => None
+    };
+    my_rocket = add_logging(my_rocket, log_path);
 
     my_rocket
 }

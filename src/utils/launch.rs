@@ -328,9 +328,25 @@ pub(crate) fn add_static_routes(
     my_rocket
 }
 
-pub(crate) fn add_logging(rocket_instance: Rocket<Build>) -> Rocket<Build> {
-    let plain = PlainSyncDecorator::new(std::io::stdout());
-    let logger = Logger::root(FullFormat::new(plain).build().fuse(), o!());
+pub(crate) fn add_logging(rocket_instance: Rocket<Build>, log_path: Option<&str>) -> Rocket<Build> {
+    let logger = match log_path {
+        Some(lp) => {
+            let file = std::fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(lp)
+                .unwrap();
+            let decorator = slog_term::PlainDecorator::new(file);
+            let drain = slog_term::FullFormat::new(decorator).build().fuse();
+            let async_drain = slog_async::Async::new(drain).build().fuse();
+            slog::Logger::root(async_drain, o!())
+        }
+        None => {
+            let plain = PlainSyncDecorator::new(std::io::stdout());
+            Logger::root(FullFormat::new(plain).build().fuse(), o!())
+        }
+    };
     let fairing = Slogger::from_logger(logger);
     rocket_instance.attach(fairing)
 }
