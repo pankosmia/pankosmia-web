@@ -255,7 +255,11 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
             if s == "" {None} else {Some(s.to_string())}},
         None => None
     };
-    my_rocket = add_logging(my_rocket, log_path.clone());
+    let truncate_log_flag = match launch_config["truncate_log"].as_bool() {
+        Some(tl) => tl,
+        None => false
+    };
+    my_rocket = add_logging(my_rocket, log_path.clone(), truncate_log_flag);
 
     // State
     my_rocket = add_app_settings(
