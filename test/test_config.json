@@ -1,0 +1,9 @@
+{
+  "working_dir": ".",
+  "webfont_path": "../../../desktop-app-pithekos/linux/build/lib/webfonts",
+  "app_setup_path": "../../../desktop-app-pithekos/linux/build/lib/setup/app_setup.json",
+  "local_setup_path": "../../test/local_test_setup.json",
+  "app_resources_path": "../../../desktop-app-pithekos/linux/build/lib/app_resources",
+  "log_path": "./log.txt",
+  "truncate_log": false
+}
