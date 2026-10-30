@@ -246,6 +246,13 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         &webfonts_dir_path,
     );
 
+    // Logging
+    let log_path = match launch_config["log_path"].as_str() {
+        Some(s) => if s == "" {None} else {Some(s.to_string())},
+        None => None
+    };
+    my_rocket = add_logging(my_rocket, log_path.clone());
+
     // State
     my_rocket = add_app_settings(
         my_rocket,
@@ -256,16 +263,10 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         &app_state_json,
         &product_json,
         client_config,
+        log_path
     );
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
     my_rocket = my_rocket.manage(msg_queue).manage(clients);
-
-    // Logging
-    let log_path = match launch_config["log_path"].as_str() {
-        Some(s) => if s == "" {None} else {Some(s)},
-        None => None
-    };
-    my_rocket = add_logging(my_rocket, log_path);
 
     my_rocket
 }

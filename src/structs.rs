@@ -85,6 +85,7 @@ pub struct AppSettings {
     pub product: ProductSpec,
     pub client_config: BTreeMap<String, Vec<ClientConfigSection>>,
     pub dev_settings: Mutex<Value>,
+    pub log_path: Option<String>
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

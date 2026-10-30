@@ -222,6 +222,7 @@ pub(crate) fn add_app_settings(
     app_state_json: &Value,
     product_json: &Value,
     client_config: BTreeMap<String, Vec<ClientConfigSection>>,
+    log_path: Option<String>
 ) -> Rocket<Build> {
     let default_bcv_json = json!({
     "book_code": "TIT",
@@ -306,6 +307,7 @@ pub(crate) fn add_app_settings(
         },
         client_config,
         dev_settings: Mutex::new(json!({"force_os": null})),
+        log_path: log_path
     })
 }
 
@@ -328,7 +330,7 @@ pub(crate) fn add_static_routes(
     my_rocket
 }
 
-pub(crate) fn add_logging(rocket_instance: Rocket<Build>, log_path: Option<&str>) -> Rocket<Build> {
+pub(crate) fn add_logging(rocket_instance: Rocket<Build>, log_path: Option<String>) -> Rocket<Build> {
     let logger = match log_path {
         Some(lp) => {
             let file = std::fs::OpenOptions::new()
