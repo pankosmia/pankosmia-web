@@ -198,7 +198,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
     .mount(
         "/api/system",
         routes![
-            endpoints::system::shutdown::shutdown
+            endpoints::system::shutdown::shutdown,
+            endpoints::system::log::raw_log
         ]
     )
 }

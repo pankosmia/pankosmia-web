@@ -20,7 +20,7 @@ use crate::utils::bootstrap::{
 use crate::utils::files::load_json;
 use crate::utils::json::get_string_value_by_key;
 use crate::utils::launch::{add_app_settings, add_catchers, add_routes, add_static_routes, add_logging};
-use crate::utils::paths::{home_dir_string, os_slash_str, source_local_setup_path, webfonts_path};
+use crate::utils::paths::{check_path_string_components, home_dir_string, os_slash_str, source_local_setup_path, webfonts_path};
 pub mod endpoints;
 mod static_vars;
 #[allow(unused_imports)]
@@ -248,7 +248,11 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
 
     // Logging
     let log_path = match launch_config["log_path"].as_str() {
-        Some(s) => if s == "" {None} else {Some(s.to_string())},
+        Some(s) => {
+            if !check_path_string_components(s.to_string()) {
+                panic!("Provided log path '{}' is potentially unsafe", &s);
+            };
+            if s == "" {None} else {Some(s.to_string())}},
         None => None
     };
     my_rocket = add_logging(my_rocket, log_path.clone());

@@ -3,7 +3,7 @@ use rocket::response::status;
 use rocket::http::ContentType;
 use crate::utils::response::ok_ok_json_response;
 
-/// *`GET /shutdown`*
+/// *`POST /shutdown`*
 ///
 /// Typically mounted as **`/api/system/shutdown`**
 ///
