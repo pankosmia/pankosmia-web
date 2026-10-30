@@ -135,6 +135,26 @@ pub(crate) fn check_dir_path_string_components(path_string: String) -> bool {
     ret
 }
 
+pub(crate) fn check_sys_path_string_components(path_string: String) -> bool {
+    if path_string.len() == 0 {
+        return true;
+    }
+    let path_string_parts = path_string.split("/");
+    let mut ret = true;
+    for path_string_part in path_string_parts {
+        if path_string_part.len() < 1 {
+            return false;
+        }
+        for forbidden_string in forbidden_path_strings() {
+            if path_string_part.contains(&forbidden_string) {
+                ret = false;
+                break;
+            }
+        }
+    }
+    ret
+}
+
 pub(crate) fn home_dir_string() -> String {
     home_dir()
         .unwrap()
