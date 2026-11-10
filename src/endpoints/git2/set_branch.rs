@@ -1,14 +1,15 @@
 use crate::structs::AppSettings;
+use crate::utils::git::git_repo_path;
 use crate::utils::json_responses::make_bad_json_data_response;
-use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::paths::check_path_components;
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, ok_ok_json_response,
 };
-use git2::{Repository, build::CheckoutBuilder, StatusOptions};
+use git2::{build::CheckoutBuilder, Repository, StatusOptions};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::{post, State};
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
 /// *`POST /branch/<branch_ref>/<repo_path>`*
 ///
@@ -28,12 +29,20 @@ pub async fn set_branch(
         return not_ok_bad_repo_json_response();
     }
 
-    let repo_path_string = format!(
-        "{}{}{}",
-        state.repo_dir.lock().unwrap().clone(),
-        os_slash_str(),
-        repo_path.display()
-    );
+    let repo_dir_string = state.repo_dir.lock().unwrap().clone();
+    let repo_url_string = repo_path.display().to_string();
+    let repo_path_string = match git_repo_path(repo_dir_string.clone(), repo_url_string.clone()) {
+        Some(s) => s,
+        None => {
+            return not_ok_json_response(
+                Status::BadRequest,
+                make_bad_json_data_response(format!(
+                    "repo directory '{}' does not exist or does not contain a .git directory",
+                    &repo_url_string
+                )),
+            );
+        }
+    };
 
     let repo = match Repository::open(&repo_path_string) {
         Ok(r) => r,
@@ -96,13 +105,7 @@ pub async fn set_branch(
     };
 
     // Safe checkout (no force)
-    if let Err(e) = repo.checkout_tree(
-        &obj,
-        Some(
-            CheckoutBuilder::new()
-                .safe()
-        ),
-    ) {
+    if let Err(e) = repo.checkout_tree(&obj, Some(CheckoutBuilder::new().safe())) {
         return not_ok_json_response(
             Status::InternalServerError,
             make_bad_json_data_response(format!("checkout failed: {}", e)),

@@ -1,5 +1,23 @@
 use crate::structs::PankosmiaError;
 use git2::{Repository, RepositoryInitOptions};
+use std::path::Path;
+use crate::utils::paths::os_slash_str;
+
+/// Checks that
+/// - directory exists
+/// - that directory contains a .git directory
+/// and returns the path as a String within an Option
+pub(crate) fn git_repo_path(repo_dir: String, repo_url: String) -> Option<String> {
+    let repo_path = format!("{}{}{}", &repo_dir, os_slash_str(), &repo_url);
+    if !Path::new(&repo_path).is_dir() {
+        return None;
+    }
+    let repo_git_path = format!("{}{}{}", &repo_path, os_slash_str(), ".git");
+    if !Path::new(&repo_git_path).is_dir() {
+        return None;
+    }
+    Some(repo_path)
+}
 
 pub(crate) fn init_repo(
     repo_dir: &String,

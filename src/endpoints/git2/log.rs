@@ -1,15 +1,16 @@
 use crate::structs::AppSettings;
+use crate::utils::git::git_repo_path;
 use crate::utils::json_responses::make_bad_json_data_response;
-use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::paths::check_path_components;
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, ok_json_response,
 };
 use git2::{ObjectType, Repository, Time};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
+use rocket::serde::Serialize;
 use rocket::{get, State};
 use std::path::{Components, PathBuf};
-use rocket::serde::Serialize;
 
 fn print_time(time: &Time) -> String {
     let offset = time.offset_minutes();
@@ -27,7 +28,7 @@ struct CommitJson {
     author: String,
     date: String,
     epoch: i64,
-    message: String
+    message: String,
 }
 
 /// *`GET /log/<repo_path>`*
@@ -42,19 +43,30 @@ pub async fn log_repo(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
-        let repo_path_string = format!(
-            "{}{}{}",
-            state.repo_dir.lock().unwrap().clone(),
-            os_slash_str(),
-            &repo_path.display().to_string()
-        );
+        let repo_dir_string = state.repo_dir.lock().unwrap().clone();
+        let repo_url_string = repo_path.display().to_string();
+        let repo_path_string = match git_repo_path(repo_dir_string.clone(), repo_url_string.clone())
+        {
+            Some(s) => s,
+            None => {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!(
+                        "repo directory '{}' does not exist or does not contain a .git directory",
+                        &repo_url_string
+                    )),
+                );
+            }
+        };
         match Repository::open(repo_path_string) {
             Ok(repo) => {
                 let mut revwalk = repo.revwalk().expect("Could not revwalk repository");
                 revwalk.set_sorting(git2::Sort::TIME).unwrap();
                 let head = repo.head().expect("Could not locate head");
                 let head_branch_name = head.name().expect("Could not get branch name from head");
-                let rev_spec = repo.revparse(head_branch_name).expect("Could not rev_parse");
+                let rev_spec = repo
+                    .revparse(head_branch_name)
+                    .expect("Could not rev_parse");
                 if rev_spec.mode().contains(git2::RevparseMode::SINGLE) {
                     revwalk
                         .push(rev_spec.from().unwrap().id())
@@ -73,7 +85,7 @@ pub async fn log_repo(
                     revwalk.hide(from).expect("could not hide");
                 }
                 revwalk.push_head().expect("could not push_head");
-                let mut return_json = vec!();
+                let mut return_json = vec![];
                 for rev_step in revwalk {
                     let commit_id = rev_step.expect("Could not unwrap rev_step");
                     let commit = repo.find_commit(commit_id).expect("Could not find commit");

@@ -16,6 +16,7 @@ use rocket::{post, State};
 use serde_json::{Map, Value};
 use std::path::{Components, PathBuf};
 use uuid::Uuid;
+use crate::utils::git::git_repo_path;
 
 /// *`POST /add-and-commit/<repo_path>`*
 ///
@@ -36,12 +37,21 @@ pub async fn add_and_commit(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
-        let repo_path_string = format!(
-            "{}{}{}",
-            state.repo_dir.lock().expect("repo dir lock").clone(),
-            os_slash_str(),
-            &repo_path.display().to_string().clone()
-        );
+        let repo_dir_string = state.repo_dir.lock().unwrap().clone();
+        let repo_url_string = repo_path.display().to_string();
+        let repo_path_string = match git_repo_path(repo_dir_string.clone(), repo_url_string.clone())
+        {
+            Some(s) => s,
+            None => {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!(
+                        "repo directory '{}' does not exist or does not contain a .git directory",
+                        &repo_url_string
+                    )),
+                );
+            }
+        };
         // Read repo metadata
         let path_to_repo_metadata = format!("{}{}metadata.json", repo_path_string, os_slash_str(),);
         let metadata_string = match std::fs::read_to_string(&path_to_repo_metadata) {
@@ -153,9 +163,7 @@ pub async fn add_and_commit(
                 Err(e) => {
                     return not_ok_json_response(
                         Status::InternalServerError,
-                        make_bad_json_data_response(
-                            format!("could not commit: {}", e).to_string(),
-                        ),
+                        make_bad_json_data_response(format!("could not commit: {}", e).to_string()),
                     )
                 }
             },

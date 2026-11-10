@@ -1,7 +1,8 @@
 use crate::static_vars::NET_IS_ENABLED;
 use crate::structs::AppSettings;
+use crate::utils::git::git_repo_path;
 use crate::utils::json_responses::make_bad_json_data_response;
-use crate::utils::paths::{check_path_components, os_slash_str};
+use crate::utils::paths::check_path_components;
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, not_ok_offline_json_response,
     ok_json_response,
@@ -14,7 +15,6 @@ use rocket::{post, State};
 use serde_json::json;
 use std::path::{Components, PathBuf};
 use std::sync::atomic::Ordering;
-/*use std::time::SystemTime;*/
 
 fn fast_forward(
     repo: &Repository,
@@ -82,14 +82,24 @@ pub async fn pull_repo(
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     if check_path_components(&mut path_components.clone()) {
-        let repo_path_string = format!(
-            "{}{}{}",
-            state.repo_dir.lock().unwrap().clone(),
-            os_slash_str(),
-            &repo_path.display().to_string().clone()
-        );
+        let repo_dir_string = state.repo_dir.lock().unwrap().clone();
+        let repo_url_string = repo_path.display().to_string();
+        let repo_path_string = match git_repo_path(repo_dir_string.clone(), repo_url_string.clone())
+        {
+            Some(s) => s,
+            None => {
+                return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!(
+                        "repo directory '{}' does not exist or does not contain a .git directory",
+                        &repo_url_string
+                    )),
+                );
+            }
+        };
         let remote_transport_regex = Regex::new(r"^(https?|ssh)://|git@").unwrap();
-        if remote_transport_regex.is_match(&remote_name) && !NET_IS_ENABLED.load(Ordering::Relaxed) {
+        if remote_transport_regex.is_match(&remote_name) && !NET_IS_ENABLED.load(Ordering::Relaxed)
+        {
             return not_ok_offline_json_response();
         }
         match Repository::open(&repo_path_string) {
