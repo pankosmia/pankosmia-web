@@ -1,6 +1,7 @@
 use std::env;
 use std::path::{Components};
 use home::home_dir;
+use regex::Regex;
 
 pub(crate) fn os_slash_str() -> &'static str {
     match env::consts::OS {
@@ -139,7 +140,10 @@ pub(crate) fn check_sys_path_string_components(path_string: String) -> bool {
     if path_string.len() == 0 {
         return true;
     }
-    let path_string_parts = path_string.split("/");
+    let re = Regex::new(r"^[A-Z]:[\\]+").unwrap();
+    let truncated_path_string = re.replace(&path_string, "");
+    println!("TRUNCATED: {}", &truncated_path_string);
+    let path_string_parts = truncated_path_string.split(os_slash_str());
     let mut ret = true;
     for path_string_part in path_string_parts {
         if path_string_part.len() < 1 {

@@ -334,12 +334,14 @@ pub(crate) fn add_static_routes(
 pub(crate) fn add_logging(rocket_instance: Rocket<Build>, log_path: Option<String>, truncate_log: bool) -> Rocket<Build> {
     let logger = match log_path {
         Some(lp) => {
-            let file = std::fs::OpenOptions::new()
+            let file = match std::fs::OpenOptions::new()
                 .create(true)
                 .write(true)
                 .truncate(truncate_log)
-                .open(lp)
-                .unwrap();
+                .open(&lp){
+                    Ok(f)=> f,
+                    Err(e) => panic!("Could not open log file '{}': {}", &lp, e)
+                };
             let decorator = slog_term::PlainDecorator::new(file);
             let drain = slog_term::FullFormat::new(decorator).build().fuse();
             let async_drain = slog_async::Async::new(drain).build().fuse();

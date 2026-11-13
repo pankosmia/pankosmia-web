@@ -214,7 +214,7 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         Ok(j) => j,
         Err(e) => {
             println!(
-                "Warning: Could not read and parse i18n_overrides as json from {}: {}",
+                "WARNING: Could not read and parse i18n_overrides as json from {}: {}",
                 i18n_overrides_path, e
             );
             json!({})
