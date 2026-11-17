@@ -213,7 +213,7 @@ pub struct BurritoMetadataLanguage {
     pub scriptDirection: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProductSpec {
     pub name: String,
     pub short_name: String,

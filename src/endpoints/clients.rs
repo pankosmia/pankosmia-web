@@ -45,7 +45,12 @@ pub fn list_clients(clients: &State<Clients>) -> status::Custom<(ContentType, St
 /// Returns a JSON object of public URL interfaces offered by clients.
 ///
 #[get("/client-interfaces")]
-pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentType, String)> {
+pub fn client_interfaces(state: &State<AppSettings>, clients: &State<Clients>) -> status::Custom<(ContentType, String)> {
+    let product = state.product.clone();
+    let flavor_roles = match product.flavor_roles {
+        Some(fr) => fr,
+        None => BTreeMap::new()
+    };
     let clients = clients.lock().unwrap().clone();
     let mut summaries = BTreeMap::new();
     for client_record in clients {
@@ -86,10 +91,19 @@ pub fn client_interfaces(clients: &State<Clients>) -> status::Custom<(ContentTyp
         let mut endpoints: Value = metadata_json["endpoints"].clone();
         if endpoints.is_null() {
             continue;
-        }
+        };
         let endpoints_ob = endpoints.as_object_mut().expect("endpoints as object");
-        for (key, value) in endpoints_ob {
-            endpoints_map.insert(key.clone(), value.clone());
+        for (flavor_key, flavor_value) in endpoints_ob {
+            let flavor_value_map = flavor_value.as_object().expect("flavor_value as map");
+            let mut filtered_flavor_value = BTreeMap::new();
+            for (role_key, role_value) in flavor_value_map {
+                let role_key_string = role_key.as_str().to_string();
+                if flavor_roles.contains_key(flavor_key) && !flavor_roles[flavor_key].contains(&role_key_string) {
+                    continue;
+                };
+                filtered_flavor_value.insert(role_key.clone(), role_value);
+            };
+            endpoints_map.insert(flavor_key.clone(), filtered_flavor_value);
         }
         let summary = json!({
             "endpoints": endpoints_map

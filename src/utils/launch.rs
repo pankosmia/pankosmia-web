@@ -298,7 +298,6 @@ pub(crate) fn add_app_settings(
             })),
             _ => Mutex::new(None),
         },
-
         product: ProductSpec {
             name: product_json["name"].as_str().unwrap().to_string(),
             short_name: product_json["short_name"].as_str().unwrap().to_string(),
