@@ -220,6 +220,8 @@ pub struct ProductSpec {
     pub version: String,
     pub date_time: String,
     pub homepage: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub flavor_roles: Option<BTreeMap<String, Vec<String>>>
 }
 
 #[derive(Responder)]

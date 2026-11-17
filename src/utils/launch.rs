@@ -305,6 +305,10 @@ pub(crate) fn add_app_settings(
             version: product_json["version"].as_str().unwrap().to_string(),
             date_time: product_json["datetime"].as_str().unwrap().to_string(),
             homepage: product_json["homepage"].as_str().unwrap().to_string(),
+            flavor_roles: match serde_json::from_value(product_json["flavor_roles"].clone()) {
+                Ok(fr) => fr,
+                Err(e) => panic!("Could not read product.json flavor_role: {}", e)
+            }
         },
         client_config,
         dev_settings: Mutex::new(json!({"force_os": null})),
