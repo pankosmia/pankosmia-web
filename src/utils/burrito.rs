@@ -342,3 +342,25 @@ pub fn ingredients_scopes_from_files(
     }
     scopes
 }
+
+pub fn scopes_string_from_plan(translation_plan_value: Value) -> String {
+    let mut plan_books = std::collections::BTreeSet::new();
+    let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
+    let translation_plan_sections = translation_plan_object["sections"]
+        .as_array()
+        .expect("plan sections as array")
+        .to_vec();
+    for section in translation_plan_sections.iter() {
+        let book_code = section["bookCode"]
+            .as_str()
+            .expect("bookCode as string")
+            .to_string();
+        plan_books.insert(book_code);
+    }
+    let scope_string = plan_books
+        .iter()
+        .map(|b| format!("\"{}\": {{}}", b))
+        .collect::<Vec<_>>()
+        .join(", ");
+    scope_string
+}

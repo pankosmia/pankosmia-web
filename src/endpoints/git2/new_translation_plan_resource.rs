@@ -1,11 +1,14 @@
 use crate::structs::AppSettings;
-use crate::utils::burrito::{copy_gitignore_template, copy_vrs_template, language_name_from_code};
-use crate::utils::files::{paths_to_new_burrito};
+use crate::utils::burrito::{
+    copy_gitignore_template, copy_vrs_template, ingredients_metadata_from_files,
+    language_name_from_code, scopes_string_from_plan,
+};
+use crate::utils::files::paths_to_new_burrito;
+use crate::utils::git::{add_and_commit_repo, init_repo};
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::os_slash_str;
 use crate::utils::response::{not_ok_json_response, ok_ok_json_response};
 use crate::utils::time::utc_now_timestamp_string;
-use crate::utils::git::{init_repo, add_and_commit_repo};
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
 use rocket::serde::json::Json;
@@ -112,10 +115,7 @@ pub fn new_translation_plan_resource_repo(
                 Status::InternalServerError,
                 (
                     ContentType::JSON,
-                    make_bad_json_data_response(format!(
-                        "{}",
-                        e
-                    )),
+                    make_bad_json_data_response(format!("{}", e)),
                 ),
             )
         }
@@ -136,11 +136,13 @@ pub fn new_translation_plan_resource_repo(
     }
 
     match copy_gitignore_template(&state.app_resources_dir, &path_to_new_repo) {
-        Ok(_) => {},
-        Err(e) => return not_ok_json_response(
+        Ok(_) => {}
+        Err(e) => {
+            return not_ok_json_response(
                 Status::InternalServerError,
                 make_bad_json_data_response(format!("{}", e)),
             )
+        }
     };
 
     // Use default plan template or make supplied plan into a template
@@ -260,6 +262,21 @@ pub fn new_translation_plan_resource_repo(
         }
     }
 
+    // Copy VRS
+    match copy_vrs_template(
+        &state.app_resources_dir,
+        &path_to_new_repo,
+        &json_form.versification.clone().unwrap_or("eng".to_string()),
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            return not_ok_json_response(
+                Status::InternalServerError,
+                make_bad_json_data_response(format!("{}", e)),
+            )
+        }
+    };
+
     // Read and customize metadata
     let mut metadata_string = match std::fs::read_to_string(&path_to_template) {
         Ok(v) => v,
@@ -282,6 +299,12 @@ pub fn new_translation_plan_resource_repo(
         }
         }
     );
+    let ingredients_metadata_map = ingredients_metadata_from_files(
+        format!("{}", &state.app_resources_dir),
+        path_to_new_repo.clone(),
+    );
+    let ingredients_metadata_string =
+        serde_json::to_string(&ingredients_metadata_map).expect("ingredients metadata as string");
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())
         .replace("%%CONTENT_NAME%%", json_form.content_name.as_str())
@@ -299,43 +322,17 @@ pub fn new_translation_plan_resource_repo(
             serde_json::to_string(&language_json)
                 .expect("language json")
                 .as_str(),
-        );
-    match copy_vrs_template(
-        &state.app_resources_dir,
-        &path_to_new_repo,
-        &json_form.versification.clone().unwrap_or("eng".to_string()),
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            return not_ok_json_response(
-                Status::InternalServerError,
-                make_bad_json_data_response(format!("{}", e)),
-            )
-        }
-    };
-    
-    // Ingredients from plan
-    let mut plan_books = std::collections::BTreeSet::new();
+        )
+        .replace("%%INGREDIENTS%%", ingredients_metadata_string.as_str());
+
+    // Scope from plan
     let translation_plan_value =
         serde_json::from_str::<Value>(&plan_template_string).expect("plan from str");
-    let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
-    let translation_plan_sections = translation_plan_object["sections"]
-        .as_array()
-        .expect("plan sections as array")
-        .to_vec();
-    for section in translation_plan_sections.iter() {
-        let book_code = section["bookCode"]
-            .as_str()
-            .expect("bookCode as string")
-            .to_string();
-        plan_books.insert(book_code);
-    }
-    let scope_string = plan_books
-        .iter()
-        .map(|b| format!("\"{}\": {{}}", b))
-        .collect::<Vec<_>>()
-        .join(", ");
-    metadata_string = metadata_string.replace("%%SCOPE%%", &scope_string);
+    metadata_string = metadata_string.replace(
+        "%%SCOPE%%",
+        scopes_string_from_plan(translation_plan_value).as_str(),
+    );
+
     // Write metadata
     let path_to_repo_metadata = format!("{}{}metadata.json", &path_to_new_repo, os_slash_str());
     match std::fs::write(path_to_repo_metadata, metadata_string) {
@@ -351,14 +348,11 @@ pub fn new_translation_plan_resource_repo(
         }
     }
     match add_and_commit_repo(new_repo, &"Initial Commit".to_string()) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             return not_ok_json_response(
                 Status::InternalServerError,
-                make_bad_json_data_response(format!(
-                    "{}",
-                    e
-                )),
+                make_bad_json_data_response(format!("{}", e)),
             )
         }
     };
