@@ -1,6 +1,6 @@
 use crate::structs::{AppSettings, BurritoMetadata};
 use crate::utils::burrito::{
-    ingredients_metadata_from_files, ingredients_scopes_from_files,
+    ingredients_metadata_from_files, ingredients_scopes_from_files, scopes_from_plan,
 };
 use crate::utils::json_responses::make_bad_json_data_response;
 use crate::utils::paths::{check_path_components, os_slash_str};
@@ -60,19 +60,60 @@ pub async fn remake_ingredients_metadata(
             }
         };
         // Add ingredient record and currentScope value for USFM
-        if let mut ingredients = metadata_struct.ingredients.lock().expect("ingredients lock") {
+        if let mut ingredients = metadata_struct
+            .ingredients
+            .lock()
+            .expect("ingredients lock")
+        {
             let new_ingredients =
                 ingredients_metadata_from_files(app_resources_dir.clone(), full_repo_path.clone());
             *ingredients = new_ingredients;
         }
         if let type_info = metadata_struct.r#type {
             let mut type_ob = type_info.as_object().expect("type object").clone();
-            let flavor_type_ob = type_ob["flavorType"].as_object_mut().expect("flavorType mutable object");
-            let new_current_scope =
-                ingredients_scopes_from_files(app_resources_dir, full_repo_path.clone());
-            flavor_type_ob["currentScope"] =
-                serde_json::from_str(serde_json::to_string(&new_current_scope).expect("currentScope string").as_str())
-                    .unwrap();
+            let flavor_type_ob = type_ob["flavorType"]
+                .as_object_mut()
+                .expect("flavorType mutable object");
+            let flavor_ob = flavor_type_ob["flavor"].as_object().expect("flavor object");
+            let flavor_name = flavor_ob["name"]
+                .as_str()
+                .expect("flavor name")
+                .to_lowercase();
+            let new_current_scope;
+            if flavor_name == "x-translationplan" || flavor_name == "audiotranslation" {
+                // Read the plan as JSON
+                let path_to_repo_plan = format!(
+                    "{}{}ingredients{}plan.json",
+                    &full_repo_path,
+                    os_slash_str(),
+                    os_slash_str()
+                );
+                let plan_string = match std::fs::read_to_string(&path_to_repo_plan) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        return not_ok_json_response(
+                            Status::InternalServerError,
+                            make_bad_json_data_response(format!(
+                                "Could not load translation plan as string: {}",
+                                e
+                            )),
+                        )
+                    }
+                };
+                let plan_json: serde_json::Value =
+                    serde_json::from_str(&plan_string).expect("plan as str");
+                // get the scopes info
+                new_current_scope = scopes_from_plan(plan_json);
+            } else {
+                new_current_scope =
+                    ingredients_scopes_from_files(app_resources_dir, full_repo_path.clone());
+            };
+            flavor_type_ob["currentScope"] = serde_json::from_str(
+                serde_json::to_string(&new_current_scope)
+                    .expect("currentScope string")
+                    .as_str(),
+            )
+            .unwrap();
             metadata_struct.r#type =
                 serde_json::from_str(serde_json::to_string(&type_ob).unwrap().as_str()).unwrap();
         }

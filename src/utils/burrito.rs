@@ -364,3 +364,24 @@ pub fn scopes_string_from_plan(translation_plan_value: Value) -> String {
         .join(", ");
     scope_string
 }
+
+pub fn scopes_from_plan(translation_plan_value: Value) -> BTreeMap<String, Value> {
+    let mut plan_books = std::collections::BTreeSet::new();
+    let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
+    let translation_plan_sections = translation_plan_object["sections"]
+        .as_array()
+        .expect("plan sections as array")
+        .to_vec();
+    for section in translation_plan_sections.iter() {
+        let book_code = section["bookCode"]
+            .as_str()
+            .expect("bookCode as string")
+            .to_string();
+        plan_books.insert(book_code);
+    };
+    let mut book_map = BTreeMap::new();
+    for book in plan_books {
+        book_map.insert(book, json!([]));
+    }
+    book_map
+}
