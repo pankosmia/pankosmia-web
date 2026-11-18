@@ -361,13 +361,18 @@ pub(crate) fn build_client_record(app_resources_path: &String, client_record: &V
         }
     }
     let mut debug_flag = false;
-    let md_require = metadata_json["require"].as_object().unwrap();
+    let md_require = metadata_json["require"].as_object().expect("md require as ob");
     if md_require.contains_key("debug") {
-        debug_flag = md_require.clone()["debug"].as_bool().unwrap();
+        debug_flag = md_require.clone()["debug"].as_bool().expect("require debug as bool");
+    }
+    let mut beta_flag = false;
+    if md_require.contains_key("beta") {
+        beta_flag = md_require.clone()["beta"].as_bool().expect("require beta as bool");
     }
     let requires = json!({
         "net": md_require.clone()["net"].as_bool().unwrap(),
-        "debug": debug_flag
+        "debug": debug_flag,
+        "beta": beta_flag
     });
     // Get url from package.json
     let package_json_path = format!(
