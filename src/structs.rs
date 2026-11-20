@@ -151,6 +151,17 @@ pub struct MetadataSummary {
     pub copyright: String
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct EditMetadataRecord {
+    pub name: String,
+    pub description: String,
+    pub abbreviation: String,
+    pub language_code: String,
+    pub language_name: Option<String>,
+    pub script_direction: String,
+    pub copyright: String
+}
+
 #[derive(Responder)]
 pub enum ContentOrRedirect {
     Content(status::Custom<(ContentType, String)>),
