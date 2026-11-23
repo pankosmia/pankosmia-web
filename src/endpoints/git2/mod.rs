@@ -9,6 +9,7 @@ pub mod delete_repo;
 pub mod status;
 pub mod new_scripture_book;
 pub mod copy_repo;
+pub mod fork_repo;
 pub mod remotes;
 pub mod add_remote;
 pub mod delete_remote;
