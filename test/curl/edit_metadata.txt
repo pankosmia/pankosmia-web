@@ -1,0 +1,1 @@
+curl -X "POST" --header "Content-Type: application/json" --data '@edit_metadata_payload.json' "localhost:19119/api/burrito/metadata/edit/_local_/_local_/en_bsb"

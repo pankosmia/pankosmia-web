@@ -1,0 +1,9 @@
+{
+    "name": "NEW NAME",
+    "description": "THIS IS A NEW DESCRIPTION",
+    "abbreviation": "NN",
+    "language_code": "x-foo",
+    "language_name": "Green Fooish",
+    "script_direction": "rtl",
+    "copyright": "© The Foo Fairies"
+}

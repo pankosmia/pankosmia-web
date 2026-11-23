@@ -4,13 +4,14 @@ use crate::utils::paths::{check_path_components, os_slash_str};
 use crate::utils::response::{
     not_ok_bad_repo_json_response, not_ok_json_response, ok_ok_json_response,
 };
+use crate::utils::burrito::language_name_from_code;
+use crate::utils::time::utc_now_timestamp_string;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
-use rocket::{post, State};
-use std::path::{Components, PathBuf};
 use rocket::serde::json::Json;
+use rocket::{post, State};
 use serde_json::{Map, Value};
-use crate::utils::time::utc_now_timestamp_string;
+use std::path::{Components, PathBuf};
 use uuid::Uuid;
 
 /// *`POST /metadata/edit/<repo_path>`*
@@ -18,15 +19,23 @@ use uuid::Uuid;
 /// Typically mounted as **`/api/burrito/metadata/edit/<repo_path>`**
 ///
 /// Edits the Dublin Core-like parts of the metadata for a repo.
+/// The data is provided as a JSON payload:
+/// {
+///    "name": "NEW NAME",
+///    "description": "THIS IS A NEW DESCRIPTION",
+///    "abbreviation": "NN",
+///    "language_code": "x-foo",
+///    "language_name": "Green Fooish",
+///    "script_direction": "rtl",
+///    "copyright": "© The Foo Fairies"
+/// }
 
-#[post("/metadata/edit/<repo_path..>",
-    format = "json",
-    data = "<edits>")]
+#[post("/metadata/edit/<repo_path..>", format = "json", data = "<edits>")]
 #[allow(irrefutable_let_patterns)]
 pub async fn post_edit_metadata(
     state: &State<AppSettings>,
     repo_path: PathBuf,
-    edits: Json<EditMetadataRecord>
+    edits: Json<EditMetadataRecord>,
 ) -> status::Custom<(ContentType, String)> {
     let path_components: Components<'_> = repo_path.components();
     let full_repo_path = format!(
@@ -62,7 +71,7 @@ pub async fn post_edit_metadata(
                 );
             }
         };
-        
+
         // Update timestamps, revision
         let now_time = utc_now_timestamp_string();
         // - meta timestamp
@@ -114,18 +123,60 @@ pub async fn post_edit_metadata(
         identification_obj.insert("primary".to_string(), Value::Object(primary_obj));
 
         // Edit identity info (name, description, abbreviation)
-        // TODO
+        // Directly in identification as lang/text tuples
+        let mut name_obj = identification_obj["name"]
+            .as_object()
+            .expect("identification name as object")
+            .clone();
+        name_obj.insert("en".to_string(), Value::String(edits.name.clone()));
+        identification_obj.insert("name".to_string(), Value::Object(name_obj));
+
+        let mut description_obj = identification_obj["description"]
+            .as_object()
+            .expect("identification description as object")
+            .clone();
+        description_obj.insert("en".to_string(), Value::String(edits.description.clone()));
+        identification_obj.insert("description".to_string(), Value::Object(description_obj));
+
+        let mut abbreviation_obj = identification_obj["abbreviation"]
+            .as_object()
+            .expect("identification abbreviation as object")
+            .clone();
+        abbreviation_obj.insert("en".to_string(), Value::String(edits.abbreviation.clone()));
+        identification_obj.insert("abbreviation".to_string(), Value::Object(abbreviation_obj));
 
         // Update identification
         metadata_struct.identification =
             serde_json::to_value(identification_obj).expect("new identification");
 
-        // Edit language (code, name, scriptDirection)
-        // TODO
+        // Edit language (code => tag, name => BTreeMap, scriptDirection => Option)
+        // Need if no language_name, look up from code
+        let language_name = match language_name_from_code(
+            &state.app_resources_dir,
+            edits.language_code.clone(),
+            edits.language_name.clone(),
+        ) {
+            Ok(ln) => ln,
+            Err(e) => return not_ok_json_response(
+                    Status::BadRequest,
+                    make_bad_json_data_response(format!("Could not read or infer language name: {}", e)),
+                )
+        };
+        metadata_struct.languages[0].tag = edits.language_code.clone();
+        metadata_struct.languages[0]
+            .name
+            .lock()
+            .expect("lock on language name")
+            .insert("en".to_string(), language_name);
+        metadata_struct.languages[0].scriptDirection = Some(edits.script_direction.clone());
 
         // Edit copyright
-        // TODO
-        
+        let mut short_statements_array = metadata_struct.copyright["shortStatements"].as_array().expect("shortStatements array").clone();
+        let mut short_statement = short_statements_array[0].as_object_mut().expect("shortStatement object").clone();
+        short_statement.insert("en".to_string(), Value::from(edits.copyright.clone()));
+        short_statements_array[0] = Value::from(short_statement);
+        metadata_struct.copyright["shortStatements"] = Value::from(short_statements_array);
+
         // Write metadata
         let metadata_output_string = match serde_json::to_string(&metadata_struct) {
             Ok(s) => s,
