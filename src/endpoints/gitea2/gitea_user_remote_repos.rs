@@ -27,8 +27,7 @@ use std::sync::atomic::Ordering;
 ///     "language_code": "fr",
 ///     "script_direction": "ltr",
 ///     "released": "2024-11-15T11:06:59Z",
-///   },
-///   ...
+///   }
 /// ]
 /// ```
 

@@ -104,7 +104,8 @@ pub(crate) fn add_routes(rocket_instance: Rocket<Build>) -> Rocket<Build> {
             endpoints::gitea2::gitea_proxy_login::gitea_proxy_login,
             endpoints::gitea2::gitea_proxy_logout::gitea_proxy_logout,
             endpoints::gitea2::get_my_collaborators::get_my_collaborators,
-            endpoints::gitea2::gitea_remote_repo_branches::gitea_remote_repo_branches
+            endpoints::gitea2::gitea_remote_repo_branches::gitea_remote_repo_branches,
+            endpoints::gitea2::gitea_users::gitea_users,
         ])
         .mount(
             "/api/git",
