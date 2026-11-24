@@ -6,17 +6,18 @@ use crate::utils::files::load_json;
 use crate::utils::paths::os_slash_str;
 use crate::utils::time::utc_now_timestamp_string;
 use chksum_md5::chksum;
+use jiff::{self, Timestamp};
 use mime_infer;
 use regex::Regex;
+use rocket::serde::json::Json;
 use serde_json::{json, Map, Value};
-use std::collections::{BTreeSet, BTreeMap};
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::fs::File;
 use std::io;
 use std::path::Path;
 use uuid::Uuid;
 use walkdir::WalkDir;
-use rocket::serde::json::Json;
 
 pub(crate) fn copy_vrs_template(
     app_resources_dir: &String,
@@ -173,6 +174,29 @@ pub(crate) fn summary_metadata_from_file(
     for (map_key, _) in current_scope_values.clone().iter() {
         book_codes.push(format!("{}", map_key));
     }
+    let primary_obj = raw_metadata_struct["identification"]["primary"]
+        .as_object()
+        .expect("identification primary as object"); // Map containing idServer as key
+    let first_primary_obj = primary_obj
+        .iter()
+        .next()
+        .expect("1st primary value")
+        .1
+        .as_object()
+        .expect("1st primary object"); // Map containing abbreviation as key
+    let repo_obj = first_primary_obj
+        .iter()
+        .next()
+        .expect("1st idServer value")
+        .1
+        .as_object()
+        .expect("1st idServer object");
+    let timestamp_str = repo_obj["timestamp"].as_str().expect("timestamp as str");
+    let epoch_timestamp: u64 =
+        match jiff::fmt::temporal::DateTimeParser::new().parse_timestamp(timestamp_str) {
+            Ok(ts) => ts.as_second().try_into().unwrap(),
+            Err(_) => Timestamp::UNIX_EPOCH.as_second().try_into().unwrap(),
+        };
     Ok(MetadataSummary {
         name: raw_metadata_struct["identification"]["name"]["en"]
             .as_str()
@@ -219,31 +243,7 @@ pub(crate) fn summary_metadata_from_file(
             _ => "?".to_string(),
         },
         book_codes: book_codes,
-        timestamp: raw_metadata_struct["identification"]["primary"]
-            .as_object()
-            .and_then(|primary| {
-                primary.values().find_map(|value| {
-                    value.as_object().and_then(|inner| {
-                        inner.values().find_map(|value| value["timestamp"].as_str())
-                    })
-                })
-            })
-            .and_then(|timestamp| {
-                let dt = chrono::DateTime::parse_from_rfc3339(timestamp).ok()?;
-                std::time::SystemTime::from(dt)
-                    .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                    .ok()
-                    .map(|elapsed| elapsed.as_secs())
-            })
-            .unwrap_or_else(|| {
-                fs::metadata(&repo_metadata_path)
-                    .expect("Could not read fs metadata")
-                    .modified()
-                    .expect("Could not get modified for fs")
-                    .duration_since(std::time::SystemTime::UNIX_EPOCH)
-                    .expect("Could not get elapsed")
-                    .as_secs()
-            }),
+        timestamp: epoch_timestamp,
     })
 }
 
@@ -362,7 +362,7 @@ fn scopes_set(translation_plan_value: Value) -> BTreeSet<String> {
             .expect("bookCode as string")
             .to_string();
         plan_books.insert(book_code);
-    };
+    }
     plan_books
 }
 
