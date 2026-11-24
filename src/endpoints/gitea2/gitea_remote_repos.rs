@@ -22,15 +22,11 @@ use std::sync::atomic::Ordering;
 ///     "name": "fr_psle",
 ///     "abbreviation": "psle",
 ///     "description": "Une traduction littéralement plus simple",
-///     "avatar_url": "https://git.door43.org/repo-avatars/f052d1bba37e57e0ec56bd68b6274290310d3bfc392cd4534b1d4a0814cccb36",
 ///     "flavor": "textTranslation",
 ///     "flavor_type": "scripture",
 ///     "language_code": "fr",
 ///     "script_direction": "ltr",
-///     "branch_or_tag": "master",
 ///     "released": "2024-11-15T11:06:59Z",
-///     "clone_url": "https://git.door43.org/BurritoTruck/fr_psle.git",
-///     "updated_at": "2024-11-15T11:06:59Z"
 ///   },
 ///   ...
 /// ]
@@ -55,7 +51,6 @@ pub fn gitea_remote_repos(
                         name: json_record["name"].as_str().unwrap().to_string(),
                         abbreviation: json_record["abbreviation"].as_str().unwrap().to_string(),
                         description: json_record["description"].as_str().unwrap().to_string(),
-                        avatar_url: json_record["avatar_url"].as_str().unwrap().to_string(),
                         flavor: json_record["flavor"].as_str().unwrap().to_string(),
                         flavor_type: json_record["flavor_type"].as_str().unwrap().to_string(),
                         language_code: json_record["language"].as_str().unwrap().to_string(),
@@ -63,27 +58,8 @@ pub fn gitea_remote_repos(
                             .as_str()
                             .unwrap()
                             .to_string(),
-                        branch_or_tag: match latest["branch_or_tag_name"].as_str() {
-                            Some(s) => s.to_string(),
-                            _ => "".to_string(),
-                        },
                         released: match latest["released"].as_str() {
                             Some(s) => s.to_string(),
-                            _ => "".to_string(),
-                        },
-                        updated_at: json_record["updated_at"].as_str().unwrap().to_string(),
-                        clone_url: match json_record["clone_url"].as_str() {
-                            Some(s) => s.to_string(),
-                            _ => "".to_string(),
-                        },
-                        latest_zip: match json_record["catalog"].as_object() {
-                            Some(ob1) => match ob1["latest"].as_object() {
-                                Some(ob) => match ob["zipball_url"].as_str() {
-                                    Some(s) => s.to_string(),
-                                    _ => "".to_string(),
-                                },
-                                _ => "".to_string(),
-                            },
                             _ => "".to_string(),
                         },
                         metadata_types: match json_record["metadata_type"].as_str() {
