@@ -27,6 +27,7 @@ pub struct NewTextTranslationContentForm {
     pub add_cv: Option<bool>,
     pub versification: String,
     pub branch_name: Option<String>,
+    pub script_direction: Option<String>
 }
 
 /// *`POST /new-text-translation`*
@@ -46,6 +47,7 @@ pub struct NewTextTranslationContentForm {
 /// - book_abbr (null or string)
 /// - add_cv (null or boolean)
 /// - branch_name (null or string)
+/// - script_direction (null or string)
 #[post("/new-text-translation", format = "json", data = "<json_form>")]
 pub fn new_text_translation_repo(
     state: &State<AppSettings>,
@@ -172,7 +174,8 @@ pub fn new_text_translation_repo(
             "tag": &json_form.content_language_code,
             "name": {
                 "en": &language_name,
-        }
+            },
+            "scriptDirection": &json_form.script_direction.clone().unwrap_or("ltr".to_string())
         }
     );
     metadata_string = metadata_string

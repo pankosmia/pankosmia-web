@@ -22,6 +22,7 @@ pub struct NewAudioTranslationContentForm {
     pub content_language_name: Option<String>,
     pub versification: String,
     pub branch_name: Option<String>,
+    pub script_direction: Option<String>,
 }
 
 /// *`POST /new-audio-translation`*
@@ -35,6 +36,7 @@ pub struct NewAudioTranslationContentForm {
 /// - content_language_name (optional)
 /// - versification (string)
 /// - branch_name (null or string)
+/// - script_direction (null or string)
 #[post("/new-audio-translation", format = "json", data = "<json_form>")]
 pub fn new_audio_translation_repo(
     state: &State<AppSettings>,
@@ -172,7 +174,8 @@ pub fn new_audio_translation_repo(
             "tag": &json_form.content_language_code,
             "name": {
                 "en": &language_name,
-        }
+            },
+            "scriptDirection": &json_form.script_direction.clone().unwrap_or("ltr".to_string())
         }
     );
     metadata_string = metadata_string

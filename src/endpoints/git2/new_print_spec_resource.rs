@@ -27,6 +27,7 @@ use serde_json::json;
 /// - branch_name(null or string)
 /// - copyright(string)
 /// - spec (string)
+/// - script_direction (null or string)
 
 #[derive(FromForm, Deserialize)]
 pub struct NewPrintSpecContentForm {
@@ -37,6 +38,7 @@ pub struct NewPrintSpecContentForm {
     pub content_language_name: Option<String>,
     pub branch_name: Option<String>,
     pub spec: Option<String>,
+    pub script_direction: Option<String>
 }
 
 #[post("/new-print-spec-resource", format = "json", data = "<json_form>")]
@@ -212,8 +214,8 @@ pub fn new_print_spec_resource_repo(
             "tag": &&json_form.content_language_code,
             "name": {
                 "en": &language_name,
-        }
-        }
+            },
+            "scriptDirection": &json_form.script_direction.clone().unwrap_or("ltr".to_string())        }
     );
     metadata_string = metadata_string
         .replace("%%ABBR%%", json_form.content_abbr.as_str())

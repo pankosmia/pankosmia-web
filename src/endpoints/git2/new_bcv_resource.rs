@@ -29,6 +29,7 @@ use serde_json::json;
 /// - book_title (null or string)
 /// - book_abbr (null or string)
 /// - branch_name (null or string)
+/// - script_direction (null or string)
 
 #[derive(FromForm, Deserialize)]
 pub struct NewBcvResourceContentForm {
@@ -44,6 +45,7 @@ pub struct NewBcvResourceContentForm {
     pub book_abbr: Option<String>,
     pub versification: Option<String>,
     pub branch_name: Option<String>,
+    pub script_direction: Option<String>
 }
 
 #[post("/new-bcv-resource", format = "json", data = "<json_form>")]
@@ -210,7 +212,8 @@ pub fn new_bcv_resource_repo(
             "tag": &json_form.content_language_code.clone(),
             "name": {
                 "en": &language_name,
-        }
+            },
+            "scriptDirection": &json_form.script_direction.clone().unwrap_or("ltr".to_string())
         }
     );
     metadata_string = metadata_string

@@ -30,6 +30,7 @@ use serde_json::{json, Value};
 /// - versification (null or string)
 /// - branch_name(null or string)
 /// - plan (null or string)
+/// - script_direction (null or string)
 
 #[derive(FromForm, Deserialize)]
 pub struct NewTranslationPlanContentForm {
@@ -41,6 +42,7 @@ pub struct NewTranslationPlanContentForm {
     pub versification: Option<String>,
     pub branch_name: Option<String>,
     pub plan: Option<String>,
+    pub script_direction: Option<String>
 }
 
 #[post(
@@ -296,7 +298,8 @@ pub fn new_translation_plan_resource_repo(
             "tag": &json_form.content_language_code,
             "name": {
                 "en": &language_name,
-        }
+            },
+            "scriptDirection": &json_form.script_direction.clone().unwrap_or("ltr".to_string())
         }
     );
     let ingredients_metadata_map = ingredients_metadata_from_files(
