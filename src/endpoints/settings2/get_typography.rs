@@ -7,7 +7,7 @@ use rocket::{get, State};
 
 /// *`GET /typography`*
 ///
-/// Typically mounted as **`/settings/typography`**
+/// Typically mounted as **`/api/settings/typography`**
 ///
 /// Returns an array containing the current typography settings.
 ///

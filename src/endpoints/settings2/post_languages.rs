@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 /// *`POST /languages/<lang>/<lang>/...`*
 ///
-/// Typically mounted as **`/languages/<lang>/<lang>/...`**
+/// Typically mounted as **`/api/languages/<lang>/<lang>/...`**
 ///
 /// Sets UI languages
 #[post("/languages/<languages..>")]

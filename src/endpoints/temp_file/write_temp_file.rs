@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 /// *`POST /bytes`*
 ///
-/// Typically mounted as **`/temp/bytes`**
+/// Typically mounted as **`/api/temp/bytes`**
 ///
 /// Writes a temporary document, where the document is provided as a file upload.
 /// Returns the arbitrary id of the document

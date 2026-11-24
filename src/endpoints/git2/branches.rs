@@ -14,7 +14,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /branches/<repo_path>`*
 ///
-/// Typically mounted as **`/git/branches/<repo_path>`**
+/// Typically mounted as **`/api/git/branches/<repo_path>`**
 ///
 /// List branches for the given repo path.
 #[get("/branches/<repo_path..>")]

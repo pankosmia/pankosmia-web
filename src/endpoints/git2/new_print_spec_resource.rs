@@ -16,7 +16,7 @@ use serde_json::json;
 
 /// *`POST /new-print-spec-resource`*
 ///
-/// Typically mounted as **`/git/new-print-spec-resource`**
+/// Typically mounted as **`/api/git/new-print-spec-resource`**
 ///
 /// Creates a new, local *x-printspec* repo. It requires the following fields as a JSON body:
 /// - content_name (string)

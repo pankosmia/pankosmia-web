@@ -15,7 +15,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`*
 ///
-/// Typically mounted as **`/git/remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`**
+/// Typically mounted as **`/api/git/remote/add/<repo_path>?remote_name=<remote_name>&remote_url=<remote_url>`**
 ///
 /// Adds a remote to the given repo path. **Do not add .git at the end of the remote url!**
 #[post("/remote/add/<repo_path..>?<remote_name>&<remote_url>")]

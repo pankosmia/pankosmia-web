@@ -57,7 +57,7 @@ fn check_burrito_zip(path: &NamedTempFile) -> Option<usize> {
 
 /// *`POST /zipped/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/zipped/<repo_path>`**
+/// Typically mounted as **`/api/burrito/zipped/<repo_path>`**
 ///
 /// Writes a new repo from a zip. The path must start with _local_/_sideloaded_
 #[post(

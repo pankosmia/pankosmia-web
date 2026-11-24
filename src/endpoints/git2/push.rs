@@ -26,7 +26,7 @@ pub struct PushForm {
 }
 /// *`POST /push/<remote>/<repo_path>`*
 ///
-/// Typically mounted as **`/push/<remote>/<repo_path>`**
+/// Typically mounted as **`/api/git/push/<remote>/<repo_path>`**
 ///
 /// Push to remote from the given repo path. In the JSON body,
 /// - cred_type is the type of SSH key, eg 'rsa', or 'https'

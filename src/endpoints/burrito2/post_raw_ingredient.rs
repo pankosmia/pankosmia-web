@@ -12,7 +12,7 @@ use crate::utils::burrito::{destination_parent, ingredients_metadata_from_files,
 
 /// *`POST /ingredient/raw/<repo_path>?ipath=my_burrito_path&update_ingredients&no_bak`*
 ///
-/// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path&update_ingredients&no_bak`**
+/// Typically mounted as **`/api/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path&update_ingredients&no_bak`**
 ///
 /// Writes a document, where the document is provided as JSON with a 'payload' key. The ipath parameter is required. There are two optional parameters:
 /// - update_ingredients to rewrite the metadata (default is false)

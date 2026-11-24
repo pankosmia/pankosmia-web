@@ -11,7 +11,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /bcv`*
 ///
-/// Typically mounted as **`/navigation/bcv`**
+/// Typically mounted as **`/api/navigation/bcv`**
 ///
 /// Returns an object containing global BCV information
 ///
@@ -30,7 +30,7 @@ pub fn get_bcv(state: &State<AppSettings>) -> status::Custom<(ContentType, Strin
 
 /// *`POST /bcv/<book_code>/<chapter>/<verse>[/<to_verse>]`*
 ///
-/// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>[/<to_verse>]`**
+/// Typically mounted as **`/api/navigation/bcv/<book_code>/<chapter>/<verse>[/<to_verse>]`**
 ///
 /// Sets global BCV with verse range.
 #[post("/bcv/<book_code>/<chapter>/<verse>/<to_verse>")]
@@ -72,7 +72,7 @@ pub fn post_bcv_range(
 
 /// *`POST /bcv/<book_code>/<chapter>/<verse>`*
 ///
-/// Typically mounted as **`/navigation/bcv/<book_code>/<chapter>/<verse>`**
+/// Typically mounted as **`/api/navigation/bcv/<book_code>/<chapter>/<verse>`**
 ///
 /// Sets global BCV without verse range.
 #[post("/bcv/<book_code>/<chapter>/<verse>")]

@@ -10,7 +10,7 @@ use std::collections::HashSet;
 
 /// *`GET /used-languages`*
 ///
-/// Typically mounted as **`/i18n/used-languages`**
+/// Typically mounted as **`/api/i18n/used-languages`**
 ///
 /// Returns an array containing languages into which at least one term is translated.
 ///

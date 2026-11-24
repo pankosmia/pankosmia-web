@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 /// *`GET /flat/<filter>`*
 ///
-/// Typically mounted as **`/i18n/flat/<filter>`**
+/// Typically mounted as **`/api/i18n/flat/<filter>`**
 ///
 /// Returns a flat object containing each i18n key with the best match based on the language preference settings. The optional filter restricts the keys returned. So, for `/i18n/flat/flavors` the response might be
 ///

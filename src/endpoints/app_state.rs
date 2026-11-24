@@ -13,7 +13,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /current-project`*
 ///
-/// Typically mounted as **`/app-state/current-project`**
+/// Typically mounted as **`/api/app-state/current-project`**
 ///
 /// Returns a JSON description of the current project, or null.
 ///
@@ -35,7 +35,7 @@ pub fn get_current_project(state: &State<AppSettings>) -> status::Custom<(Conten
 
 /// *`POST /current-project/<source>/<organization>/<project>`*
 ///
-/// Typically mounted as **`/app-state/current-project/<source>/<organization>/<project>`**
+/// Typically mounted as **`/api/app-state/current-project/<source>/<organization>/<project>`**
 ///
 /// Sets current project.
 #[post("/current-project/<source>/<organization>/<project>")]
@@ -77,7 +77,7 @@ pub fn post_current_project(
 
 /// *`POST /empty-current-project`*
 ///
-/// Typically mounted as **`/app-state/empty_current-project`**
+/// Typically mounted as **`/api/app-state/empty_current-project`**
 ///
 /// Unsets current project.
 #[post("/current-project")]
@@ -108,7 +108,7 @@ pub fn post_empty_current_project(
 
 /// *`GET /alignment`*
 ///
-/// Typically mounted as **`/app-state/alignment`**
+/// Typically mounted as **`/api/app-state/alignment`**
 ///
 /// Returns a JSON description of the current alignment.
 ///
@@ -139,7 +139,7 @@ pub fn get_alignment(state: &State<AppSettings>) -> status::Custom<(ContentType,
 
 /// *`POST /snippet/<snippet>`*
 ///
-/// Typically mounted as **`/app-state/snippet/<snippet>`**
+/// Typically mounted as **`/api/app-state/snippet/<snippet>`**
 ///
 /// Sets selected snippet, unsets word.
 #[post("/snippet/<snippet>")]
@@ -175,7 +175,7 @@ pub fn post_snippet(
 
 /// *`POST /word`*
 ///
-/// Typically mounted as **`/app-state/word`**
+/// Typically mounted as **`/api/app-state/word`**
 ///
 /// Sets selected word via JSON payload, unsets snippet.
 #[post("/word", format = "json", data = "<json_form>")]
@@ -224,7 +224,7 @@ pub fn post_word(
 
 /// *`POST /empty-alignment`*
 ///
-/// Typically mounted as **`/app-state/empty_alignment`**
+/// Typically mounted as **`/api/app-state/empty_alignment`**
 ///
 /// Unsets current word and snippet.
 #[post("/empty-alignment")]

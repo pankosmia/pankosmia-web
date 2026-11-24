@@ -9,7 +9,7 @@ use std::fs;
 
 /// *```GET /raw```*
 ///
-/// Typically mounted as **`/i18n/raw/`**
+/// Typically mounted as **`/api/i18n/raw/`**
 ///
 /// Returns the raw, nested i18n.json file from the server.
 ///

@@ -9,7 +9,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /status`*
 ///
-/// Typically mounted as **`/beta/status`**
+/// Typically mounted as **`/api/beta/status`**
 ///
 /// Returns the current beta state as a JSON object.
 ///
@@ -23,7 +23,7 @@ pub fn beta_status() -> status::Custom<(ContentType, String)> {
 
 /// *`GET /enable`*
 ///
-/// Typically mounted as **`/beta/enable`**
+/// Typically mounted as **`/api/beta/enable`**
 ///
 /// Enables beta state, returns a JSON OK response and generates an SSE notification.
 ///
@@ -39,7 +39,7 @@ pub fn beta_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Strin
 
 /// *`GET /disable`*
 ///
-/// Typically mounted as **`/beta/disable`**
+/// Typically mounted as **`/api/beta/disable`**
 ///
 /// Disables beta state, returns a JSON OK response and generates an SSE notification.
 ///

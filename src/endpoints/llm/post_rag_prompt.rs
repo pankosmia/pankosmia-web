@@ -52,7 +52,7 @@ pub struct RagResponse {
 
 /// *`POST /rag-prompt`*
 ///
-/// Typically mounted as **`/llm/rag-prompt`**
+/// Typically mounted as **`/api/llm/rag-prompt`**
 ///
 /// Builds a RAG prompt, processes it and returns the result
 /// 

@@ -8,7 +8,7 @@ use rocket::{get, State};
 
 /// *`GET /versifications`*
 ///
-/// Typically mounted as **`/content-utils/versifications`**
+/// Typically mounted as **`/api/content-utils/versifications`**
 ///
 /// Returns a JSON array of versification schemes.
 ///

@@ -13,7 +13,7 @@ use crate::utils::burrito::destination_parent;
 
 /// *`POST /copy/<repo_path>?target_path=<target_path>&delete_src&add_ignore`*
 ///
-/// Typically mounted as **`/git/copy/<repo_path>?target_path=<target_path>&delete_src`**
+/// Typically mounted as **`/api/git/copy/<repo_path>?target_path=<target_path>&delete_src`**
 ///
 /// Copies a repo to a new location, optionally deleting the source and optionally adding a .gitignore file
 #[post("/copy/<repo_path..>?<target_path>&<delete_src>&<add_ignore>")]

@@ -9,7 +9,7 @@ use rocket::{get, State};
 
 /// *`GET /metadata/summaries?<org>`*
 ///
-/// Typically mounted as **`/burrito/metadata/summaries?<org>`**
+/// Typically mounted as **`/api/burrito/metadata/summaries?<org>`**
 ///
 /// Returns a JSON array of local repo metadata objects, optionally only for a given org.
 

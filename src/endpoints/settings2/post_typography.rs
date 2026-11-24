@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 
 /// *`POST /typography/<font_set>/<size>/<direction>`*
 ///
-/// Typically mounted as **`/settings/typography/<font_set>/<size>/<direction>`**
+/// Typically mounted as **`/api/settings/typography/<font_set>/<size>/<direction>`**
 ///
 /// Sets UI typography and interface direction
 #[allow(irrefutable_let_patterns)]

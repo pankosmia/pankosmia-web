@@ -20,7 +20,7 @@ use crate::utils::git::git_repo_path;
 
 /// *`POST /add-and-commit/<repo_path>`*
 ///
-/// Typically mounted as **`/git/add-and-commit/<repo_path>`**
+/// Typically mounted as **`/api/git/add-and-commit/<repo_path>`**
 ///
 /// Adds and commits modified files for a given repo.
 

@@ -8,7 +8,7 @@ use rocket::{get, State};
 
 /// *`GET /templates`*
 ///
-/// Typically mounted as **`/content-utils/templates`**
+/// Typically mounted as **`/api/content-utils/templates`**
 ///
 /// Returns a JSON array of local content template names.
 ///

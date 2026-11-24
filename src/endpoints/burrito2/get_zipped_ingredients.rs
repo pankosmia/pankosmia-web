@@ -10,7 +10,7 @@ use crate::utils::zip::{make_zip_file};
 
 /// *`GET /ingredient/zipped/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/zipped/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredient/zipped/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Returns a zip of ingredients under the provided path.
 #[get("/ingredient/zipped/<repo_path..>?<ipath>")]

@@ -8,7 +8,7 @@ use rocket::{get, State};
 
 /// *`GET /metadata-template/<template_name>`*
 ///
-/// Typically mounted as **`/content-utils/metadata-template/<template_name>`**
+/// Typically mounted as **`/api/content-utils/metadata-template/<template_name>`**
 ///
 /// Returns a metadata content template as JSON
 #[get("/metadata-template/<template_name>")]

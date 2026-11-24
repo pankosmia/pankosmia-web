@@ -13,7 +13,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /ingredient/bytes/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/bytes/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredient/bytes/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Writes a document, where the document is provided as a file upload.
 #[post(

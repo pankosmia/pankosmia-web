@@ -8,7 +8,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /framed/<top_margin>/<background_color>/<repo_path>`*
 ///
-/// Typically mounted as **`/html/framed/<top_margin>/<background_color>/<repo_path>`**
+/// Typically mounted as **`/api/html/framed/<top_margin>/<background_color>/<repo_path>`**
 ///
 /// Returns html with a padded iframe containing the specified same-origin path, with the specified top margin (int) and background color (6 hex).
 #[get("/framed/<top_margin>/<background_color>/<repo_path..>")]

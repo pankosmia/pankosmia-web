@@ -19,7 +19,7 @@ use serde_json::{json, Value};
 
 /// *`POST /new-translation-plan-resource`*
 ///
-/// Typically mounted as **`/git/new-translation-plan-resource`**
+/// Typically mounted as **`/api/git/new-translation-plan-resource`**
 ///
 /// Creates a new, local x-translationplan* repo. It requires the following fields as a JSON body:
 /// - content_name (string)

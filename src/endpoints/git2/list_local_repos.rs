@@ -6,7 +6,7 @@ use rocket::{get, State};
 
 /// *`GET /list-local-repos`*
 ///
-/// Typically mounted as **`/git/list-local-repos`**
+/// Typically mounted as **`/api/git/list-local-repos`**
 ///
 /// Returns a JSON array of local repo paths.
 ///

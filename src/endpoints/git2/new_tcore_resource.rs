@@ -14,7 +14,7 @@ use std::fs;
 
 /// *`POST /new-tcore-resource`*
 ///
-/// Typically mounted as **`/git/new-tcore-resource`**
+/// Typically mounted as **`/api/git/new-tcore-resource`**
 ///
 /// Creates a new, local x-tcore* repo. It requires the following fields as a JSON body:
 /// - usfm_repo_path (string)

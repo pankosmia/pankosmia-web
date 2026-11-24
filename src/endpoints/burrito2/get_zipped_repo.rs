@@ -10,7 +10,7 @@ use crate::utils::zip::{make_zip_file};
 
 /// *`GET /zipped/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/zipped/<repo_path>`**
+/// Typically mounted as **`/api/burrito/zipped/<repo_path>`**
 ///
 /// Returns a zip of a repo.
 #[get("/zipped/<repo_path..>")]

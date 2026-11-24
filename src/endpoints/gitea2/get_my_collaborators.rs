@@ -9,7 +9,7 @@ use std::sync::atomic::Ordering;
 
 /// *`/my-collaborators/<proxy>/<organization>/<project>`*
 ///
-/// Typically mounted as **`/my-collaborators/<proxy>/<organization>/<project>`**
+/// Typically mounted as **`/api/gitea/my-collaborators/<proxy>/<organization>/<project>`**
 ///
 /// Returns an array containing the current selected UI languages.
 ///

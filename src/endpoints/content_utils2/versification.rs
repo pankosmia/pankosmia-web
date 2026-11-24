@@ -8,7 +8,7 @@ use rocket::{get, State};
 
 /// *`GET /versification/<versification_name>`*
 ///
-/// Typically mounted as **`/content-utils/versification/<versification_name>`**
+/// Typically mounted as **`/api/content-utils/versification/<versification_name>`**
 ///
 /// Returns chapter/verse info for a given versification as JSON
 #[get("/versification/<versification_name>")]

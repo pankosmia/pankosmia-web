@@ -10,7 +10,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /ingredient/raw/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredient/raw/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Returns a raw text resource. We try to guess the mimetype.
 #[get("/ingredient/raw/<repo_path..>?<ipath>")]

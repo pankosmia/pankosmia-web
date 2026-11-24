@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 
 /// *`GET /paths/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/paths/<repo_path>`**
+/// Typically mounted as **`/api/burrito/paths/<repo_path>`**
 ///
 /// Returns an array of files (not indexed ingredients) in a repo. Hidden files and directories are ignored.
 

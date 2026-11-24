@@ -115,7 +115,7 @@ fn check_burrito_dir(path: &Path) -> bool {
 }
 /// *`POST /remake_burrito_from_zip/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/remake_burrito_from_zip/<repo_path>`**
+/// Typically mounted as **`/api/burrito/remake_burrito_from_zip/<repo_path>`**
 ///
 /// If the zip looks like a burrito replace the
 ///     current content of the repo with the content of the zip

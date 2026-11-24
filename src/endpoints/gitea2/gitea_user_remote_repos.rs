@@ -12,7 +12,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /user-remote-repos/<gitea_server>/<gitea_org>`*
 ///
-/// Typically mounted as **`/gitea/user-remote-repos/<gitea_server>/<gitea_org>`**
+/// Typically mounted as **`/api/gitea/user-remote-repos/<gitea_server>/<gitea_org>`**
 ///
 /// Returns an object containing repo info for a given gitea user.
 ///

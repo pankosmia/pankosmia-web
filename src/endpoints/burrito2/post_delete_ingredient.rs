@@ -11,7 +11,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /ingredient/delete/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/delete/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredient/delete/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Deletes a file from a repo.
 #[post("/ingredient/delete/<repo_path..>?<ipath>")]

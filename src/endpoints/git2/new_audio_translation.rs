@@ -27,7 +27,7 @@ pub struct NewAudioTranslationContentForm {
 
 /// *`POST /new-audio-translation`*
 ///
-/// Typically mounted as **`/git/new-audio-translation`**
+/// Typically mounted as **`/api/git/new-audio-translation`**
 ///
 /// Creates a new, local audioTranslation repo. It requires the following fields as a JSON body:
 /// - content_name (string)

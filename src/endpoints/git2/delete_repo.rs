@@ -9,7 +9,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /delete/<repo_path>`*
 ///
-/// Typically mounted as **`/git/delete/<repo_path>`**
+/// Typically mounted as **`/api/git/delete/<repo_path>`**
 ///
 /// Deletes a local repo from the given repo path.
 #[post("/delete/<repo_path..>")]

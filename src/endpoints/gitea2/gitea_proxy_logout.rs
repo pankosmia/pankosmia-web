@@ -8,7 +8,7 @@ use rocket::{get, State};
 use std::sync::atomic::Ordering;
 /// *`GET /logout/<auth_key>`* (uses cookie with key `<auth_key>_code`)
 ///
-/// Typically mounted as **`/gitea/logout/<auth_key>`**
+/// Typically mounted as **`/api/gitea/logout/<auth_key>`**
 ///
 /// Logs out of a remote server.
 #[get("/logout/<token_key>")]

@@ -13,7 +13,7 @@ use serde_json::json;
 
 /// *`GET /paths-info/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/paths-info/<repo_path>`**
+/// Typically mounted as **`/api/burrito/paths-info/<repo_path>`**
 ///
 /// Returns an array of objects containing path, size and update time for ingredient paths (not indexed ingredients) in a repo. Hidden files and directories are ignored.
 

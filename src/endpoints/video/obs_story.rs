@@ -17,7 +17,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /obs-story/<repo_path>`*
 ///
-/// Typically mounted as **`/video/obs-story/<repo_path>`**
+/// Typically mounted as **`/api/video/obs-story/<repo_path>`**
 ///
 /// Example body:
 ///

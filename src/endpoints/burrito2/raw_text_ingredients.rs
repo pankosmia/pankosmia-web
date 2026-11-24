@@ -10,7 +10,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /ingredients/raw/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredients/raw/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredients/raw/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Returns an object containing the files directly in the specified directory as strings.
 #[get("/ingredients/raw/<repo_path..>?<ipath>")]

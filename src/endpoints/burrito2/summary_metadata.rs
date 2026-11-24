@@ -12,7 +12,7 @@ use crate::utils::burrito::summary_metadata_from_file;
 
 /// *`GET /metadata/summary/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/metadata/summary/<repo_path>`**
+/// Typically mounted as **`/api/burrito/metadata/summary/<repo_path>`**
 ///
 /// Returns a flat summary of information from the raw metadata.json file for the specified burrito, where *repo_path* is *`<server>/<org>/<repo>`* and refers to a local repo. eg, the response to `/burrito/metadata/summary/git.door43.org/BurritoTruck/fr_psle` might be
 ///

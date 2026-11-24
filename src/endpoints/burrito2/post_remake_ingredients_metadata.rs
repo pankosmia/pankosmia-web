@@ -14,7 +14,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /metadata/remake-ingredients/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/metadata/remake-ingredients/<repo_path>`**
+/// Typically mounted as **`/api/burrito/metadata/remake-ingredients/<repo_path>`**
 ///
 /// Remakes the ingredients section of the metadata for a repo.
 

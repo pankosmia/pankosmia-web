@@ -8,7 +8,7 @@ use serde_json::Value;
 
 /// *`POST /dev-setting/<setting_key>/<setting_value>`*
 ///
-/// Typically mounted as **`/settings/dev-setting/<setting_key>/<setting_value>`**
+/// Typically mounted as **`/api/settings/dev-setting/<setting_key>/<setting_value>`**
 ///
 /// Sets the value of a dev setting. setting_key must exist, setting_value must be a string
 /// 
@@ -40,7 +40,7 @@ pub fn post_dev_setting(
 
 /// *`POST /dev-setting/<setting_key>`*
 ///
-/// Typically mounted as **`/settings/dev-setting/<setting_key>`**
+/// Typically mounted as **`/api/settings/dev-setting/<setting_key>`**
 ///
 /// Clears the value of a dev setting. setting_key must exist
 /// 

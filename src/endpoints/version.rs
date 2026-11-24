@@ -12,7 +12,7 @@ use std::env::consts;
 
 /// *`GET /version`*
 ///
-/// Typically mounted as **`/version`**
+/// Typically mounted as **`/api/version`**
 ///
 /// Returns an object containing version information
 ///

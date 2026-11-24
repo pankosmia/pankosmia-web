@@ -15,7 +15,7 @@ use std::sync::atomic::Ordering;
 
 /// POST /clone-repo/<repo_path>?<branch>
 ///
-/// Typically mounted as /git/clone-repo/<repo_path>?<branch>
+/// Typically mounted as /api/git/clone-repo/<repo_path>?<branch>
 ///
 /// Clones a repository locally from the given repo_path.
 ///

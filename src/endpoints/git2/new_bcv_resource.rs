@@ -15,7 +15,7 @@ use serde_json::json;
 
 /// *`POST /new-bcv-resource`*
 ///
-/// Typically mounted as **`/git/new-bcv-resource`**
+/// Typically mounted as **`/api/git/new-bcv-resource`**
 ///
 /// Creates a new, local x-bcv* repo. It requires the following fields as a JSON body:
 /// - content_name (string)

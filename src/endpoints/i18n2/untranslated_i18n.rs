@@ -9,7 +9,7 @@ use serde_json::Value;
 
 /// *`GET /untranslated/<lang>`*
 ///
-/// Typically mounted as **`/i18n/untranslated/<lang>`**
+/// Typically mounted as **`/api/i18n/untranslated/<lang>`**
 ///
 /// Returns an array containing terms that are untranslated in the given language. So, for `/i18n/untranslated/de` the response might be
 ///

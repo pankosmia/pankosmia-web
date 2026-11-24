@@ -11,7 +11,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /remote-repos/<gitea_server>/<gitea_org>/<gitea_repo>/branches`*
 ///
-/// Typically mounted as **`/gitea/remote-repos/<gitea_server>/<gitea_org>/<gitea_repo>/branches`**
+/// Typically mounted as **`/api/gitea/remote-repos/<gitea_server>/<gitea_org>/<gitea_repo>/branches`**
 ///
 /// Returns an array containing branch names for a given repo.
 #[get("/remote-repos/<gitea_server>/<gitea_org>/<gitea_repo>/branches")]

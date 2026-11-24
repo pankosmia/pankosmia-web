@@ -11,7 +11,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /ingredient/revert/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/revert/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredient/revert/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Reverts a file from a backup file, if available.
 #[post("/ingredient/revert/<repo_path..>?<ipath>")]

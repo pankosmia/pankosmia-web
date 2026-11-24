@@ -14,7 +14,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /remote/delete/<repo_path>?remote_name=<remote_name>`*
 ///
-/// Typically mounted as **`/git/remote/delete/<repo_path>?remote_name=<remote_name>`**
+/// Typically mounted as **`/api/git/remote/delete/<repo_path>?remote_name=<remote_name>`**
 ///
 /// Deletes a remote from the given repo path.
 #[post("/remote/delete/<repo_path..>?<remote_name>")]

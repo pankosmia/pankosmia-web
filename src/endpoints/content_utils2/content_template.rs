@@ -8,7 +8,7 @@ use rocket::{get, State};
 
 /// *`GET /template/<template_name>/<filename>`*
 ///
-/// Typically mounted as **`/content-utils/template/<template_name>/<filename>`**
+/// Typically mounted as **`/api/content-utils/template/<template_name>/<filename>`**
 ///
 /// Returns a content template of a particular type as plain text. The filename includes the suffix.
 #[get("/template/<template_name>/<filename>")]

@@ -8,7 +8,7 @@ use rocket::{get, State};
 
 /// *`GET /product?<resource_path>`*
 ///
-/// Typically mounted as **`/content-utils/product?<resource_path>`**
+/// Typically mounted as **`/api/content-utils/product?<resource_path>`**
 ///
 /// Returns a product-specific resource
 /// Note that there should only be one set of product content at any one time.

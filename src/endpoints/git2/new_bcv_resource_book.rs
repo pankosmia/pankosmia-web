@@ -14,7 +14,7 @@ use std::path::{Components, Path, PathBuf};
 
 /// *`POST /new-scripture-book/<repo_path>`*
 ///
-/// Typically mounted as **`/git/new-scripture-book/<repo_path>`**
+/// Typically mounted as **`/api/git/new-scripture-book/<repo_path>`**
 ///
 /// Adds a Scripture book to a local repo at the given repo path.
 ///

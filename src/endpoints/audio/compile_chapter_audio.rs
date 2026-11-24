@@ -16,7 +16,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /compile-chapter/<repo_path>`*
 ///
-/// Typically mounted as **`/audio/compile-chapter/<repo_path>`**
+/// Typically mounted as **`/api/audio/compile-chapter/<repo_path>`**
 ///
 /// Assemble un chapitre complet à partir des mp3 de paragraphes déjà rendus par
 /// `compile_audio`. À appeler **après** avoir compilé chaque paragraphe.

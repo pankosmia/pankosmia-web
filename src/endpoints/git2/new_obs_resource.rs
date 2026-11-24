@@ -26,7 +26,7 @@ pub struct NewObsContentForm {
 
 /// *`POST /new-obs-resource`*
 ///
-/// Typically mounted as **`/git/new-obs-resource`**
+/// Typically mounted as **`/api/git/new-obs-resource`**
 ///
 /// Creates a new, local obs repo. It requires the following fields as a JSON body:
 /// - content_name (string)

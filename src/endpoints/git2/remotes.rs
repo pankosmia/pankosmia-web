@@ -14,7 +14,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /remotes/<repo_path>`*
 ///
-/// Typically mounted as **`/git/remotes/<repo_path>`**
+/// Typically mounted as **`/api/git/remotes/<repo_path>`**
 ///
 /// List remotes for the given repo path.
 #[get("/remotes/<repo_path..>")]

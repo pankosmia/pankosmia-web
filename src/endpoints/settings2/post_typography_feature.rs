@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 /// *`POST /typography-feature/<font_name>/<feature>/<value>`*
 ///
-/// Typically mounted as **`/settings//typography-feature/<font_name>/<feature>/<value>`**
+/// Typically mounted as **`/api/settings//typography-feature/<font_name>/<feature>/<value>`**
 ///
 /// Sets the value of a font feature. Currently silently ignores unknown fonts and fields.
 #[allow(irrefutable_let_patterns)]

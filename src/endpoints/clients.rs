@@ -13,7 +13,7 @@ use std::fs;
 
 /// *`GET /list-clients`*
 ///
-/// Typically mounted as **`/list-clients`**
+/// Typically mounted as **`/api/list-clients`**
 ///
 /// Returns a JSON array of clients.
 ///
@@ -40,7 +40,7 @@ pub fn list_clients(clients: &State<Clients>) -> status::Custom<(ContentType, St
 
 /// *`GET /client-interfaces`*
 ///
-/// Typically mounted as **`/client-interfaces`**
+/// Typically mounted as **`/api/client-interfaces`**
 ///
 /// Returns a JSON object of public URL interfaces offered by clients.
 ///
@@ -115,7 +115,7 @@ pub fn client_interfaces(state: &State<AppSettings>, clients: &State<Clients>) -
 
 /// *`GET /client-config`*
 ///
-/// Typically mounted as **`/client-config`**
+/// Typically mounted as **`/api/client-config`**
 ///
 /// Returns an object containing client config information if available
 ///
@@ -158,7 +158,7 @@ fn find_client_by_storage_id(clients: Vec<Client>, storage_id: String) -> Option
 
 /// *`GET /client-settings/<storage_id>`*
 ///
-/// Typically mounted as **`/client-settings/<storage_id>`**
+/// Typically mounted as **`/api/client-settings/<storage_id>`**
 ///
 /// Returns a JSON object of client settings via the client's storage id.
 /// 
@@ -195,7 +195,7 @@ pub fn get_client_settings(
 
 /// *`POST /client-settings/<storage_id>`*
 ///
-/// Typically mounted as **`/client-settings/<storage_id>`**
+/// Typically mounted as **`/api/client-settings/<storage_id>`**
 ///
 /// Sets settings JSON for a client via the storage_id. The JSON must be an object.
 ///

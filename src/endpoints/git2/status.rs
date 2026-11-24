@@ -10,7 +10,7 @@ use crate::utils::git::git_repo_path;
 
 /// *`GET /status/<repo_path>`*
 ///
-/// Typically mounted as **`/git/status/<repo_path>`**
+/// Typically mounted as **/api/git/status/<repo_path>`**
 ///
 /// Returns an array of changes to the local repo from the given repo path.
 ///

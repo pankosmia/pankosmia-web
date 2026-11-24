@@ -8,7 +8,7 @@ use serde_json::json;
 
 /// *`GET /ffmpeg-path`*
 ///
-/// Typically mounted as **`/audio/ffmpeg-path`**
+/// Typically mounted as **`/api/audio/ffmpeg-path`**
 ///
 /// Returns the path to the ffmpeg binary downloaded locally by the desktop app
 /// (`~/pankosmia/_assets/ffmpeg/**`), which the client can then forward to the

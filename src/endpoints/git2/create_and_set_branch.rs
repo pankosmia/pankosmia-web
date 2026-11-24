@@ -13,7 +13,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /new-branch/<branch_ref>/<repo_path>`*
 ///
-/// Typically mounted as **`/git/new-branch/<branch_ref>/<repo_path>`**
+/// Typically mounted as **`/api/git/new-branch/<branch_ref>/<repo_path>`**
 ///
 /// Creates and changes to the named branch for a given repo. The branch must not exist.
 

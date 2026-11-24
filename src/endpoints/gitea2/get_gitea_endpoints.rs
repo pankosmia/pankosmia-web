@@ -6,7 +6,7 @@ use rocket::{get, State};
 
 /// *```GET /endpoints```*
 ///
-/// Typically mounted as **`/gitea/endpoints`**
+/// Typically mounted as **`/api/gitea/endpoints`**
 ///
 /// Returns an object containing gitea gateway keys and urls.
 ///

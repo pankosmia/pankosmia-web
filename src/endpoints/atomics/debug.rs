@@ -9,7 +9,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /status`*
 ///
-/// Typically mounted as **`/debug/status`**
+/// Typically mounted as **`/api/debug/status`**
 ///
 /// Returns the current debug state as a JSON object.
 ///
@@ -23,7 +23,7 @@ pub fn debug_status() -> status::Custom<(ContentType, String)> {
 
 /// *`GET /enable`*
 ///
-/// Typically mounted as **`/debug/enable`**
+/// Typically mounted as **`/api/debug/enable`**
 ///
 /// Enables debug state, returns a JSON OK response and generates an SSE notification.
 ///
@@ -39,7 +39,7 @@ pub fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Stri
 
 /// *`GET /disable`*
 ///
-/// Typically mounted as **`/debug/disable`**
+/// Typically mounted as **`/api/debug/disable`**
 ///
 /// Disables debug state, returns a JSON OK response and generates an SSE notification.
 ///

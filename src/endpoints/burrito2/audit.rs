@@ -10,7 +10,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /audit/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/audit/<repo_path>`**
+/// Typically mounted as **`/api/burrito/audit/<repo_path>`**
 ///
 /// Returns a report about the specified burrito, where *repo_path* is *`<server>/<org>/<repo>`* and refers to a local repo.
 #[get("/audit/<repo_path..>")]

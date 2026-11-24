@@ -71,7 +71,7 @@ fn normal_merge(
 
 /// *`POST /pull-repo/<remote_name>/<repo_path>`*
 ///
-/// Typically mounted as **`/git/pull-repo/<remote_name>/<repo_path>`**
+/// Typically mounted as **`/api/git/pull-repo/<remote_name>/<repo_path>`**
 ///
 /// Pulls (fetches and merges) for a repo.
 #[post("/pull-repo/<remote_name>/<repo_path..>")]

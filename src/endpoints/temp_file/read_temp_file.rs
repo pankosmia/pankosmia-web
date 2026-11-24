@@ -7,7 +7,7 @@ use rocket::{get, State};
 
 /// *`GET /bytes/<temp_id>`*
 ///
-/// Typically mounted as **`/temp/bytes/<temp_id>`**
+/// Typically mounted as **`/api/temp/bytes/<temp_id>`**
 ///
 /// Returns a raw binary temp file.
 #[get("/bytes/<temp_id>")]
@@ -45,7 +45,7 @@ pub async fn read_temp_file(
 
 /// *`GET /html/<temp_id>`*
 ///
-/// Typically mounted as **`/temp/html/<temp_id>`**
+/// Typically mounted as **`/api/temp/html/<temp_id>`**
 ///
 /// Returns a temp file with HTML mimetype.
 #[get("/html/<temp_id>")]

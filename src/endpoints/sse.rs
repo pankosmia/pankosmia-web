@@ -9,7 +9,7 @@ use std::time::Duration;
 
 /// *`GET /`*
 ///
-/// Typically mounted as **`/notifications/`**
+/// Typically mounted as **`/api/notifications/`**
 ///
 /// Opens an SSE stream for notifications about server state. Use an existing SSE client to connect to this unless you like pain.
 #[get("/")]

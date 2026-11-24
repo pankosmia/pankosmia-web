@@ -10,7 +10,7 @@ use std::sync::atomic::Ordering;
 use uuid::Uuid;
 /// *`GET /login/<auth_key>/<redir_path..>`*
 ///
-/// Typically mounted as **`/gitea/login/<auth_key>/<redir_path..>`**
+/// Typically mounted as **`/api/gitea/login/<auth_key>/<redir_path..>`**
 ///
 /// Initiates login to a remote server, which may include redirection to that server's login pages.
 #[get("/login/<token_key>/<redir_path..>")]

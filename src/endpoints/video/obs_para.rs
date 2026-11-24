@@ -16,7 +16,7 @@ use std::path::{Components, PathBuf};
 
 /// *`POST /obs-para/<repo_path>`*
 ///
-/// Typically mounted as **`/video/obs-para/<repo_path>`**
+/// Typically mounted as **`/api/video/obs-para/<repo_path>`**
 ///
 /// Construit la vidéo d'un paragraphe (image OBS + audio).
 ///

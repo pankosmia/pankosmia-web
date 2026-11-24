@@ -7,7 +7,7 @@ use rocket::{get, State};
 
 /// *`GET /languages`*
 ///
-/// Typically mounted as **`/settings/languages`**
+/// Typically mounted as **`/api/settings/languages`**
 ///
 /// Returns an array containing the current selected UI languages.
 ///

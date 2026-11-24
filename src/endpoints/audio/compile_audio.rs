@@ -22,7 +22,7 @@ const OUTPUT_BITRATE: &str = "64k";
 
 /// *`POST /compile/<repo_path>`*
 ///
-/// Typically mounted as **`/audio/compile/<repo_path>`**
+/// Typically mounted as **`/api/audio/compile/<repo_path>`**
 ///
 /// Rend (« compile ») le projet audio non-destructif (multi-pistes + EDL stocké
 /// dans `_project.json`) en un seul mp3 aux normes door43.

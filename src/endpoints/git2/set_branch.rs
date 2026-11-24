@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 /// *`POST /branch/<branch_ref>/<repo_path>`*
 ///
-/// Typically mounted as **`/git/branch/<branch_ref>/<repo_path>`**
+/// Typically mounted as **`/api/git/branch/<branch_ref>/<repo_path>`**
 ///
 /// Changes the selected branch for a given repo. The branch must exist.
 

@@ -8,7 +8,7 @@ use crate::utils::paths::os_slash_str;
 
 /// *`GET /model`*
 ///
-/// Typically mounted as **`/llm/model`**
+/// Typically mounted as **`/api/llm/model`**
 ///
 /// Returns a JSON array of llm models in the blobs/llm_models directory.
 ///

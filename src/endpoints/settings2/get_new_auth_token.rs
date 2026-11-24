@@ -7,7 +7,7 @@ use rocket::{get, State};
 
 /// *`GET /auth-token/<token_key>/<code>/<client_code>`*
 ///
-/// Typically mounted as **`/settings/auth-token/<token_key>/<code>/<client_code>`**
+/// Typically mounted as **`/api/settings/auth-token/<token_key>/<code>/<client_code>`**
 ///
 /// A landing URL for authentification via a gateway server.
 ///

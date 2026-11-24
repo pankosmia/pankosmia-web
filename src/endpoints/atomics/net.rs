@@ -9,7 +9,7 @@ use std::sync::atomic::Ordering;
 
 /// *`GET /status`*
 ///
-/// Typically mounted as **`/net/status`**
+/// Typically mounted as **`/api/net/status`**
 ///
 /// Returns the current net-enable state as a JSON object.
 ///
@@ -23,7 +23,7 @@ pub fn net_status() -> status::Custom<(ContentType, String)> {
 
 /// *`POST /enable`*
 ///
-/// Typically mounted as **`/net/enable`**
+/// Typically mounted as **`/api/net/enable`**
 ///
 /// Enables net state, returns a JSON OK response and generates an SSE notification.
 ///
@@ -39,7 +39,7 @@ pub fn net_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String
 
 /// *`POST /disable`*
 ///
-/// Typically mounted as **`/net/disable`**
+/// Typically mounted as **`/api/net/disable`**
 ///
 /// Disables net state, returns a JSON OK response and generates an SSE notification.
 ///

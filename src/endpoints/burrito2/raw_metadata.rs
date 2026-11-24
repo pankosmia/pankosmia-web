@@ -9,7 +9,7 @@ use std::path::{Components, PathBuf};
 
 /// *`GET /metadata/raw/<repo_path>`*
 ///
-/// Typically mounted as **`/burrito/metadata/raw/<repo_path>`**
+/// Typically mounted as **`/api/burrito/metadata/raw/<repo_path>`**
 ///
 /// Returns the raw metadata.json file for the specified burrito, where *repo_path* is *`<server>/<org>/<repo>`* and refers to a local repo.
 #[get("/metadata/raw/<repo_path..>")]

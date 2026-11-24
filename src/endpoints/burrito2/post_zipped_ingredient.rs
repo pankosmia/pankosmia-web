@@ -21,7 +21,7 @@ pub struct Upload<'f> {
 
 /// *`POST /ingredient/zipped/<repo_path>?ipath=my_burrito_path`*
 ///
-/// Typically mounted as **`/burrito/ingredient/zipped/<repo_path>?ipath=my_burrito_path`**
+/// Typically mounted as **`/api/burrito/ingredient/zipped/<repo_path>?ipath=my_burrito_path`**
 ///
 /// Writes files or directories provided as a zip file.
 #[post(

@@ -12,7 +12,7 @@ use crate::utils::burrito::destination_parent;
 
 /// *`POST /ingredient/copy/<repo_path>?src_path=<src_path>&target_path=<target_path>&delete_src`*
 ///
-/// Typically mounted as **`/burrito/copy/<repo_path>?src_path=<src_path>&target_path=<target_path>&delete_src`**
+/// Typically mounted as **`/api/burrito/copy/<repo_path>?src_path=<src_path>&target_path=<target_path>&delete_src`**
 ///
 /// Copies an ingredient to a new location, optionally deleting the source.
 #[post("/ingredient/copy/<repo_path..>?<src_path>&<target_path>&<delete_src>")]

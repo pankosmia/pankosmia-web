@@ -33,7 +33,7 @@ struct CommitJson {
 
 /// *`GET /log/<repo_path>`*
 ///
-/// Typically mounted as **`/git/log/<repo_path>`**
+/// Typically mounted as **`/api/git/log/<repo_path>`**
 ///
 /// Returns the log of the repo.
 #[get("/log/<repo_path..>")]

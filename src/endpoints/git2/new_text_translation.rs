@@ -32,7 +32,7 @@ pub struct NewTextTranslationContentForm {
 
 /// *`POST /new-text-translation`*
 ///
-/// Typically mounted as **`/git/new-text-translation`**
+/// Typically mounted as **`/api/git/new-text-translation`**
 ///
 /// Creates a new, local textTranslation repo. It requires the following fields as a JSON body:
 /// - content_name (string)

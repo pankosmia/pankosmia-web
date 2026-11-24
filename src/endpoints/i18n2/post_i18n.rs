@@ -12,7 +12,7 @@ use std::sync::atomic::Ordering;
 
 /// *`POST /`*
 ///
-/// Typically mounted as **`/i18n`**
+/// Typically mounted as **`/api/i18n`**
 ///
 /// Replaces the local i18n file.
 #[post("/", format = "json", data = "<payload>")]

@@ -7,7 +7,7 @@ use rocket::{get, State};
 
 /// *`GET /log`*
 ///
-/// Typically mounted as **`/system/log`**
+/// Typically mounted as **`/api/system/log`**
 ///
 /// Returns the raw log file if one is configured, otherwise 404.
 #[get("/log")]

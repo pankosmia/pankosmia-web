@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 /// *`GET /negotiated/<filter>`*
 ///
-/// Typically mounted as **`/i18n/negotiated/<filter>`**
+/// Typically mounted as **`/api/i18n/negotiated/<filter>`**
 ///
 /// Returns a nested object containing each i18n key with the best match based on the language preference settings. The optional filter restricts the keys returned. So, for `/i18n/negotiated/flavors` the response might be
 ///
