@@ -9,7 +9,7 @@ use chksum_md5::chksum;
 use mime_infer;
 use regex::Regex;
 use serde_json::{json, Map, Value};
-use std::collections::BTreeMap;
+use std::collections::{BTreeSet, BTreeMap};
 use std::fs;
 use std::fs::File;
 use std::io;
@@ -349,8 +349,8 @@ pub fn ingredients_scopes_from_files(
     scopes
 }
 
-pub fn scopes_string_from_plan(translation_plan_value: Value) -> String {
-    let mut plan_books = std::collections::BTreeSet::new();
+fn scopes_set(translation_plan_value: Value) -> BTreeSet<String> {
+    let mut plan_books = BTreeSet::new();
     let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
     let translation_plan_sections = translation_plan_object["sections"]
         .as_array()
@@ -362,7 +362,12 @@ pub fn scopes_string_from_plan(translation_plan_value: Value) -> String {
             .expect("bookCode as string")
             .to_string();
         plan_books.insert(book_code);
-    }
+    };
+    plan_books
+}
+
+pub fn scopes_string_from_plan(translation_plan_value: Value) -> String {
+    let plan_books = scopes_set(translation_plan_value);
     let scope_string = plan_books
         .iter()
         .map(|b| format!("\"{}\": {{}}", b))
@@ -372,19 +377,7 @@ pub fn scopes_string_from_plan(translation_plan_value: Value) -> String {
 }
 
 pub fn scopes_from_plan(translation_plan_value: Value) -> BTreeMap<String, Value> {
-    let mut plan_books = std::collections::BTreeSet::new();
-    let translation_plan_object = translation_plan_value.as_object().expect("plan as object");
-    let translation_plan_sections = translation_plan_object["sections"]
-        .as_array()
-        .expect("plan sections as array")
-        .to_vec();
-    for section in translation_plan_sections.iter() {
-        let book_code = section["bookCode"]
-            .as_str()
-            .expect("bookCode as string")
-            .to_string();
-        plan_books.insert(book_code);
-    }
+    let plan_books = scopes_set(translation_plan_value);
     let mut book_map = BTreeMap::new();
     for book in plan_books {
         book_map.insert(book, json!([]));
