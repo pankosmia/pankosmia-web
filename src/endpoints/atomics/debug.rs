@@ -4,7 +4,7 @@ use crate::utils::response::{ok_ok_json_response, ok_json_response};
 use crate::MsgQueue;
 use rocket::http::{ContentType};
 use rocket::response::status;
-use rocket::{get, State};
+use rocket::{get, post, State};
 use std::sync::atomic::Ordering;
 
 /// *`GET /status`*
@@ -21,14 +21,14 @@ pub fn debug_status() -> status::Custom<(ContentType, String)> {
     ))
 }
 
-/// *`GET /enable`*
+/// *`POST /enable`*
 ///
 /// Typically mounted as **`/api/debug/enable`**
 ///
 /// Enables debug state, returns a JSON OK response and generates an SSE notification.
 ///
 /// `{"is_good":true,"reason":"ok"}`
-#[get("/enable")]
+#[post("/enable")]
 pub fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()
@@ -37,14 +37,14 @@ pub fn debug_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Stri
     ok_ok_json_response()
 }
 
-/// *`GET /disable`*
+/// *`POST /disable`*
 ///
 /// Typically mounted as **`/api/debug/disable`**
 ///
 /// Disables debug state, returns a JSON OK response and generates an SSE notification.
 ///
 /// `{"is_good":true,"reason":"ok"}`
-#[get("/disable")]
+#[post("/disable")]
 pub fn debug_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()

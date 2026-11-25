@@ -4,7 +4,7 @@ use crate::utils::response::{ok_ok_json_response, ok_json_response};
 use crate::MsgQueue;
 use rocket::http::{ContentType};
 use rocket::response::status;
-use rocket::{get, State};
+use rocket::{get, post, State};
 use std::sync::atomic::Ordering;
 
 /// *`GET /status`*
@@ -21,14 +21,14 @@ pub fn beta_status() -> status::Custom<(ContentType, String)> {
     ))
 }
 
-/// *`GET /enable`*
+/// *`POST /enable`*
 ///
 /// Typically mounted as **`/api/beta/enable`**
 ///
 /// Enables beta state, returns a JSON OK response and generates an SSE notification.
 ///
 /// `{"is_good":true,"reason":"ok"}`
-#[get("/enable")]
+#[post("/enable")]
 pub fn beta_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()
@@ -37,14 +37,14 @@ pub fn beta_enable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, Strin
     ok_ok_json_response()
 }
 
-/// *`GET /disable`*
+/// POST /disable`*
 ///
 /// Typically mounted as **`/api/beta/disable`**
 ///
 /// Disables beta state, returns a JSON OK response and generates an SSE notification.
 ///
 /// `{"is_good":true,"reason":"ok"}`
-#[get("/disable")]
+#[post("/disable")]
 pub fn beta_disable(msgs: &State<MsgQueue>) -> status::Custom<(ContentType, String)> {
     msgs.lock()
         .unwrap()

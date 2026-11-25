@@ -6,8 +6,10 @@ use rocket::http::ContentType;
 use rocket::http::Status;
 use rocket::local::blocking::Client;
 use serde_json;
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn version() {
     let conf = make_test_conf();
     let client = Client::tracked(my_rocket(conf)).unwrap();
