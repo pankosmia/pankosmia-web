@@ -20,7 +20,8 @@ use rocket::serde::json::Json;
 /// 
 /// The updated Dublin Core-like metadatais is provided as a JSON payload:
 /// 
-/// ```{
+/// ```text
+/// {
 ///    "name": "NEW NAME",
 ///    "description": "THIS IS A NEW DESCRIPTION",
 ///    "abbreviation": "NN",
@@ -28,7 +29,8 @@ use rocket::serde::json::Json;
 ///    "language_name": "Green Fooish",
 ///    "script_direction": "rtl",
 ///    "copyright": "© The Foo Fairies"
-/// }```
+/// }
+/// ```
 #[post("/fork/<repo_path..>?<target_path>&<delete_src>&<add_ignore>", format = "json", data = "<edits>")]
 pub async fn fork_repo(
     state: &State<AppSettings>,

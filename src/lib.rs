@@ -1,7 +1,3 @@
-#[macro_use]
-#[cfg(test)]
-mod tests;
-
 #[doc(hidden)]
 use rocket::{Build, Rocket};
 use serde_json::{json, Value};
