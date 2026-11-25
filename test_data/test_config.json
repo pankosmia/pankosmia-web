@@ -5,5 +5,5 @@
   "local_setup_path": "./test_data/local_test_setup.json",
   "app_resources_path": "../desktop-app-pithekos/linux/build/lib/app_resources",
   "log_path": "./log.txt",
-  "truncate_log": false
+  "truncate_log": true
 }
