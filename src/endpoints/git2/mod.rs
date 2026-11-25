@@ -20,6 +20,5 @@ pub mod set_branch;
 pub mod create_and_set_branch;
 pub mod pull_repo;
 pub mod new_bcv_resource_book;
-pub mod new_tcore_resource;
 pub mod new_translation_plan_resource;
 pub mod new_print_spec_resource;
