@@ -14,3 +14,4 @@ pub(crate) mod time;
 pub(crate) mod bcv_ref;
 pub(crate) mod zip;
 pub(crate) mod git;
+pub(crate) mod i18n;

@@ -1,5 +1,6 @@
 use crate::structs::{AppSettings, BytesOrError};
-use crate::utils::json_responses::make_bad_json_data_response;
+use crate::utils::i18n::do_i18n;
+use crate::utils::json_responses::{make_bad_json_data_response, make_augmented_bad_json_data_response};
 use crate::utils::paths::os_slash_str;
 use rocket::http::{ContentType, Status};
 use rocket::response::status;
@@ -34,14 +35,13 @@ pub async fn read_temp_file(
             Status::BadRequest,
             (
                 ContentType::JSON,
-                BytesOrError::Error(make_bad_json_data_response(
-                    format!("could not read temp file: {}", e).to_string(),
+                BytesOrError::Error(make_augmented_bad_json_data_response(
+                    do_i18n(&state, "temp", "temp_file_read_error", vec![e.to_string()]),
                 )),
             ),
         ),
     }
 }
-
 
 /// *`GET /html/<temp_id>`*
 ///
@@ -61,13 +61,7 @@ pub async fn read_temp_file_as_html(
         &temp_id
     );
     match std::fs::read(path_to_serve) {
-        Ok(v) => status::Custom(
-            Status::Ok,
-            (
-                ContentType::HTML,
-                BytesOrError::Bytes(v),
-            ),
-        ),
+        Ok(v) => status::Custom(Status::Ok, (ContentType::HTML, BytesOrError::Bytes(v))),
         Err(e) => status::Custom(
             Status::BadRequest,
             (

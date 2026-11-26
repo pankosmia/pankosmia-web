@@ -126,6 +126,12 @@ pub struct JsonDataResponse {
     pub reason: String,
 }
 #[derive(Serialize, Deserialize)]
+pub struct JsonAugmentedDataResponse {
+    pub is_good: bool,
+    pub reason_key: String,
+    pub reason: String,
+}
+#[derive(Serialize, Deserialize)]
 pub struct JsonNetStatusResponse {
     pub is_enabled: bool,
 }
