@@ -241,11 +241,13 @@ pub enum BytesOrError {
     Bytes(Vec<u8>),
 }
 
+/*
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ServerDependencies {
     pub resources: String,
     pub webfonts: String,
 }
+*/
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ClientConfigString {
@@ -295,16 +297,11 @@ pub struct RemoteRepoRecord {
     pub name: String,
     pub abbreviation: String,
     pub description: String,
-    // pub avatar_url: String,
     pub flavor: String,
     pub flavor_type: String,
     pub language_code: String,
     pub script_direction: String,
-    // pub branch_or_tag: String,
-    // pub clone_url: String,
     pub released: String,
-    // pub updated_at: String,
-    // pub latest_zip: String,
     pub metadata_types: String,
     pub topics: Vec<String>,
     pub book_codes: Vec<String>,

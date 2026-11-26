@@ -1,16 +1,12 @@
 [package]
 name = "pankosmia_web"
 description = "A web server for pankosmia desktop applications"
-version = "0.23.1"
+version = "0.23.2"
 edition = "2021"
 license = "MIT"
 homepage = "https://xenizo.fr"
 repository = "https://github.com/pankosmia/pankosmia-web"
 readme = "Crate_README.md"
-
-exclude = [
-    "webfonts/*"
-]
 
 [lib]
 name = "pankosmia_web"
@@ -18,6 +14,12 @@ crate-type = [
     "lib"
 ]
 path = "src/lib.rs"
+test = false
+
+[[bin]]
+name = "pankosmia_web"
+path = "src/main.rs"
+test = false
 
 [dependencies]
 boon = "0.6.1"
@@ -50,5 +52,8 @@ rocket-slogger = "1.2.0"
 slog-term = "2.9.2"
 slog-async = "2.8.0"
 slog = "2.8.2"
-clap = { version = "4.6.9", features = ["derive"] }
+clap = { version = "4.6.10", features = ["derive"] }
 urlencoding = "2.1.3"
+
+[dev-dependencies]
+serial_test = "3.5.0"

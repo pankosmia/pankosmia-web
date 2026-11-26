@@ -18,7 +18,8 @@ use std::path::{Components, PathBuf};
 /// Edits the Dublin Core-like parts of the metadata for a repo.
 /// The data is provided as a JSON payload:
 /// 
-/// ```{
+/// ```text
+/// {
 ///    "name": "NEW NAME",
 ///    "description": "THIS IS A NEW DESCRIPTION",
 ///    "abbreviation": "NN",
@@ -26,7 +27,8 @@ use std::path::{Components, PathBuf};
 ///    "language_name": "Green Fooish",
 ///    "script_direction": "rtl",
 ///    "copyright": "© The Foo Fairies"
-/// }```
+/// }
+/// ```
 
 #[post("/metadata/edit/<repo_path..>", format = "json", data = "<edits>")]
 #[allow(irrefutable_let_patterns)]

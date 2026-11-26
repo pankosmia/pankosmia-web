@@ -170,7 +170,3 @@ pub async fn main() -> Result<(), rocket::Error> {
     // Our work here (in this thread) is done
     Ok(())
 }
-
-#[cfg(test)]
-mod tests;
-
