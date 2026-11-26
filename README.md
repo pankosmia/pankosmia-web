@@ -7,7 +7,7 @@ Pankosmia-web expects various setup and resource files. These are typically prov
 You first need to build the Pithekos app. Then
 ```
 cargo build # Makes debug build
-cd target/debug
-./pankosmia_web --help # CLI options
-./pankosmia_web --config-path ../../test/test_config.json # log file in the debug directory, other files under ~/pankosmia/pithekos and ~/pankosmia_repos
+# Run from top-level dir as test config uses relative paths
+target/debug/pankosmia_web --help # CLI options
+target/debug/pankosmia_web -c test_data/test_config.json
 ```

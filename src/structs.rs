@@ -85,7 +85,8 @@ pub struct AppSettings {
     pub product: ProductSpec,
     pub client_config: BTreeMap<String, Vec<ClientConfigSection>>,
     pub dev_settings: Mutex<Value>,
-    pub log_path: Option<String>
+    pub log_path: Option<String>,
+    pub i18n: BTreeMap<std::string::String, BTreeMap<std::string::String, std::string::String>>
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

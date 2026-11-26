@@ -226,7 +226,8 @@ pub(crate) fn add_app_settings(
     app_state_json: &Value,
     product_json: &Value,
     client_config: BTreeMap<String, Vec<ClientConfigSection>>,
-    log_path: Option<String>
+    log_path: Option<String>,
+    i18n: BTreeMap<std::string::String, BTreeMap<std::string::String, std::string::String>>
 ) -> Rocket<Build> {
     let default_bcv_json = json!({
     "book_code": "TIT",
@@ -314,7 +315,8 @@ pub(crate) fn add_app_settings(
         },
         client_config,
         dev_settings: Mutex::new(json!({"force_os": null})),
-        log_path: log_path
+        log_path: log_path,
+        i18n: i18n
     })
 }
 

@@ -226,6 +226,44 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         product_homepage,
     );
 
+    // Build server i18n BTreeMap
+    // concat second and third levels to have single BTreeMap
+    // - Reread built i18n file as Value to get overrides
+    let i18n_template_path = format!("{}templates/i18n.json", app_resources_dir_path);
+    let mut whole_i18n_value: Value = match std::fs::read_to_string(&i18n_template_path) {
+        Ok(it) => match serde_json::from_str(&it) {
+            Ok(i) => i,
+            Err(e) => {
+                panic!(
+                    "Could not parse i18n template {} JSON as map: {}\n{}",
+                    &i18n_template_path, e, it
+                );
+            }
+        },
+        Err(e) => {
+            panic!("Could not read i18n template {}: {}", i18n_template_path, e);
+        }
+    };
+    // - Extract server section as Value
+    let server_i18n_value = match whole_i18n_value["server"].as_object_mut() {
+        Some(si) =>si,
+        None => {
+            panic!("Could not read server i18n as object");
+        }
+    };
+    // - Read into struct (map of maps)
+    let mut server_i18n_lookup = BTreeMap::new();
+    for (cat_key, cat_value) in server_i18n_value {
+        for (term_key, term_trads) in cat_value.as_object_mut().expect("i18n category as object") {
+            let full_key = format!("{}--{}", cat_key, term_key);
+            let mut term_trad_tree: BTreeMap<String, String> = BTreeMap::new();
+            for (term_lang, term_trad) in term_trads.as_object_mut().expect("i18n term languages as object") {
+                term_trad_tree.insert(term_lang.as_str().to_string(), term_trad.as_str().expect("term trad as str").to_string());
+            }
+            server_i18n_lookup.insert(full_key, term_trad_tree);
+        }
+    };
+
     // *** LAUNCH ROCKET ***
     let mut my_rocket = rocket::build();
 
@@ -267,7 +305,8 @@ pub fn rocket(launch_config: Value) -> Rocket<Build> {
         &app_state_json,
         &product_json,
         client_config,
-        log_path
+        log_path,
+        server_i18n_lookup
     );
     let msg_queue = MsgQueue::new(Mutex::new(VecDeque::new()));
     my_rocket = my_rocket.manage(msg_queue).manage(clients);
